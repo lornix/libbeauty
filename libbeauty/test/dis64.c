@@ -2710,7 +2710,7 @@ search_back_exit_free:
 	
 }
 
-int external_entry_point_init(struct external_entry_point_s *external_entry_points, struct rev_eng *handle)
+int external_entry_points_init(struct external_entry_point_s *external_entry_points, struct rev_eng *handle)
 {
 	int n;
 	int l;
@@ -2790,7 +2790,7 @@ int external_entry_point_init(struct external_entry_point_s *external_entry_poin
 	return 0;
 }
 
-int link_reloc_table_code_to_enternal_entry_point(struct rev_eng *handle, struct external_entry_point_s *external_entry_points)
+int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct external_entry_point_s *external_entry_points)
 {
 	int n;
 	int l;
@@ -2980,7 +2980,7 @@ int main(int argc, char *argv[])
 	/* Where should entry_point_list_length be initialised */
 	entry_point_list_length = ENTRY_POINTS_SIZE;
 
-	tmp = external_entry_point_init(external_entry_points, handle);
+	tmp = external_entry_points_init(external_entry_points, handle);
 	if (tmp) return 1;
 
 	printf("Number of functions = %d\n", n);
@@ -2997,7 +2997,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	tmp = link_reloc_table_code_to_enternal_entry_point(handle, external_entry_points);
+	tmp = link_reloc_table_code_to_external_entry_point(handle, external_entry_points);
 	if (tmp) return 1;
 
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
