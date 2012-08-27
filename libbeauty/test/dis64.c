@@ -2710,6 +2710,87 @@ search_back_exit_free:
 	
 }
 
+int external_entry_point_init(struct external_entry_point_s *external_entry_points, struct rev_eng *handle)
+{
+	int n;
+	int l;
+	struct memory_s *memory_text;
+	struct memory_s *memory_stack;
+	struct memory_s *memory_reg;
+	struct memory_s *memory_data;
+	int *memory_used;
+
+	/* Print the symtab */
+	printf("symtab_sz = %lu\n", handle->symtab_sz);
+	if (handle->symtab_sz >= 100) {
+		printf("symtab too big!!! EXITING\n");
+		return 1;
+	}
+	n = 0;
+	for (l = 0; l < handle->symtab_sz; l++) {
+		size_t length;
+		/* FIXME: value == 0 for the first function in the .o file. */
+		/*        We need to be able to handle more than
+		          one function per .o file. */
+		printf("section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
+			handle->symtab[l]->section->id,
+			handle->symtab[l]->section->index,
+			handle->symtab[l]->flags,
+			handle->symtab[l]->value);
+		if ((handle->symtab[l]->flags & 0x8) ||
+			(handle->symtab[l]->flags == 0)) {
+			external_entry_points[n].valid = 1;
+			/* 1: Public function entry point
+			 * 2: Private function entry point
+			 * 3: Private label entry point
+			 */
+			if (handle->symtab[l]->flags & 0x8) {
+				external_entry_points[n].type = 1;
+			} else {
+				external_entry_points[n].type = 2;
+			}
+			external_entry_points[n].section_offset = l;
+			external_entry_points[n].section_id = 
+				handle->symtab[l]->section->id;
+			external_entry_points[n].section_index = 
+				handle->symtab[l]->section->index;
+			external_entry_points[n].value = handle->symtab[l]->value;
+			length = strlen(handle->symtab[l]->name);
+			external_entry_points[n].name = malloc(length+1);
+			strncpy(external_entry_points[n].name, handle->symtab[l]->name, length+1);
+			external_entry_points[n].process_state.memory_text =
+				calloc(MEMORY_TEXT_SIZE, sizeof(struct memory_s));
+			external_entry_points[n].process_state.memory_stack =
+				calloc(MEMORY_STACK_SIZE, sizeof(struct memory_s));
+			external_entry_points[n].process_state.memory_reg =
+				calloc(MEMORY_REG_SIZE, sizeof(struct memory_s));
+			external_entry_points[n].process_state.memory_data =
+				calloc(MEMORY_DATA_SIZE, sizeof(struct memory_s));
+			external_entry_points[n].process_state.memory_used =
+				calloc(MEMORY_USED_SIZE, sizeof(int));
+			memory_text = external_entry_points[n].process_state.memory_text;
+			memory_stack = external_entry_points[n].process_state.memory_stack;
+			memory_reg = external_entry_points[n].process_state.memory_reg;
+			memory_data = external_entry_points[n].process_state.memory_data;
+			memory_used = external_entry_points[n].process_state.memory_used;
+
+			ram_init(memory_data);
+			reg_init(memory_reg);
+			stack_init(memory_stack);
+			/* Set EIP entry point equal to symbol table entry point */
+			//memory_reg[2].init_value = EIP_START;
+			memory_reg[2].offset_value = external_entry_points[n].value;
+
+			print_mem(memory_reg, 1);
+
+			n++;
+		}
+
+	}
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -2871,73 +2952,10 @@ int main(int argc, char *argv[])
 	inst_exe = &inst_log_entry[0];
 	/* Where should entry_point_list_length be initialised */
 	entry_point_list_length = ENTRY_POINTS_SIZE;
-	/* Print the symtab */
-	printf("symtab_sz = %lu\n", handle->symtab_sz);
-	if (handle->symtab_sz >= 100) {
-		printf("symtab too big!!! EXITING\n");
-		return 1;
-	}
-	n = 0;
-	for (l = 0; l < handle->symtab_sz; l++) {
-		size_t length;
-		/* FIXME: value == 0 for the first function in the .o file. */
-		/*        We need to be able to handle more than
-		          one function per .o file. */
-		printf("section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
-			handle->symtab[l]->section->id,
-			handle->symtab[l]->section->index,
-			handle->symtab[l]->flags,
-			handle->symtab[l]->value);
-		if ((handle->symtab[l]->flags & 0x8) ||
-			(handle->symtab[l]->flags == 0)) {
-			external_entry_points[n].valid = 1;
-			/* 1: Public function entry point
-			 * 2: Private function entry point
-			 * 3: Private label entry point
-			 */
-			if (handle->symtab[l]->flags & 0x8) {
-				external_entry_points[n].type = 1;
-			} else {
-				external_entry_points[n].type = 2;
-			}
-			external_entry_points[n].section_offset = l;
-			external_entry_points[n].section_id = 
-				handle->symtab[l]->section->id;
-			external_entry_points[n].section_index = 
-				handle->symtab[l]->section->index;
-			external_entry_points[n].value = handle->symtab[l]->value;
-			length = strlen(handle->symtab[l]->name);
-			external_entry_points[n].name = malloc(length+1);
-			strncpy(external_entry_points[n].name, handle->symtab[l]->name, length+1);
-			external_entry_points[n].process_state.memory_text =
-				calloc(MEMORY_TEXT_SIZE, sizeof(struct memory_s));
-			external_entry_points[n].process_state.memory_stack =
-				calloc(MEMORY_STACK_SIZE, sizeof(struct memory_s));
-			external_entry_points[n].process_state.memory_reg =
-				calloc(MEMORY_REG_SIZE, sizeof(struct memory_s));
-			external_entry_points[n].process_state.memory_data =
-				calloc(MEMORY_DATA_SIZE, sizeof(struct memory_s));
-			external_entry_points[n].process_state.memory_used =
-				calloc(MEMORY_USED_SIZE, sizeof(int));
-			memory_text = external_entry_points[n].process_state.memory_text;
-			memory_stack = external_entry_points[n].process_state.memory_stack;
-			memory_reg = external_entry_points[n].process_state.memory_reg;
-			memory_data = external_entry_points[n].process_state.memory_data;
-			memory_used = external_entry_points[n].process_state.memory_used;
 
-			ram_init(memory_data);
-			reg_init(memory_reg);
-			stack_init(memory_stack);
-			/* Set EIP entry point equal to symbol table entry point */
-			//memory_reg[2].init_value = EIP_START;
-			memory_reg[2].offset_value = external_entry_points[n].value;
+	tmp = external_entry_point_init(external_entry_points, handle);
+	if (tmp) return 1;
 
-			print_mem(memory_reg, 1);
-
-			n++;
-		}
-
-	}
 	printf("Number of functions = %d\n", n);
 	for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
 		if (external_entry_points[n].valid != 0) {
