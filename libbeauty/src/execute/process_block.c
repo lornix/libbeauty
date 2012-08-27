@@ -48,7 +48,7 @@
 #include <rev.h>
 #include <assert.h>
 
-int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t list_length, struct entry_point_s *entry, uint64_t eip_offset_limit) {
+int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
 	uint64_t offset = 0;
 	int result;
 	int n, m, l;
@@ -67,6 +67,8 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 	struct dis_instructions_s dis_instructions;
 	int *memory_used;
 	disassembler_ftype disassemble_fn = self->disassemble_fn;
+	struct entry_point_s *entry = self->entry_point;
+	uint64_t list_length = self->entry_point_list_length;
 
 	memory_text = process_state->memory_text;
 	memory_stack = process_state->memory_stack;

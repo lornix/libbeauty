@@ -171,10 +171,12 @@ struct self_s {
 	disassembler_ftype disassemble_fn;
 	struct external_entry_point_s *external_entry_points;
 	struct relocation_s *relocations;
+	struct entry_point_s *entry_point; /* This is used to hold return values from process block */
+	uint64_t entry_point_list_length;  /* Number of entry_point entries allocated */
 };
 
 extern int execute_instruction(void *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);
-extern int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t list_length, struct entry_point_s *entry, uint64_t eip_offset_limit);
+extern int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit);
 extern int output_label(struct label_s *label, FILE *fd);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);

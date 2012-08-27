@@ -109,10 +109,6 @@ int memory_used[MEMORY_USED_SIZE];
 /* Used to keep a non bfd version of the relocation entries */
 int memory_relocation[MEMORY_USED_SIZE];
 
-/* This is used to hold return values from process block */
-struct entry_point_s entry_point[ENTRY_POINTS_SIZE];
-uint64_t entry_point_list_length = ENTRY_POINTS_SIZE;
-
 int print_dis_instructions(struct self_s *self)
 {
 	int n;
@@ -2924,6 +2920,9 @@ int main(int argc, char *argv[])
 	self->inst_log_entry = inst_log_entry;
 	self->relocations = relocations;
 	self->external_entry_points = external_entry_points;
+	self->entry_point = calloc(ENTRY_POINTS_SIZE, sizeof(struct entry_point_s));
+	self->entry_point_list_length = ENTRY_POINTS_SIZE;
+
 	nodes = calloc(1000, sizeof(struct control_flow_node_s));
 	nodes_size = 0;
 	
@@ -2977,8 +2976,6 @@ int main(int argc, char *argv[])
 	printf("disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
 	dis_instructions.bytes_used = 0;
 	inst_exe = &inst_log_entry[0];
-	/* Where should entry_point_list_length be initialised */
-	entry_point_list_length = ENTRY_POINTS_SIZE;
 
 	tmp = external_entry_points_init(external_entry_points, handle);
 	if (tmp) return 1;
@@ -3014,6 +3011,7 @@ int main(int argc, char *argv[])
 		if ((external_entry_points[l].valid != 0) &&
 			(external_entry_points[l].type == 1)) {  /* 1 == Implemented in this .o file */
 			struct process_state_s *process_state;
+			struct entry_point_s *entry_point = self->entry_point;
 			
 			printf("Start function block: %s:0x%"PRIx64"\n", external_entry_points[l].name, external_entry_points[l].value);	
 			process_state = &external_entry_points[l].process_state;
@@ -3035,13 +3033,12 @@ int main(int argc, char *argv[])
 			entry_point[0].eip_init_value = memory_reg[2].init_value;
 			entry_point[0].eip_offset_value = memory_reg[2].offset_value;
 			entry_point[0].previous_instuction = 0;
-			entry_point_list_length = ENTRY_POINTS_SIZE;
 
 			print_mem(memory_reg, 1);
 			printf ("LOGS: inst_log = 0x%"PRIx64"\n", inst_log);
 			do {
 				not_finished = 0;
-				for (n = 0; n < entry_point_list_length; n++ ) {
+				for (n = 0; n < self->entry_point_list_length; n++ ) {
 					/* EIP is a parameter for process_block */
 					/* Update EIP */
 					//printf("entry:%d\n",n);
@@ -3056,7 +3053,7 @@ int main(int argc, char *argv[])
 						not_finished = 1;
 						printf ("LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
 						printf ("LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
-						err = process_block(self, process_state, handle, inst_log_prev, entry_point_list_length, entry_point, inst_size);
+						err = process_block(self, process_state, handle, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
 						entry_point[n].used = 0;
 						if (err) {
@@ -3082,7 +3079,7 @@ int main(int argc, char *argv[])
 	//inst_log--;
 	printf("Instructions=%"PRId64", entry_point_list_length=%"PRId64"\n",
 		inst_log,
-		entry_point_list_length);
+		self->entry_point_list_length);
 
 	/* Correct inst_log to identify how many dis_instructions there have been */
 	inst_log--;
@@ -3195,8 +3192,10 @@ int main(int argc, char *argv[])
 
 	print_dis_instructions(self);
 
-	if (entry_point_list_length > 0) {
-		for (n = 0; n < entry_point_list_length; n++ ) {
+	if (self->entry_point_list_length > 0) {
+		for (n = 0; n < self->entry_point_list_length; n++ ) {
+			struct entry_point_s *entry_point = self->entry_point;
+
 			if (entry_point[n].used) {
 				printf("%d, eip = 0x%"PRIx64", prev_inst = 0x%"PRIx64"\n",
 					entry_point[n].used,
