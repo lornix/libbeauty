@@ -2814,6 +2814,22 @@ int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct
 	return 0;
 }
 
+/* Convert Control flow graph to Abstract syntax tree */
+/* One list with just a list of Type, Index pairs.
+ * The Type will be one of:
+ *	Node: A particular Node
+ *	Container: For another list of types. Type, Index pairs.
+ *	If: For a if...then...else contruct. Contains the Node for the if expression, then Containers for True, and False paths.
+ *	Loop: For a loop contruct. A loop has First Node, and Subsequent Nodes in the loop body.
+ *		Later Loop will be converted to for() or while().
+ */
+int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	/* TODO */
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -3184,6 +3200,9 @@ int main(int argc, char *argv[])
 		}
 	}
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+
+	/* Control flow graph to Abstract syntax tree */
+	tmp = cfg_to_ast(self, nodes, &nodes_size);
 
 	/* FIXME */
 	exit(0);
