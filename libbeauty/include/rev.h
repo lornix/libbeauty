@@ -119,6 +119,65 @@ struct node_mid_start_s {
 	int node;
 };
 
+/* AST: Abstract syntax tree 
+ * Structures to build an AST.
+ * An AST provides extra data over the CFG: Control Flow Graph, NODES,
+ * because it describes structure (if...then...else, and loops), and therefore closer to the 
+ * final output in the programming language of choice.
+ * It is used to group NODES together, and associate them with structure. e.g. Part of a for() loop.
+ * This will make is easier to read the resulting source code because
+ * before everything was if...then...else, but now a new construct of a for() loop can be
+ * shown, as it is a special case of the if...then...else.
+ * Also, the if...then...else can now contain lists of statements, instead of if...then goto...else goto.
+ * Thus, reducing the amount of gotos in the resulting source code, making it easier to read.
+ * FIXME: At first this is not a proper full AST of each program statement, but 
+ * it is instead an AST at the NODE level.
+ * FIXME: jump tables and call tables not taken into account yet.
+ */
+
+struct ast_type_index_s {
+/* Types:
+ * 0 = Not used. // This entry has not been used yet or it is not used any more.
+ * 1 = Node.  // This points to the existing Node table.
+ * 2 = Container. // This points to the "container" table.
+ * 3 = IF. // This points to the "if" table.
+ * 4 = LOOP. // This points to the "loop" table.
+ */
+/* Parent data will not be stored here.
+ * The only case not handled is if the type is 1 for Node.
+ * We will store the parent data in the Node table instead of here.
+ */
+	int type; /* Object type. e.g. If, for, while. */
+	uint64_t index; /* index into the specific object table */
+};
+struct ast_container_s {
+	struct ast_type_index_s parent; /* So we can traverse the tree */
+	int length; /* Number of objects. */
+	struct ast_type_index_s *object; /* Array of objects */
+};
+
+/* An IF is a special branch condition that does not result in a loop structure. */
+struct ast_if_s {
+/* FIXME: Must do a sanity check to ensure that a single node contains the BRANCH instruction,
+ * 	  and also the associated instruction modifying flags. So the IF expression can be created.
+ *	If not the case, throw an exception for now, but then think about what to do about it.
+ *	Most likely solution would be trying to migrate the BRANCH up to the flags instruction.
+ *	This would potentially duplicate the BRANCH instruction if is crossed a join point.
+ */
+	struct ast_type_index_s parent; /* So we can traverse the tree */
+	struct ast_container_s expression_node; /* Normally this would point to the node containing the if expression */
+	struct ast_container_s true;  /* IF expression is true. The "then" path. */
+	struct ast_container_s false; /* IF expression is false, The "else" path. */
+};
+
+/* A LOOP is a special branch condition that does result in a loop structure. */
+/* This will later be broken out into whether it is a for() or a while() */
+struct ast_loop_s {
+	struct ast_type_index_s parent; /* So we can traverse the tree */
+	struct ast_container_s first_node; /* Normally this would point to the first node of the body. */
+	struct ast_container_s body; /* The rest of the loop body. */
+};
+
 struct control_flow_node_s {
 	int inst_start;
 	int inst_end;
@@ -136,6 +195,7 @@ struct control_flow_node_s {
 	int *path; /* The list of paths that touch this node */
 	int looped_path_size; /* Number of path entries in the list */
 	int *looped_path; /* The list of paths that touch this node */
+	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
 };
 
 struct external_entry_point_s {
