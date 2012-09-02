@@ -166,8 +166,8 @@ struct ast_if_s {
  */
 	struct ast_type_index_s parent; /* So we can traverse the tree */
 	struct ast_container_s expression_node; /* Normally this would point to the node containing the if expression */
-	struct ast_container_s true;  /* IF expression is true. The "then" path. */
-	struct ast_container_s false; /* IF expression is false, The "else" path. */
+	struct ast_container_s if_then;  /* IF expression is true. The "then" path. */
+	struct ast_container_s if_else; /* IF expression is false, The "else" path. */
 };
 
 /* A LOOP is a special branch condition that does result in a loop structure. */
