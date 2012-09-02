@@ -2814,6 +2814,14 @@ int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct
 	return 0;
 }
 
+struct ast_entry_s {
+	int type;
+	int index;
+	int sub_index;
+	int node;
+	int node_end; // Node to end at.
+};
+
 /* Convert Control flow graph to Abstract syntax tree */
 /* One list with just a list of Type, Index pairs.
  * The Type will be one of:
@@ -2825,7 +2833,121 @@ int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct
  */
 int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
-	/* TODO */
+	struct ast_container_s *ast_container;
+	struct ast_if_s *ast_if;
+	struct ast_loop_s *ast_loop;
+	struct ast_entry_s *ast_entry;
+	int found;
+	int n;
+	int entry;
+	int type;
+	int node;
+	int node_end;
+	int container_index = 1;
+	int if_index = 1;
+	int loop_index = 1;
+	int entry_index = 1;
+	int index;
+	int length;
+	int tmp;
+
+	ast_container = calloc(100, sizeof(struct ast_container_s));
+	ast_if = calloc(100, sizeof(struct ast_if_s));
+	ast_loop = calloc(100, sizeof(struct ast_loop_s));
+	ast_entry = calloc(100, sizeof(struct ast_entry_s));
+
+	ast_entry[0].type = 2;
+	ast_entry[0].index = 0;
+	ast_entry[0].sub_index = 0;
+	ast_entry[0].node = 1;
+	ast_entry[0].node_end = 0;
+
+	do {
+		found = 0;
+		for (n = 0; n < 100; n++) {
+			if (ast_entry[n].type) {
+				found = 1;
+				entry = n;
+				break;
+			}
+		}
+		if (!found) {
+			break;
+		}
+		printf("ast_entry entry = 0x%x\n", entry);
+		node = ast_entry[entry].node;
+		type = 0;
+		if (nodes[node].if_tail) {
+			type = 3;
+			node_end = nodes[node].if_tail;
+		} else if (nodes[node].loop_head) {
+			type = 4;
+			node_end = 0; /* FIXME: Is this right? */
+		} else {
+			type = 1;
+			node_end = 0; /* FIXME: Is this right? */
+		};
+		printf("AST: Type = 0x%x\n", type);
+		switch (type) {
+		case 3:
+			index = ast_entry[entry].index;
+			if (ast_entry[entry].type != 2) {
+				printf("failed type != 2\n");
+				exit(1);
+			}
+			length = ast_container[index].length;
+			if (0 == length) {
+				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
+				ast_container[index].length = 1;
+			} else {
+				tmp = length + 1;
+				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
+				ast_container[index].length = tmp;
+			}
+			ast_container[index].object[length].type = type;
+			ast_container[index].object[length].index = if_index;
+			if_index++;
+			ast_entry[entry].sub_index = ast_container[index].length;
+			ast_entry[entry].node = node_end;
+			ast_entry[entry].node_end = 0;
+			break;
+		case 1:
+			index = ast_entry[entry].index;
+			if (ast_entry[entry].type != 2) {
+				printf("failed type != 2\n");
+				exit(1);
+			}
+			length = ast_container[index].length;
+			if (0 == length) {
+				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
+				ast_container[index].length = 1;
+			} else {
+				tmp = length + 1;
+				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
+				ast_container[index].length = tmp;
+			}
+			ast_container[index].object[length].type = type;
+			ast_container[index].object[length].index = node;
+			if (nodes[node].next_size > 0) {
+				ast_entry[entry].sub_index = ast_container[index].length;
+				ast_entry[entry].node = nodes[node].next_node[0];
+			} else {
+				ast_entry[entry].type = 0;
+			}
+			break;
+		default:
+			ast_entry[entry].type = 0;
+			break;
+		}
+	} while(1);
+	tmp = 0;
+	printf("ast_container[%d].length = 0x%x\n", tmp, ast_container[tmp].length);
+	for (n = 0; n < ast_container[tmp].length; n++) {
+		printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
+			n,
+			ast_container[tmp].object[n].type,
+			ast_container[tmp].object[n].index);
+	}
 	return 0;
 }
 
