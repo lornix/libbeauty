@@ -2822,6 +2822,23 @@ struct ast_entry_s {
 	int node_end; // Node to end at.
 };
 
+int find_empty_ast_entry(struct ast_entry_s *ast_entry, int *entry)
+{
+	int found;
+	int n;
+
+	found = 0;
+	for (n = 0; n < 100; n++) {
+		if (!ast_entry[n].type) {
+			found = 1;
+			*entry = n;
+			break;
+		}
+	}
+	return found;
+}
+
+
 /* Convert Control flow graph to Abstract syntax tree */
 /* One list with just a list of Type, Index pairs.
  * The Type will be one of:
@@ -2850,6 +2867,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int index;
 	int length;
 	int tmp;
+	int tmp_entry;
 
 	ast_container = calloc(100, sizeof(struct ast_container_s));
 	ast_if = calloc(100, sizeof(struct ast_if_s));
@@ -2861,6 +2879,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_entry[0].sub_index = 0;
 	ast_entry[0].node = 1;
 	ast_entry[0].node_end = 0;
+	container_index++;
 
 	do {
 		found = 0;
@@ -2906,7 +2925,30 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 			ast_container[index].object[length].type = type;
 			ast_container[index].object[length].index = if_index;
+			ast_if[if_index].expression_node.type = 1;
+			ast_if[if_index].expression_node.index = node;
 			if_index++;
+
+			ast_if[if_index].if_then.type = 2;
+			ast_if[if_index].if_then.index = container_index;
+			tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+			ast_entry[tmp_entry].type = 2;
+			ast_entry[tmp_entry].index = container_index;
+			ast_entry[tmp_entry].sub_index = 0;
+			ast_entry[tmp_entry].node = nodes[node].next_node[0];
+			ast_entry[tmp_entry].node_end = node_end;
+			container_index++;
+
+			ast_if[if_index].if_else.type = 2;
+			ast_if[if_index].if_else.index = container_index;
+			tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+			ast_entry[tmp_entry].type = 2;
+			ast_entry[tmp_entry].index = container_index;
+			ast_entry[tmp_entry].sub_index = 0;
+			ast_entry[tmp_entry].node = nodes[node].next_node[1];
+			ast_entry[tmp_entry].node_end = node_end;
+			container_index++;
+
 			ast_entry[entry].sub_index = ast_container[index].length;
 			ast_entry[entry].node = node_end;
 			ast_entry[entry].node_end = 0;
@@ -2931,6 +2973,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if (nodes[node].next_size > 0) {
 				ast_entry[entry].sub_index = ast_container[index].length;
 				ast_entry[entry].node = nodes[node].next_node[0];
+				if (ast_entry[entry].node == ast_entry[entry].node_end) {
+					ast_entry[entry].type = 0;
+				}
 			} else {
 				ast_entry[entry].type = 0;
 			}
