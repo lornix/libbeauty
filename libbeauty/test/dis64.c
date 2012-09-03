@@ -2838,6 +2838,19 @@ int find_empty_ast_entry(struct ast_entry_s *ast_entry, int *entry)
 	return found;
 }
 
+int print_ast_container(struct ast_container_s *ast_container)
+{
+	int n;
+	if (ast_container->length) {
+		printf("ast_container->length = 0x%x\n", ast_container->length);
+	}
+	for (n = 0; n < ast_container->length; n++) {
+		printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
+			n,
+			ast_container->object[n].type,
+			ast_container->object[n].index);
+	}
+}
 
 /* Convert Control flow graph to Abstract syntax tree */
 /* One list with just a list of Type, Index pairs.
@@ -2856,14 +2869,15 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	struct ast_entry_s *ast_entry;
 	int found;
 	int n;
+	int m;
 	int entry;
 	int type;
 	int node;
 	int node_end;
-	int container_index = 1;
-	int if_index = 1;
-	int loop_index = 1;
-	int entry_index = 1;
+	int container_index = 0;
+	int if_index = 0;
+	int loop_index = 0;
+	int entry_index = 0;
 	int index;
 	int length;
 	int tmp;
@@ -2927,8 +2941,6 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index].object[length].index = if_index;
 			ast_if[if_index].expression_node.type = 1;
 			ast_if[if_index].expression_node.index = node;
-			if_index++;
-
 			ast_if[if_index].if_then.type = 2;
 			ast_if[if_index].if_then.index = container_index;
 			tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -2937,7 +2949,12 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_entry[tmp_entry].sub_index = 0;
 			ast_entry[tmp_entry].node = nodes[node].next_node[0];
 			ast_entry[tmp_entry].node_end = node_end;
-			container_index++;
+			if (ast_entry[tmp_entry].node == node_end) {
+				ast_entry[tmp_entry].type = 0;
+				ast_if[if_index].if_then.type = 0;
+			} else {
+				container_index++;
+			}
 
 			ast_if[if_index].if_else.type = 2;
 			ast_if[if_index].if_else.index = container_index;
@@ -2947,11 +2964,17 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_entry[tmp_entry].sub_index = 0;
 			ast_entry[tmp_entry].node = nodes[node].next_node[1];
 			ast_entry[tmp_entry].node_end = node_end;
-			container_index++;
+			if (ast_entry[tmp_entry].node == node_end) {
+				ast_entry[tmp_entry].type = 0;
+				ast_if[if_index].if_else.type = 0;
+			} else {
+				container_index++;
+			}
 
 			ast_entry[entry].sub_index = ast_container[index].length;
 			ast_entry[entry].node = node_end;
 			ast_entry[entry].node_end = 0;
+			if_index++;
 			break;
 		case 1:
 			index = ast_entry[entry].index;
@@ -2985,14 +3008,69 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			break;
 		}
 	} while(1);
-	tmp = 0;
-	printf("ast_container[%d].length = 0x%x\n", tmp, ast_container[tmp].length);
-	for (n = 0; n < ast_container[tmp].length; n++) {
-		printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
-			n,
-			ast_container[tmp].object[n].type,
-			ast_container[tmp].object[n].index);
+	printf("AST OUTPUT\n");
+	for (m = 0; m < container_index; m++) {
+		printf("ast_container[%d]", m);
+		print_ast_container(&ast_container[m]);
 	}
+	for (m = 0; m < if_index; m++) {
+		int type;
+		type = ast_if[m].expression_node.type;
+		switch (type) {
+		case 0:
+			printf("ast_if expression_node empty\n");
+			break;
+		case 1:
+			printf("ast_if[%d].expression_node.type = 0x%x\n", m, ast_if[m].expression_node.type);
+			printf("ast_if[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if[m].expression_node.index);
+			break;
+		case 2:
+			printf("ast_if[%d].expression_node\n", m);
+			tmp = ast_if[m].expression_node.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_if expression_node default\n");
+			break;
+		}
+		type = ast_if[m].if_then.type;
+		switch (type) {
+		case 0:
+			printf("ast_if if_then empty\n");
+			break;
+		case 1:
+			printf("ast_if[%d].if_then.type = 0x%x\n", m, ast_if[m].if_then.type);
+			printf("ast_if[%d].if_then.index = 0x%"PRIx64"\n", m, ast_if[m].if_then.index);
+			break;
+		case 2:
+			printf("ast_if[%d].if_then\n", m);
+			tmp = ast_if[m].expression_node.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_if if_then default\n");
+			break;
+		}
+		type = ast_if[m].if_else.type;
+		switch (type) {
+		case 0:
+			printf("ast_if if_else empty\n");
+			break;
+		case 1:
+			printf("ast_if[%d].if_else.type = 0x%x\n", m, ast_if[m].if_else.type);
+			printf("ast_if[%d].if_else.index = 0x%"PRIx64"\n", m, ast_if[m].if_else.index);
+			break;
+		case 2:
+			printf("ast_if[%d].if_else\n", m);
+			tmp = ast_if[m].expression_node.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_if if_else default\n");
+			break;
+		}
+	}
+
 	return 0;
 }
 
