@@ -3044,7 +3044,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			break;
 		case 2:
 			printf("ast_if[%d].if_then\n", m);
-			tmp = ast_if[m].expression_node.index;
+			tmp = ast_if[m].if_then.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -3062,7 +3062,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			break;
 		case 2:
 			printf("ast_if[%d].if_else\n", m);
-			tmp = ast_if[m].expression_node.index;
+			tmp = ast_if[m].if_else.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
