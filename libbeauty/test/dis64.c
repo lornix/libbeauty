@@ -524,20 +524,42 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 				break;
 			}
 			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
+			printf("node_dominance: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			if (tmp) {
 				nodes[n].dominator = node_b;
-				if (1 == tmp) {
-					/* 1 == exact match */
-					if (nodes[node_b].next_size > 1) {
-						/* dominator is a branch and we are the if_tail */
-						nodes[node_b].if_tail = n;
-					}
 				break;
-				}
 			}
 		}
 	}
+	return 0;
+}
 
+int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
+{
+	int n;
+	int node_b = 1;
+	int tmp;
+
+	for(n = 1; n <= *nodes_size; n++) {
+		node_b = n;
+		while ((node_b != 0) && (nodes[n].next_size > 1)) {
+			if (nodes[node_b].next_size == 0) {
+				break;
+			}
+			/* FIXME: avoid following loop edge ones */
+			tmp = nodes[node_b].next_node[0];
+			node_b = tmp;
+			if (0 == node_b) {
+				break;
+			}
+			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
+			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			if (tmp) {
+				nodes[n].if_tail = node_b;
+				break;
+			}
+		}
+	}
 	return 0;
 }
 
@@ -3398,6 +3420,7 @@ int main(int argc, char *argv[])
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
 			tmp = build_node_dominance(self, nodes, &nodes_size);
+			tmp = build_node_if_tail(self, nodes, &nodes_size);
 			tmp = analyse_control_flow_loop_exits(self, nodes, &nodes_size, loops, &loops_size);
 
 			external_entry_points[l].paths_size = paths_used;
