@@ -2929,19 +2929,24 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		if (!found) {
 			break;
 		}
-		printf("ast_entry entry = 0x%x\n", entry);
+		printf("BEFORE ast_entry entry = 0x%x\n", entry);
+		printf("ast_type = 0x%x\n", ast_entry[entry].type);
+		printf("ast_index = 0x%x\n", ast_entry[entry].index);
+		printf("ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
+		printf("ast_node = 0x%x\n", ast_entry[entry].node);
+		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
+
 		node = ast_entry[entry].node;
+		node_end = ast_entry[entry].node_end;
 		type = AST_TYPE_EMPTY;
 		if (nodes[node].if_tail) {
 			type = AST_TYPE_IF;
-			node_end = nodes[node].if_tail;
 		} else if (nodes[node].loop_head) {
 			type = AST_TYPE_LOOP;
-			node_end = 0; /* FIXME: Is this right? */
 		} else {
 			type = AST_TYPE_NODE;
-			node_end = 0; /* FIXME: Is this right? */
 		};
+		printf("new_node_end = 0x%x\n", node_end);
 		printf("AST: Type = 0x%x\n", type);
 		switch (type) {
 		case AST_TYPE_IF:
@@ -2963,42 +2968,47 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index].object[length].index = if_index;
 			ast_if[if_index].expression_node.type = AST_TYPE_NODE;
 			ast_if[if_index].expression_node.index = node;
-			ast_if[if_index].if_then.type = AST_TYPE_CONTAINER;
-			ast_if[if_index].if_then.index = container_index;
-			tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
-			ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
-			ast_entry[tmp_entry].index = container_index;
-			ast_entry[tmp_entry].sub_index = 0;
-			ast_entry[tmp_entry].node = nodes[node].next_node[0];
-			ast_entry[tmp_entry].node_end = node_end;
-			if (ast_entry[tmp_entry].node == node_end) {
-				ast_entry[tmp_entry].type = AST_TYPE_EMPTY;
+
+			if (nodes[node].next_node[0] == nodes[node].if_tail) {
 				ast_if[if_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
+				printf("Creating if_then container 0x%x\n", container_index);
+				ast_if[if_index].if_then.type = AST_TYPE_CONTAINER;
+				ast_if[if_index].if_then.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].next_node[0];
+				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 			}
 
-			ast_if[if_index].if_else.type = AST_TYPE_CONTAINER;
-			ast_if[if_index].if_else.index = container_index;
-			tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
-			ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
-			ast_entry[tmp_entry].index = container_index;
-			ast_entry[tmp_entry].sub_index = 0;
-			ast_entry[tmp_entry].node = nodes[node].next_node[1];
-			ast_entry[tmp_entry].node_end = node_end;
-			if (ast_entry[tmp_entry].node == node_end) {
-				ast_entry[tmp_entry].type = AST_TYPE_EMPTY;
+			if (nodes[node].next_node[1] == nodes[node].if_tail) {
 				ast_if[if_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
+				printf("Creating if_else container 0x%x\n", container_index);
+				ast_if[if_index].if_else.type = AST_TYPE_CONTAINER;
+				ast_if[if_index].if_else.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].next_node[1];
+				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 			}
 
-			ast_entry[entry].sub_index = ast_container[index].length;
-			ast_entry[entry].node = node_end;
-			ast_entry[entry].node_end = 0;
+			if (nodes[node].if_tail == ast_entry[entry].node_end) {
+				ast_entry[entry].type = AST_TYPE_EMPTY;
+			} else {
+				ast_entry[entry].sub_index = ast_container[index].length;
+				ast_entry[entry].node = nodes[node].if_tail;
+			}
+
 			if_index++;
 			break;
-		case 1:
+		case AST_TYPE_NODE:
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
 				printf("failed type != 2\n");
@@ -3029,6 +3039,14 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_entry[entry].type = AST_TYPE_EMPTY;
 			break;
 		}
+
+		printf("AFTER ast_entry entry = 0x%x\n", entry);
+		printf("ast_type = 0x%x\n", ast_entry[entry].type);
+		printf("ast_index = 0x%x\n", ast_entry[entry].index);
+		printf("ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
+		printf("ast_node = 0x%x\n", ast_entry[entry].node);
+		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
+
 	} while(1);
 	printf("AST OUTPUT\n");
 	for (m = 0; m < container_index; m++) {
