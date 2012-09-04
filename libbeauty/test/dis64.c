@@ -2939,9 +2939,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		node = ast_entry[entry].node;
 		node_end = ast_entry[entry].node_end;
 		type = AST_TYPE_EMPTY;
-		if (nodes[node].if_tail) {
+		if ((nodes[node].if_tail) && (nodes[node].type == 0)) {
 			type = AST_TYPE_IF;
-		} else if (nodes[node].loop_head) {
+		} else if ((nodes[node].loop_head) && (nodes[node].type == 1)) {
 			type = AST_TYPE_LOOP;
 		} else {
 			type = AST_TYPE_NODE;
@@ -3036,6 +3036,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 			break;
 		default:
+			printf("UNHANDLED type = 0x%x\n", type);
 			ast_entry[entry].type = AST_TYPE_EMPTY;
 			break;
 		}
