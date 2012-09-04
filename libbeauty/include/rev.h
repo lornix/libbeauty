@@ -135,14 +135,14 @@ struct node_mid_start_s {
  * FIXME: jump tables and call tables not taken into account yet.
  */
 
+/* Types: */
+#define AST_TYPE_EMPTY 0	// This entry has not been used yet or it is not used any more.
+#define AST_TYPE_NODE 1		// This points to the existing Node table.
+#define AST_TYPE_CONTAINER 2	// This points to the "container" table.
+#define AST_TYPE_IF 3		// This points to the "if" table.
+#define AST_TYPE_LOOP 4		// This points to the "loop" table.
+
 struct ast_type_index_s {
-/* Types:
- * 0 = Not used. // This entry has not been used yet or it is not used any more.
- * 1 = Node.  // This points to the existing Node table.
- * 2 = Container. // This points to the "container" table.
- * 3 = IF. // This points to the "if" table.
- * 4 = LOOP. // This points to the "loop" table.
- */
 /* Parent data will not be stored here.
  * The only case not handled is if the type is 1 for Node.
  * We will store the parent data in the Node table instead of here.
