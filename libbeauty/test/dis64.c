@@ -3115,6 +3115,51 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	return 0;
 }
 
+int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	char *filename;
+	FILE *fd;
+	uint64_t node;
+	int tmp;
+	int n;
+	const char *font = "graph.font";
+	const char *color;
+	filename = "test.dot";
+
+	fd = fopen(filename, "w");
+	if (!fd) {
+		printf("Failed to open file %s, error=%p\n", filename, fd);
+		return 1;
+	}
+	printf(".dot fd=%p\n", fd);
+	printf("writing out dot to file\n");
+	tmp = fprintf(fd, "digraph code {\n"
+		"\tgraph [bgcolor=white];\n"
+		"\tnode [color=lightgray, style=filled shape=box"
+		" fontname=\"%s\" fontsize=\"8\"];\n", font);
+	for (node = 1; node <= *node_size; node++) {
+		tmp = fprintf(fd, " \"Node:0x%08"PRIx64"\" ["
+                                        "URL=\"Node:0x%08"PRIx64"\" color=\"%s\", label=\"Node:0x%08"PRIx64"\"]\n",
+                                        node,
+					node, "lightgray", node);
+		for (n = 0; n < nodes[node].next_size; n++) {
+			if (2 == nodes[node].next_type[n]) {
+				color = "gold";
+			} else if (0 == n) {
+				color = "green";
+			} else if (1 == n) {
+				color = "red";
+			} else {
+				color = "blue";
+			}
+			tmp = fprintf(fd, "\"Node:0x%08"PRIx64"\" -> \"Node:0x%08X\" [color=\"%s\"];\n",
+				node, nodes[node].next_node[n], color);
+		}
+	}
+	tmp = fprintf(fd, "}\n");
+	fclose(fd);
+	return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -3491,6 +3536,7 @@ int main(int argc, char *argv[])
 	/* Control flow graph to Abstract syntax tree */
 	tmp = cfg_to_ast(self, nodes, &nodes_size);
 
+	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	/* FIXME */
 	exit(0);
 
