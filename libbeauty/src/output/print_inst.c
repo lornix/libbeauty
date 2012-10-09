@@ -83,13 +83,13 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 				size_table[instruction->srcA.value_size]);
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s\n",
+			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				size_table[instruction->dstA.value_size]);
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"%s\n",
+			tmp = fprintf(fd, " %s0x%"PRIx64"%s",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				size_table[instruction->dstA.value_size]);
@@ -98,7 +98,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 		break;
 	case IF:
 		tmp = fprintf(fd, " cond=%"PRIu64"", instruction->srcA.index);
-		tmp = fprintf(fd, " JMP-REL=0x%"PRIx64"\n", instruction->dstA.index);
+		tmp = fprintf(fd, " JMP-REL=0x%"PRIx64"", instruction->dstA.index);
 		ret = 0;
 		break;
 	case CALL:
@@ -150,22 +150,22 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 				tmp = output_label(label, fd);
 				tmp_state++;
 			}
-			tmp = fprintf(fd, ");\n");
+			tmp = fprintf(fd, ");");
 		} else if (instruction->srcA.indirect == IND_MEM) {
-			tmp = fprintf(fd, "(*r0x%"PRIx64") ();\n", 
+			tmp = fprintf(fd, "(*r0x%"PRIx64") ();", 
 				instruction->srcA.index);
 		} else {
-			tmp = fprintf(fd, " CALL FAILED index=0x%"PRIx64"\n",
+			tmp = fprintf(fd, " CALL FAILED index=0x%"PRIx64"",
 				instruction->srcA.index);
 		}
 		ret = 0;
 		break;
 	case NOP:
-		tmp = fprintf(fd, "\n");
+		//tmp = fprintf(fd, "");
 		ret = 0;
 		break;
 	case RET:
-		tmp = fprintf(fd, "\n");
+		//tmp = fprintf(fd, "");
 		ret = 0;
 		break;
 	}
@@ -175,8 +175,10 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels)
 {
 	int ret;
+	int tmp;
 
 	ret = write_inst(self, stdout, instruction, instruction_number, labels);
+	tmp = fprintf(stdout, "\n");
 	return ret;
 }
 

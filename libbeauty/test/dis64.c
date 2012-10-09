@@ -3117,6 +3117,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
+	struct instruction_s *instruction;
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	char *filename;
 	FILE *fd;
 	uint64_t node;
@@ -3139,9 +3142,16 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (node = 1; node <= *node_size; node++) {
 		tmp = fprintf(fd, " \"Node:0x%08"PRIx64"\" ["
-                                        "URL=\"Node:0x%08"PRIx64"\" color=\"%s\", label=\"Node:0x%08"PRIx64"\"]\n",
+                                        "URL=\"Node:0x%08"PRIx64"\" color=\"%s\", label=\"Node:0x%08"PRIx64"\\l",
                                         node,
 					node, "lightgray", node);
+		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
+			inst_log1 =  &inst_log_entry[n];
+			instruction =  &inst_log1->instruction;
+			tmp = write_inst(self, fd, instruction, n, NULL);
+			tmp = fprintf(fd, "\\l");
+		}
+		tmp = fprintf(fd, "\"]\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
 			if (2 == nodes[node].next_type[n]) {
 				color = "gold";
