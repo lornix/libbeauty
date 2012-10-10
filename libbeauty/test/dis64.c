@@ -271,6 +271,8 @@ int path_loop_check(struct path_s *paths, int path, int step, int node, int limi
 
 	int n = 0;
 
+	printf("path_loop_check: path = 0x%x, step = 0x%x, node = 0x%x, loop_head = 0x%x\n", path, step, node, paths[path].loop_head);
+
 	while (n < limit) {
 		n++;
 		step--;
@@ -659,8 +661,8 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 							}
 						}
 					} else {
-					//if (path && node == paths[paths[path].path_prev].path[paths[path].path_prev_index]) {
-						printf("JCD1: do while loop to self on node = 0x%x, step = 0x%x, path=0x%x\n", node, step, path);
+						printf("JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
+							node, step, path);
 						paths[path].loop_head = node;
 						nodes[node].type = 1;
 						nodes[node].loop_head = 1;
@@ -672,6 +674,20 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						for (n = 0; n < nodes[node].next_size; n++) {
 							if (nodes[node].next_node[n] == node) {
 								nodes[node].next_type[n] = 2;
+							}
+						}
+						if (path) {
+							int node1 = paths[paths[path].path_prev].path[paths[path].path_prev_index];
+							int node2 = node;
+							for (n = 0; n < nodes[node2].prev_size; n++) {
+								if (nodes[node2].prev_node[n] == node1) {
+									nodes[node2].prev_type[n] = 2;
+								}
+							}
+							for (n = 0; n < nodes[node1].next_size; n++) {
+								if (nodes[node1].next_node[n] == node2) {
+									nodes[node1].next_type[n] = 2;
+								}
 							}
 						}
 						break;
