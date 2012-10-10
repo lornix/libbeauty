@@ -3172,7 +3172,11 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			if (2 == nodes[node].next_type[n]) {
 				color = "gold";
 			} else if (0 == n) {
-				color = "green";
+				if (nodes[node].next_size > 1) {
+					color = "green";
+				} else {
+					color = "blue";
+				}
 			} else if (1 == n) {
 				color = "red";
 			} else {
