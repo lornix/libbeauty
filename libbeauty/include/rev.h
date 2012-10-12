@@ -179,6 +179,7 @@ struct ast_loop_s {
 };
 
 struct control_flow_node_s {
+	int entry_point; /* Can use this to find the name on the node. */
 	int inst_start;
 	int inst_end;
 	int prev_size;

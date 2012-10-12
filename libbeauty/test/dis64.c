@@ -830,14 +830,15 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 	printf("print_control_flow_nodes:\n");	
 	for (n = 1; n <= *node_size; n++) {
-		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x\n",
+		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x\n",
 			n,
 			nodes[n].type,
 			nodes[n].dominator,
 			nodes[n].if_tail,
 			nodes[n].loop_head,
 			nodes[n].inst_start,
-			nodes[n].inst_end);
+			nodes[n].inst_end,
+			nodes[n].entry_point);
 		for (m = 0; m < nodes[n].prev_size; m++) {
 			printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_type=%d\n", n, m, nodes[n].prev_node[m], nodes[n].prev_type[m]);
 		}
@@ -3151,6 +3152,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	char *filename;
 	FILE *fd;
 	int node;
@@ -3158,6 +3160,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	int n;
 	const char *font = "graph.font";
 	const char *color;
+	const char *name;
 	filename = "test.dot";
 
 	fd = fopen(filename, "w");
@@ -3172,10 +3175,15 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (node = 1; node <= *node_size; node++) {
+		if (nodes[node].entry_point) {
+			name = external_entry_points[nodes[node].entry_point - 1].name;
+		} else {
+			name = "";
+		}
 		tmp = fprintf(fd, " \"Node:0x%08x\" ["
-                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x\\l",
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
-					node, "lightgray", node);
+					node, "lightgray", node, name);
 		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
 			inst_log1 =  &inst_log_entry[n];
 			instruction =  &inst_log1->instruction;
@@ -3502,6 +3510,9 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {
+		if (external_entry_points[l].valid) {
+			nodes[external_entry_points[l].start_node].entry_point = l + 1;
+		}
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			printf("Starting external entry point %d:%s\n", l, external_entry_points[l].name);
 			int paths_used = 0;
