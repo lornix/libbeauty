@@ -3153,7 +3153,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	char *filename;
 	FILE *fd;
-	uint64_t node;
+	int node;
 	int tmp;
 	int n;
 	const char *font = "graph.font";
@@ -3172,8 +3172,8 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (node = 1; node <= *node_size; node++) {
-		tmp = fprintf(fd, " \"Node:0x%08"PRIx64"\" ["
-                                        "URL=\"Node:0x%08"PRIx64"\" color=\"%s\", label=\"Node:0x%08"PRIx64"\\l",
+		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x\\l",
                                         node,
 					node, "lightgray", node);
 		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
@@ -3197,7 +3197,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			} else {
 				color = "blue";
 			}
-			tmp = fprintf(fd, "\"Node:0x%08"PRIx64"\" -> \"Node:0x%08X\" [color=\"%s\"];\n",
+			tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				node, nodes[node].next_node[n], color);
 		}
 	}
