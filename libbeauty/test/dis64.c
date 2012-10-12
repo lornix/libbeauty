@@ -541,6 +541,8 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int n;
 	int node_b = 1;
 	int tmp;
+	int count = 0;
+	int m;
 
 	for(n = 1; n <= *nodes_size; n++) {
 		node_b = n;
@@ -548,14 +550,27 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			if (nodes[node_b].next_size == 0) {
 				break;
 			}
-			/* FIXME: avoid following loop edge ones */
-			tmp = nodes[node_b].next_node[0];
+			for (m = 0; m < nodes[node_b].next_size; m++) {
+				if (nodes[node_b].next_type[m] == 2) {
+					tmp = nodes[node_b].next_node[m];
+					break;
+				}
+			}
+			/* if a non type 2 "loop" link is not found, exit */
+			if (m == nodes[node_b].next_size) {
+				break;
+			}
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
 			}
 			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
 			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			count++;
+			if (count > 1000) {
+				printf("node_if_tail: failed, too many if_tails\n");
+				exit(1);
+			}
 			if (tmp) {
 				nodes[n].if_tail = node_b;
 				break;
@@ -652,12 +667,12 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						printf("JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
 						for (n = 0; n < nodes[node2].prev_size; n++) {
 							if (nodes[node2].prev_node[n] == node1) {
-								nodes[node2].prev_type[n] = 2;
+								nodes[node2].prev_type[n] = 2; /* Link is a loop edge type */
 							}
 						}
 						for (n = 0; n < nodes[node1].next_size; n++) {
 							if (nodes[node1].next_node[n] == node2) {
-								nodes[node1].next_type[n] = 2;
+								nodes[node1].next_type[n] = 2; /* Link is a loop edge type */
 							}
 						}
 					} else {
