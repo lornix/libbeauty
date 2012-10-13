@@ -106,6 +106,11 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			memory_used[offset] = inst_log;
 		} else {
 			int inst_this = memory_used[offset];
+			if (inst_this < 0) {
+				/* FIXME: What to do in this case? */
+				/* problem caused by rep movs instruction */
+				printf("process_block:line110:FIXME:Not a valid instuction %d at eip offset 0x%"PRIx64"\n", inst_this, offset);
+			}
 			/* If value == maxint, then it is the destination of a jump */
 			/* But I need to separate the instruction flows */
 			/* A jump/branch inst should create a new instruction tree */
@@ -138,6 +143,9 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				}
 				if (!found) {
 					inst_exe_prev->next_size++;
+					if (inst_exe_prev->next_size > 2) {
+						printf("process_block: next_size = %d, inst = 0x%x\n", inst_exe_prev->next_size, inst_this);
+					}
 					inst_exe_prev->next = realloc(inst_exe_prev->next, sizeof(inst_exe_prev->next) * inst_exe_prev->next_size);
 					inst_exe_prev->next[inst_exe_prev->next_size - 1] = inst_this;
 				}
@@ -174,7 +182,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 		}
 		for (n = 0; n < dis_instructions.instruction_number; n++) {
 			instruction = &dis_instructions.instruction[n];
-			printf( "Printing inst1111:%d, %d, %"PRId64"\n",instruction_offset, n, inst_log);
+			printf( "Printing inst1111:0x%x, 0x%x, 0x%"PRIx64"\n",instruction_offset, n, inst_log);
 			err = print_inst(self, instruction, instruction_offset + n + 1, NULL);
 			if (err) {
 				printf("print_inst failed\n");
@@ -196,6 +204,9 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			}
 			inst_exe->prev[inst_exe->prev_size - 1] = inst_log_prev;
 			inst_exe_prev->next_size++;
+			if (inst_exe_prev->next_size > 2) {
+				printf("process_block:line203: next_size = %d, inst = 0x%"PRIx64"\n", inst_exe_prev->next_size, inst_log);
+			}
 			if (inst_exe_prev->next_size > 1) {
 				printf("JCD8b: next_size = 0x%x\n", inst_exe_prev->next_size);
 			}

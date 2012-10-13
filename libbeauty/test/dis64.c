@@ -188,11 +188,18 @@ int tidy_inst_log(struct self_s *self)
 	for (n = 1; n <= inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		if (inst_log1->next_size > 1) {
+			if (inst_log1->next_size > 2) {
+				printf("next: over:before inst 0x%x\n", n);
+				for (m = 0; m < inst_log1->next_size; m++) {
+					printf("next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
+				}
+			}
 			for (m = 0; m < (inst_log1->next_size - 1); m++) {
 				for (l = m + 1; l < inst_log1->next_size; l++) {
 					printf("next: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
 					if (inst_log1->next[m] == inst_log1->next[l]) {
 						inst_log1->next[m] = 0;
+						printf("next: post: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
 					}
 				}
 			}
@@ -203,6 +210,12 @@ int tidy_inst_log(struct self_s *self)
 					}
 					inst_log1->next_size--;
 					inst_log1->next = realloc(inst_log1->next, inst_log1->next_size * sizeof(int));
+				}
+			}
+			if (inst_log1->next_size > 2) {
+				printf("next: over:after inst 0x%x\n", n);
+				for (m = 0; m < inst_log1->next_size; m++) {
+					printf("next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
 				}
 			}
 		}
@@ -811,6 +824,10 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].next_node = calloc(inst_log1->next_size, sizeof(int));
 			nodes[n].next_type = calloc(inst_log1->next_size, sizeof(int));
 			nodes[n].next_size = inst_log1->next_size;
+			if (nodes[n].next_size > 2) {
+				printf("build_cfg next_size too big for node 0x%x, inst 0x%x\n", n, nodes[n].inst_end);
+				exit(1);
+			}
 
 			for (m = 0; m < inst_log1->next_size; m++) {
 				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->next[m]);
@@ -844,6 +861,11 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		}
 		for (m = 0; m < nodes[n].next_size; m++) {
 			printf("nodes[0x%x].next_node[%d] = 0x%x, next_type=%d\n", n, m, nodes[n].next_node[m], nodes[n].next_type[m]);
+		}
+		if (nodes[n].next_size > 2) {
+			/* FIXME: only an error so long as we are not yet supporting jump indexes. */
+			printf("Oversized node\n");
+			exit(1);
 		}
 		printf("nodes[0x%x].path_size = 0x%x\n", n, nodes[n].path_size);
 		printf("nodes[0x%x].looped_size = 0x%x\n", n, nodes[n].looped_path_size);

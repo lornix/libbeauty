@@ -2081,8 +2081,8 @@ int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructi
 			instruction->dstA.store = STORE_DIRECT;
 			instruction->dstA.indirect = IND_DIRECT;
 			instruction->dstA.indirect_size = 8;
-			/* Should be to next amd64 instruction. FIXME: Is this next instruction or this one? */
-			instruction->dstA.index = 1;
+			/* Should be to next amd64 instruction. */
+			instruction->dstA.index = 0;  /* 0 is next instruction */
 			instruction->dstA.relocated = 0;
 			instruction->dstA.value_size = 4;
 			instruction->srcA.store = STORE_DIRECT;
@@ -2168,7 +2168,7 @@ int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructi
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
-			/* JMP back to beginning of this amd64 instruction */
+			/* JMP back to beginning of this amd64 instruction and also the rep byte */
 			instruction->srcA.index = -(dis_instructions->bytes_used); 
 			instruction->srcA.value_size = 4;
 			instruction->dstA.store = STORE_REG;
@@ -2928,6 +2928,11 @@ int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructi
 		}
 		break;
 	}
-
+	if (repz != repz_handled) {
+		result = 0;
+	}
+	if (repnz != repnz_handled) {
+		result = 0;
+	}
 	return result;
 }
