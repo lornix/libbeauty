@@ -381,8 +381,9 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 	int m;
 	int found;
 	struct loop_s *loop;
+	int tmp;
 
-
+	/* Build loops table */
 	for (n = 0; n < *paths_size; n++) {
 		if (paths[n].loop_head != 0) {
 			found = -1;
@@ -414,6 +415,35 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 			merge_path_into_loop(paths, loop, n);
 		}
 	}
+	/* Add nesting information to loops */
+	for (n = 0; n < *paths_size; n++) {
+		if (paths[n].loop_head != 0) {
+			found = -1;
+			for(m = 0; m < *loop_size; m++) {
+				if (loops[m].head == paths[n].loop_head) {
+					found = m;
+					printf("flow_loops2 found = %d\n", found);
+					break;
+				}
+			}
+			if (found == -1) {
+				printf("loop nesting failed\n");
+				return 1;
+			}
+			tmp = paths[n].path_prev;
+			if (paths[tmp].loop_head != 0) {
+				printf("flow_loops2 path %d nesting %d in %d:%d\n", n, m, tmp, paths[tmp].loop_head);
+				loops[m].nest = paths[tmp].loop_head;
+			}
+		}
+	}
+#if 0
+	for(m = 0; m < *loop_size; m++) {
+		if (loops[m].size) {
+			printf("flow_loops2 loop:%d head=%d nest=%d size=%d\n", m, loops[m].head, loops[m].nest, loops[m].size);
+		}
+	}
+#endif
 	return 0;
 }
 
@@ -424,7 +454,7 @@ int print_control_flow_loops(struct self_s *self, struct loop_s *loops, int *loo
 	printf("Printing loops size = %d\n", *loops_size);
 	for (m = 0; m < *loops_size; m++) {
 		if (loops[m].size > 0) {
-			printf("Loop %d: loop_head=%d\n", m, loops[m].head);
+			printf("Loop %d: loop_head=%d, nest=%d\n", m, loops[m].head, loops[m].nest);
 			for (n = 0; n < loops[m].size; n++) {
 				printf("Loop %d=0x%x\n", m, loops[m].list[n]);
 			}
@@ -3550,6 +3580,7 @@ int main(int argc, char *argv[])
 			for (n = 0; n < loops_size; n++) {
 				loops[n].size = 0;
 				loops[n].head = 0;
+				loops[n].nest = 0;
 			}
 
 			tmp = build_control_flow_paths(self, nodes, &nodes_size,
@@ -3563,7 +3594,8 @@ int main(int argc, char *argv[])
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
-			tmp = analyse_control_flow_loop_exits(self, nodes, &nodes_size, loops, &loops_size);
+			/* loop_exits do ready yet. */
+			//tmp = analyse_control_flow_loop_exits(self, nodes, &nodes_size, loops, &loops_size);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
@@ -3592,6 +3624,7 @@ int main(int argc, char *argv[])
 			for (n = 0; n < loops_used; n++) {
 				external_entry_points[l].loops[n].head = loops[n].head;
 				external_entry_points[l].loops[n].size = loops[n].size;
+				external_entry_points[l].loops[n].nest = loops[n].nest;
 				external_entry_points[l].loops[n].list = calloc(loops[n].size, sizeof(int));
 				for (m = 0; m  < loops[n].size; m++) {
 					external_entry_points[l].loops[n].list[m] = loops[n].list[m];

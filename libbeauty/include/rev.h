@@ -99,6 +99,7 @@ struct process_state_s {
 
 struct loop_s {
 	int head; /* The associated loop_head node */
+	int nest;
 	int size;
 	int *list;
 };
