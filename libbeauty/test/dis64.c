@@ -447,6 +447,31 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 	return 0;
 }
 
+int build_control_flow_loops_node_members(struct self_s *self,
+	struct control_flow_node_s *nodes, int *nodes_size,
+	struct loop_s *loops, int *loops_size)
+{
+	int n, m;
+	int node;
+	int head;
+	int size;
+
+	for (m = 0; m < *loops_size; m++) {
+		if (loops[m].size > 0) {
+			for (n = 0; n < loops[m].size; n++) {
+				node = loops[m].list[n];
+				head = loops[m].head;
+				size = nodes[node].member_of_loop_size;
+				size++;
+				nodes[node].member_of_loop = realloc(nodes[node].member_of_loop, size * sizeof(int));
+				nodes[node].member_of_loop[size - 1] = head;
+				nodes[node].member_of_loop_size = size;
+			}
+		}
+	}
+	return 0;
+}
+
 int print_control_flow_loops(struct self_s *self, struct loop_s *loops, int *loops_size)
 {
 	int n, m;
@@ -896,6 +921,9 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			/* FIXME: only an error so long as we are not yet supporting jump indexes. */
 			printf("Oversized node\n");
 			exit(1);
+		}
+		for (m = 0; m < nodes[n].member_of_loop_size; m++) {
+			printf("nodes[0x%x].member_of_loop[%d] = 0x%x\n", n, m, nodes[n].member_of_loop[m]);
 		}
 		printf("nodes[0x%x].path_size = 0x%x\n", n, nodes[n].path_size);
 		printf("nodes[0x%x].looped_size = 0x%x\n", n, nodes[n].looped_path_size);
@@ -3595,6 +3623,7 @@ int main(int argc, char *argv[])
 //			exit(1);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
+			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
