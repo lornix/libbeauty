@@ -197,6 +197,8 @@ struct control_flow_node_s {
 	int *path; /* The list of paths that touch this node */
 	int looped_path_size; /* Number of path entries in the list */
 	int *looped_path; /* The list of paths that touch this node */
+	int member_of_loop_size; /* Number of member_of_loop entries in the list */
+	int *member_of_loop; /* The list of member_of_loop entries. One entry for each loop this node belongs to */
 	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
 };
 

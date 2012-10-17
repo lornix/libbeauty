@@ -3119,6 +3119,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[entry].type = AST_TYPE_EMPTY;
 			}
 			break;
+		case AST_TYPE_LOOP:
+			printf("AST_TYPE_LOOP type = 0x%x, node = 0x%x\n", type, node);
+			ast_entry[entry].type = AST_TYPE_EMPTY;
+			break;
 		default:
 			printf("UNHANDLED type = 0x%x\n", type);
 			ast_entry[entry].type = AST_TYPE_EMPTY;
