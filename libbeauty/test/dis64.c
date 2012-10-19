@@ -3344,6 +3344,14 @@ int main(int argc, char *argv[])
 	struct loop_s *loops;
 	int loops_size = 2000;
 
+	if (argc != 2) {
+		printf("Syntax error\n");
+		printf("Usage: dis64 filename\n");
+		printf("Where \"filename\" is the input .o file\n");
+		exit(1);
+	}
+	file = argv[1];
+
 	expression = malloc(1000); /* Buffer for if expressions */
 
 	handle = bf_test_open_file(file);
