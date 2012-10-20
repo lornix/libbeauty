@@ -619,7 +619,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				break;
 			}
 			for (m = 0; m < nodes[node_b].next_size; m++) {
-				if (nodes[node_b].next_type[m] == 2) {
+				if (nodes[node_b].next_type[m] == NEXT_TYPE_LOOP_EDGE) {
 					tmp = nodes[node_b].next_node[m];
 					break;
 				}
@@ -735,12 +735,12 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						printf("JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
 						for (n = 0; n < nodes[node2].prev_size; n++) {
 							if (nodes[node2].prev_node[n] == node1) {
-								nodes[node2].prev_type[n] = 2; /* Link is a loop edge type */
+								nodes[node2].prev_type[n] = NEXT_TYPE_LOOP_EDGE; /* Link is a loop edge type */
 							}
 						}
 						for (n = 0; n < nodes[node1].next_size; n++) {
 							if (nodes[node1].next_node[n] == node2) {
-								nodes[node1].next_type[n] = 2; /* Link is a loop edge type */
+								nodes[node1].next_type[n] = NEXT_TYPE_LOOP_EDGE; /* Link is a loop edge type */
 							}
 						}
 					} else {
@@ -751,12 +751,12 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						nodes[node].loop_head = 1;
 						for (n = 0; n < nodes[node].prev_size; n++) {
 							if (nodes[node].prev_node[n] == node) {
-								nodes[node].prev_type[n] = 2;
+								nodes[node].prev_type[n] = NEXT_TYPE_LOOP_EDGE;
 							}
 						}
 						for (n = 0; n < nodes[node].next_size; n++) {
 							if (nodes[node].next_node[n] == node) {
-								nodes[node].next_type[n] = 2;
+								nodes[node].next_type[n] = NEXT_TYPE_LOOP_EDGE;
 							}
 						}
 						if (path) {
@@ -764,12 +764,12 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 							int node2 = node;
 							for (n = 0; n < nodes[node2].prev_size; n++) {
 								if (nodes[node2].prev_node[n] == node1) {
-									nodes[node2].prev_type[n] = 2;
+									nodes[node2].prev_type[n] = NEXT_TYPE_LOOP_EDGE;
 								}
 							}
 							for (n = 0; n < nodes[node1].next_size; n++) {
 								if (nodes[node1].next_node[n] == node2) {
-									nodes[node1].next_type[n] = 2;
+									nodes[node1].next_type[n] = NEXT_TYPE_LOOP_EDGE;
 								}
 							}
 						}
@@ -965,7 +965,7 @@ int analyse_control_flow_loop_exits(struct self_s *self, struct control_flow_nod
 						}
 					}
 					if (!found) {
-						node->next_type[n] = 3;  /* exit type */
+						node->next_type[n] = NEXT_TYPE_LOOP_EXIT;  /* exit type */
 					}
 				}
 			}
@@ -3276,7 +3276,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		}
 		tmp = fprintf(fd, "\"]\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
-			if (2 == nodes[node].next_type[n]) {
+			if (NEXT_TYPE_LOOP_EDGE == nodes[node].next_type[n]) {
 				color = "gold";
 			} else if (0 == n) {
 				if (nodes[node].next_size > 1) {

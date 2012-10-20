@@ -179,6 +179,28 @@ struct ast_loop_s {
 	struct ast_type_index_s body; /* The rest of the loop body. */
 };
 
+/* 1: A possitively identified normal link */
+#define NEXT_TYPE_NORMAL 1
+/* 2: The link is a loop edge */
+#define NEXT_TYPE_LOOP_EDGE 2
+/* 3: The link is exiting a loop. Don't know yet if it is a goto or a break */
+/*	Not sure yet the best way to identify a "break".
+ *	Need to look at post dominance/if-tail for all loop exit points from a particular loop
+ */
+#define NEXT_TYPE_LOOP_EXIT 3
+/* 4: The link is entering a loop. Needed just to complete the link type problem space */
+#define NEXT_TYPE_LOOP_ENTRY 4
+/* FIXME: The next_type will probably change from a int to a struct at some point,
+ *	as we need to add more properties to the links between nodes. 
+ *	E.g. the concept of link length. If you were looking at the .dot graph,
+ *	would the link be a long line or a short one. This could have some baring
+ *      in whether the link should be turned into a goto.
+ *	It could also hold information regarding link elasticity.
+ *	Link elasticity is the property whereby if you look at the .dot graph, there is room to increase
+ *	the link lenght to the previous node, at the expense of decreasing the length of the link to
+ *	the next node.
+ */
+
 struct control_flow_node_s {
 	int entry_point; /* Can use this to find the name on the node. */
 	int inst_start;
@@ -188,7 +210,7 @@ struct control_flow_node_s {
 	int *prev_type; /* Is previous a loop edge? 1 = Normal, 2 =  loop_edge */
 	int next_size;
 	int *next_node;
-	int *next_type; /* Is next a loop exit? 1 = Normal, 2 = loop_edge, 3 = loop_exit */
+	int *next_type; /* Is next a loop exit? 1 = Normal, 2 = loop_edge, 3 = loop_exit, 4 = loop_entry */
 	int dominator; /* Node that dominates this node */
 	int type; /* 0 =  Normal, 1 =  Part of a loop */
 	int loop_head; /* 0 = Normal, 1 = Loop head */
