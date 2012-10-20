@@ -938,35 +938,46 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	return 0;
 }
 
-/* For each node in each loop list, check each node->next[] to see whether it is exiting the loop or not. */
-int analyse_control_flow_loop_exits(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct loop_s *loops, int *loop_size)
+/* Try to identify the node link types for each node */
+int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
 	int l, m, n, n2;
 	struct control_flow_node_s *node;
+	struct control_flow_node_s *next_node;
 	int head;
 	int next;
 	int type;
 	int found;
 
-	for (l = 0; l < *loop_size; l++) {
-		for (m = 0; m < loops[l].size; m++) {
-			node = &nodes[loops[l].list[m]];
-			head = loops[l].head;
-			for (n = 0; n < node->next_size; n++) {
-				next = node->next_node[n];
-				type = node->next_type[n];
-				if (type == 0) {
-					/* Only modify when the type is normal == 0 */
-					found = 0;
-					for (n2 = 0; n2 < loops[l].size; n2++) {
-						if (next == loops[l].list[n2]) {
-							found = 1;
-							break;
-						}
-					}
-					if (!found) {
-						node->next_type[n] = NEXT_TYPE_LOOP_EXIT;  /* exit type */
-					}
+	for (n = 1; n < *node_size; n++) {
+		node = &nodes[n];
+		for (l = 0; l < node->next_size; l++) {
+			type = node->next_type[l];
+			if (type != 0) {
+				/* Only modify when the type is undefined == 0 */
+				continue;
+			}
+			type = 0;
+			next = node->next_node[l];
+			next_node = &nodes[next];
+			if (next_node->loop_head != 0) {
+				/* Add check for node member_of_loop subset, else NEXT_TYPE_LOOP_EXIT */
+				type = NEXT_TYPE_LOOP_ENTRY;
+			}
+			/* Loop entry: If the next node is a loop_head */
+			/* Loop exit: If the next node is a member_of_loop subset of the existing node */
+			/* But special case if at a loop_head node or a node that is a member of
+			 * multiple loops. Need to identify a primary member_of_loop entry.
+			 * The primary member_of_loop entry is the one that equals loop_head.
+			 * Normal: If the next node is a member_of_loop identical to node */
+
+
+
+				//	node->next_type[n] = NEXT_TYPE_LOOP_EXIT;  /* exit type */
+			node->next_type[l] = type;
+			for (m = 0; m < next_node->prev_size; m++) {
+				if (next_node->prev_node[m] == n) {
+					next_node->prev_type[m] = type; /* Link is a loop edge type */
 				}
 			}
 		}
@@ -3636,7 +3647,7 @@ int main(int argc, char *argv[])
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
 			/* loop_exits do ready yet. */
-			//tmp = analyse_control_flow_loop_exits(self, nodes, &nodes_size, loops, &loops_size);
+			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
