@@ -973,19 +973,31 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 			next = node->link_next[l].node;
 			next_node = &nodes[next];
 			if (next_node->loop_head != 0) {
+				/* Loop entry: If the next node is a loop_head */
 				/* Add check for node member_of_loop subset, else NEXT_TYPE_LOOP_EXIT */
 				node->link_next[l].is_loop_entry = 1;
 			}
-			/* Loop entry: If the next node is a loop_head */
 			/* Loop exit: If the next node is a member_of_loop subset of the existing node */
 			/* But special case if at a loop_head node or a node that is a member of
 			 * multiple loops. Need to identify a primary member_of_loop entry.
 			 * The primary member_of_loop entry is the one that equals loop_head.
 			 * Normal: If the next node is a member_of_loop identical to node */
-
-
-
-				//	node->next_type[n] = NEXT_TYPE_LOOP_EXIT;  /* exit type */
+			if (node->loop_head) {
+				if ((next_node->member_of_loop_size == 1) &&
+					(next_node->member_of_loop[0] == n)) {
+					node->link_next[l].is_normal = 1;
+				} else {
+					node->link_next[l].is_loop_exit = 1;
+				}
+			} else {
+				tmp = is_subset(next_node->member_of_loop_size, next_node->member_of_loop,
+					 node->member_of_loop_size, node->member_of_loop);
+				if (tmp == 2) { /* subset */
+					node->link_next[l].is_loop_exit = 1;
+				} else if (tmp == 1) { /* exactly the same */
+					node->link_next[l].is_normal = 1;
+				}
+			}
 		}
 	}
 	return 0;
