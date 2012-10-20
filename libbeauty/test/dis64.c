@@ -265,7 +265,7 @@ int node_mid_start_add(struct control_flow_node_s *node, struct node_mid_start_s
 
 	for (n = 0; n < 1000; n++) {
 		if (node_mid_start[n].node == 0) {
-			node_mid_start[n].node = node->next_node[index];
+			node_mid_start[n].node = node->link_next[index].node;
 			node_mid_start[n].path_prev = path;
 			node_mid_start[n].path_prev_index = step;
 			index++;
@@ -619,8 +619,8 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				break;
 			}
 			for (m = 0; m < nodes[node_b].next_size; m++) {
-				if (nodes[node_b].next_type[m] == NEXT_TYPE_LOOP_EDGE) {
-					tmp = nodes[node_b].next_node[m];
+				if (nodes[node_b].link_next[m].is_loop_edge == 1) {
+					tmp = nodes[node_b].link_next[m].node;
 					break;
 				}
 			}
@@ -733,14 +733,9 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						int node1 = paths[path].path[step - 2];
 						int node2 = paths[path].path[step - 1];
 						printf("JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
-						for (n = 0; n < nodes[node2].prev_size; n++) {
-							if (nodes[node2].prev_node[n] == node1) {
-								nodes[node2].prev_type[n] = NEXT_TYPE_LOOP_EDGE; /* Link is a loop edge type */
-							}
-						}
 						for (n = 0; n < nodes[node1].next_size; n++) {
-							if (nodes[node1].next_node[n] == node2) {
-								nodes[node1].next_type[n] = NEXT_TYPE_LOOP_EDGE; /* Link is a loop edge type */
+							if (nodes[node1].link_next[n].node == node2) {
+								nodes[node1].link_next[n].is_loop_edge = 1;
 							}
 						}
 					} else {
@@ -749,41 +744,32 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						paths[path].loop_head = node;
 						nodes[node].type = 1;
 						nodes[node].loop_head = 1;
-						for (n = 0; n < nodes[node].prev_size; n++) {
-							if (nodes[node].prev_node[n] == node) {
-								nodes[node].prev_type[n] = NEXT_TYPE_LOOP_EDGE;
-							}
-						}
 						for (n = 0; n < nodes[node].next_size; n++) {
-							if (nodes[node].next_node[n] == node) {
-								nodes[node].next_type[n] = NEXT_TYPE_LOOP_EDGE;
+							if (nodes[node].link_next[n].node == node) {
+								nodes[node].link_next[n].is_loop_edge = 1;
 							}
 						}
 						if (path) {
 							int node1 = paths[paths[path].path_prev].path[paths[path].path_prev_index];
 							int node2 = node;
-							for (n = 0; n < nodes[node2].prev_size; n++) {
-								if (nodes[node2].prev_node[n] == node1) {
-									nodes[node2].prev_type[n] = NEXT_TYPE_LOOP_EDGE;
-								}
-							}
+
 							for (n = 0; n < nodes[node1].next_size; n++) {
-								if (nodes[node1].next_node[n] == node2) {
-									nodes[node1].next_type[n] = NEXT_TYPE_LOOP_EDGE;
+								if (nodes[node1].link_next[n].node == node2) {
+									nodes[node1].link_next[n].is_loop_edge = 1;
 								}
 							}
 						}
 						break;
 					}
 				} else if (nodes[node].next_size == 1) {
-					printf("JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].next_node[0]);
-					node = nodes[node].next_node[0];
+					printf("JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
 				} else if (nodes[node].next_size > 1) {
 					tmp = node_mid_start_add(&nodes[node], node_mid_start, path, step - 1);
-					printf("JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].next_node[0]);
-					node = nodes[node].next_node[0];
+					printf("JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
 				}
@@ -829,6 +815,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int inst_end;
 	int n;
 	int m;
+	int l;
 	int tmp;
 
 	printf("build_control_flow_nodes:\n");	
@@ -866,18 +853,22 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		inst_log1 =  &inst_log_entry[nodes[n].inst_start];
 		if (inst_log1->prev_size > 0) {
 			nodes[n].prev_node = calloc(inst_log1->prev_size, sizeof(int));
-			nodes[n].prev_type = calloc(inst_log1->prev_size, sizeof(int));
+			nodes[n].prev_link_index = calloc(inst_log1->prev_size, sizeof(int));
 			nodes[n].prev_size = inst_log1->prev_size;
 
 			for (m = 0; m < inst_log1->prev_size; m++) {
 				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->prev[m]);
 				nodes[n].prev_node[m] = tmp;
+				for (l = 0; l < nodes[tmp].next_size; l++) {
+					if (nodes[tmp].link_next[l].node == n) {
+						nodes[n].prev_link_index[m] = l;
+					}
+				}
 			}
 		}
 		inst_log1 =  &inst_log_entry[nodes[n].inst_end];
 		if (inst_log1->next_size > 0) {
-			nodes[n].next_node = calloc(inst_log1->next_size, sizeof(int));
-			nodes[n].next_type = calloc(inst_log1->next_size, sizeof(int));
+			nodes[n].link_next = calloc(inst_log1->next_size, sizeof(struct node_link_s));
 			nodes[n].next_size = inst_log1->next_size;
 			if (nodes[n].next_size > 2) {
 				printf("build_cfg next_size too big for node 0x%x, inst 0x%x\n", n, nodes[n].inst_end);
@@ -886,7 +877,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 			for (m = 0; m < inst_log1->next_size; m++) {
 				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->next[m]);
-				nodes[n].next_node[m] = tmp;
+				nodes[n].link_next[m].node = tmp;
 			}
 		}
 	}
@@ -899,6 +890,8 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 {
 	int n;
 	int m;
+	int prev_node;
+	int prev_link_index;
 
 	printf("print_control_flow_nodes:\n");	
 	for (n = 1; n <= *node_size; n++) {
@@ -912,10 +905,28 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].inst_end,
 			nodes[n].entry_point);
 		for (m = 0; m < nodes[n].prev_size; m++) {
-			printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_type=%d\n", n, m, nodes[n].prev_node[m], nodes[n].prev_type[m]);
+			prev_node = nodes[n].prev_node[m];
+			prev_link_index = nodes[n].prev_link_index[m];
+			/* make a special case for when prev_node == 0 */
+			if (prev_node) {
+				printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x norm=%d edge=%d exit=%d entry=%d\n",
+					n, m, prev_node, prev_link_index,
+					nodes[prev_node].link_next[prev_link_index].is_normal,
+					nodes[prev_node].link_next[prev_link_index].is_loop_edge,
+					nodes[prev_node].link_next[prev_link_index].is_loop_exit,
+					nodes[prev_node].link_next[prev_link_index].is_loop_entry);
+			} else {
+				printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x\n",
+					n, m, prev_node, prev_link_index);
+			}
 		}
 		for (m = 0; m < nodes[n].next_size; m++) {
-			printf("nodes[0x%x].next_node[%d] = 0x%x, next_type=%d\n", n, m, nodes[n].next_node[m], nodes[n].next_type[m]);
+			printf("nodes[0x%x].link_next[%d].node = 0x%x, next norm=%d edge=%d exit=%d entry=%d\n",
+				n, m, nodes[n].link_next[m].node,
+				nodes[n].link_next[m].is_normal,
+				nodes[n].link_next[m].is_loop_edge,
+				nodes[n].link_next[m].is_loop_exit,
+				nodes[n].link_next[m].is_loop_entry);
 		}
 		if (nodes[n].next_size > 2) {
 			/* FIXME: only an error so long as we are not yet supporting jump indexes. */
@@ -948,21 +959,22 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	int next;
 	int type;
 	int found;
+	int tmp;
 
 	for (n = 1; n < *node_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
-			type = node->next_type[l];
-			if (type != 0) {
+			tmp = node->link_next[l].is_loop_edge;
+			if (tmp != 0) {
 				/* Only modify when the type is undefined == 0 */
 				continue;
 			}
 			type = 0;
-			next = node->next_node[l];
+			next = node->link_next[l].node;
 			next_node = &nodes[next];
 			if (next_node->loop_head != 0) {
 				/* Add check for node member_of_loop subset, else NEXT_TYPE_LOOP_EXIT */
-				type = NEXT_TYPE_LOOP_ENTRY;
+				node->link_next[l].is_loop_entry = 1;
 			}
 			/* Loop entry: If the next node is a loop_head */
 			/* Loop exit: If the next node is a member_of_loop subset of the existing node */
@@ -974,12 +986,6 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 
 
 				//	node->next_type[n] = NEXT_TYPE_LOOP_EXIT;  /* exit type */
-			node->next_type[l] = type;
-			for (m = 0; m < next_node->prev_size; m++) {
-				if (next_node->prev_node[m] == n) {
-					next_node->prev_type[m] = type; /* Link is a loop edge type */
-				}
-			}
 		}
 	}
 	return 0;
@@ -3092,7 +3098,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_if[if_index].expression_node.type = AST_TYPE_NODE;
 			ast_if[if_index].expression_node.index = node;
 
-			if (nodes[node].next_node[0] == nodes[node].if_tail) {
+			if (nodes[node].link_next[0].node == nodes[node].if_tail) {
 				ast_if[if_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_then container 0x%x\n", container_index);
@@ -3102,12 +3108,12 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
 				ast_entry[tmp_entry].index = container_index;
 				ast_entry[tmp_entry].sub_index = 0;
-				ast_entry[tmp_entry].node = nodes[node].next_node[0];
+				ast_entry[tmp_entry].node = nodes[node].link_next[0].node;
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 			}
 
-			if (nodes[node].next_node[1] == nodes[node].if_tail) {
+			if (nodes[node].link_next[1].node == nodes[node].if_tail) {
 				ast_if[if_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_else container 0x%x\n", container_index);
@@ -3117,7 +3123,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
 				ast_entry[tmp_entry].index = container_index;
 				ast_entry[tmp_entry].sub_index = 0;
-				ast_entry[tmp_entry].node = nodes[node].next_node[1];
+				ast_entry[tmp_entry].node = nodes[node].link_next[1].node;
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 			}
@@ -3150,7 +3156,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index].object[length].index = node;
 			if (nodes[node].next_size > 0) {
 				ast_entry[entry].sub_index = ast_container[index].length;
-				ast_entry[entry].node = nodes[node].next_node[0];
+				ast_entry[entry].node = nodes[node].link_next[0].node;
 				if (ast_entry[entry].node == ast_entry[entry].node_end) {
 					ast_entry[entry].type = AST_TYPE_EMPTY;
 				}
@@ -3287,7 +3293,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		}
 		tmp = fprintf(fd, "\"]\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
-			if (NEXT_TYPE_LOOP_EDGE == nodes[node].next_type[n]) {
+			if (1 == nodes[node].link_next[n].is_loop_edge) {
 				color = "gold";
 			} else if (0 == n) {
 				if (nodes[node].next_size > 1) {
@@ -3301,7 +3307,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 				color = "blue";
 			}
 			tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
-				node, nodes[node].next_node[n], color);
+				node, nodes[node].link_next[n].node, color);
 		}
 	}
 	tmp = fprintf(fd, "}\n");

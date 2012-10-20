@@ -41,7 +41,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	int ret = 1; /* Default to failed */
 	int tmp;
 	int tmp_state = 0;
-	int n, m, l;
+	int n, l;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	tmp = fprintf(fd, "// 0x%04x:%s%s",
 		instruction_number,
@@ -123,7 +123,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 			for (n = 0; n < external_entry_points[l].params_size; n++) {
 				struct label_s *label;
 				label = &labels[external_entry_points[l].params[n]];
-				printf("reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[m], label->value);
+				printf("reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[n], label->value);
 				if ((label->scope == 2) &&
 					(label->type == 1)) {
 					if (tmp_state > 0) {
