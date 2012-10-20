@@ -613,21 +613,19 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int m;
 
 	for(n = 1; n <= *nodes_size; n++) {
+		if (2 != nodes[n].next_size) {
+			continue;
+		}
+		if ((nodes[n].link_next[0].is_normal != 1) ||
+			(nodes[n].link_next[1].is_normal != 1)) {
+			continue;
+		}
 		node_b = n;
-		while ((node_b != 0) && (nodes[n].next_size > 1)) {
+		while ((node_b != 0) ) {
 			if (nodes[node_b].next_size == 0) {
 				break;
 			}
-			for (m = 0; m < nodes[node_b].next_size; m++) {
-				if (nodes[node_b].link_next[m].is_loop_edge == 1) {
-					tmp = nodes[node_b].link_next[m].node;
-					break;
-				}
-			}
-			/* if a non type 2 "loop" link is not found, exit */
-			if (m == nodes[node_b].next_size) {
-				break;
-			}
+			tmp = nodes[node_b].link_next[0].node;
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
@@ -3663,9 +3661,8 @@ int main(int argc, char *argv[])
 			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
 			tmp = build_node_dominance(self, nodes, &nodes_size);
-			tmp = build_node_if_tail(self, nodes, &nodes_size);
-			/* loop_exits do ready yet. */
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
+			tmp = build_node_if_tail(self, nodes, &nodes_size);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
