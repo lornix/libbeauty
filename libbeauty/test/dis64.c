@@ -630,7 +630,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			if (0 == node_b) {
 				break;
 			}
-			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
+			if (nodes[n].path_size >= 2) {
+				tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
+			} else {
+				tmp = is_subset(nodes[n].looped_path_size, nodes[n].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
+			}
 			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			count++;
 			if (count > 1000) {
