@@ -893,7 +893,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int prev_node;
 	int prev_link_index;
 
-	printf("print_control_flow_nodes:\n");	
+	printf("print_control_flow_nodes: size = %d\n", *node_size);	
 	for (n = 1; n <= *node_size; n++) {
 		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x\n",
 			n,
@@ -961,7 +961,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	int found;
 	int tmp;
 
-	for (n = 1; n < *node_size; n++) {
+	for (n = 1; n <= *node_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			tmp = node->link_next[l].is_loop_edge;
