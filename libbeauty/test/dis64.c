@@ -643,6 +643,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 			if (tmp) {
 				nodes[n].if_tail = node_b;
+				nodes[n].type = 2;
 				break;
 			}
 		}

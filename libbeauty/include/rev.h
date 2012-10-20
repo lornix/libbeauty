@@ -208,7 +208,7 @@ struct control_flow_node_s {
 	int next_size;
 	struct node_link_s *link_next;
 	int dominator; /* Node that dominates this node */
-	int type; /* 0 =  Normal, 1 =  Part of a loop */
+	int type; /* 0 =  Normal, 1 =  Part of a loop, 2 = normal if statement */
 	int loop_head; /* 0 = Normal, 1 = Loop head */
 	int if_tail; /* 0 = no tail, > 0 points to the tail of the if...then...else */
 	int path_size; /* Number of path entries in the list */
