@@ -611,29 +611,75 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int tmp;
 	int count = 0;
 	int m;
+	int method = 0;
+	int type = 0;
+	int preferred = 0;
+	int start_node;
 
 	for(n = 1; n <= *nodes_size; n++) {
+		type = 0;
+		start_node = n;
 		if (2 != nodes[n].next_size) {
 			continue;
 		}
-		if ((nodes[n].link_next[0].is_normal != 1) ||
-			(nodes[n].link_next[1].is_normal != 1)) {
+		if ((nodes[n].link_next[0].is_normal == 1) &&
+			(nodes[n].link_next[1].is_normal == 1)) {
+			if (nodes[n].path_size >= 2) {
+				method = 1;
+				type = 2;
+				preferred = 0;
+			} else {
+				method = 0;
+				type = 2;
+				preferred = 0;
+			}
+		}
+		if (nodes[n].loop_head) {
+			if (nodes[n].link_next[0].is_loop_exit == 1) {
+				method = 1;
+				type = 1;
+				preferred = 0;
+			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
+				method = 1;
+				type = 1;
+				preferred = 1;
+			}
+		}
+		if (!nodes[n].loop_head) {
+			if (nodes[n].link_next[0].is_loop_exit == 1) {
+				method = 1;
+				type = 3;
+				preferred = 0;
+				if (nodes[n].member_of_loop_size == 1) {
+					start_node = nodes[n].member_of_loop[0];
+				}
+			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
+				method = 1;
+				type = 3;
+				preferred = 1;
+				if (nodes[n].member_of_loop_size == 1) {
+					start_node = nodes[n].member_of_loop[0];
+				}
+			}
+		}
+		if (!type) {
 			continue;
 		}
+
 		node_b = n;
 		while ((node_b != 0) ) {
 			if (nodes[node_b].next_size == 0) {
 				break;
 			}
-			tmp = nodes[node_b].link_next[0].node;
+			tmp = nodes[node_b].link_next[preferred].node;
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
 			}
-			if (nodes[n].path_size >= 2) {
-				tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
+			if (method == 1) {
+				tmp = is_subset(nodes[start_node].path_size, nodes[start_node].path, nodes[node_b].path_size, nodes[node_b].path);
 			} else {
-				tmp = is_subset(nodes[n].looped_path_size, nodes[n].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
+				tmp = is_subset(nodes[start_node].looped_path_size, nodes[start_node].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
 			}
 			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			count++;
@@ -643,7 +689,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 			if (tmp) {
 				nodes[n].if_tail = node_b;
-				nodes[n].type = 2;
+				nodes[n].type = type;
 				break;
 			}
 		}
