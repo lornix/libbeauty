@@ -580,15 +580,31 @@ is_subset_exit:
 
 int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
-	int n;
+	int n,m;
 	int node_b = 1;
 	int tmp;
+	int type;
 
 	for(n = 1; n <= *nodes_size; n++) {
 		node_b = n;
 		while (node_b != 0) {
-			/* FIXME: avoid following loop edge ones */
-			tmp = nodes[node_b].prev_node[0];
+			tmp = 0;
+			/* avoid following loop edge ones */
+			for (m = 0; m < nodes[node_b].prev_size; m++) {
+				int prev_node;
+				int prev_link_index;
+
+				prev_node = nodes[node_b].prev_node[m];
+				if (!prev_node) {
+					continue;
+				}
+				prev_link_index = nodes[node_b].prev_link_index[m];
+				printf("dom: prev_node = 0x%x, prev_link_index = 0x%x\n", prev_node, prev_link_index);
+				if (!(nodes[prev_node].link_next[prev_link_index].is_loop_edge)) {
+					tmp = prev_node;
+					break;
+				}
+			}
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
@@ -3129,7 +3145,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		node = ast_entry[entry].node;
 		node_end = ast_entry[entry].node_end;
 		type = AST_TYPE_EMPTY;
-		if ((nodes[node].if_tail) && (nodes[node].type == 0)) {
+		if ((nodes[node].if_tail) && (nodes[node].type == 2)) {
 			type = AST_TYPE_IF;
 		} else if ((nodes[node].loop_head) && (nodes[node].type == 1)) {
 			type = AST_TYPE_LOOP;
