@@ -752,10 +752,8 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 	int ret;
 
 	instruction = &inst->instruction;
-	printf("Execute Instruction %d:%s%s\n",
-		instruction->opcode,
-		opcode_table[instruction->opcode],
-		dis_flags_table[instruction->flags]);
+
+	print_inst_short(self, instruction);
 
 	switch (instruction->opcode) {
 	case NOP:

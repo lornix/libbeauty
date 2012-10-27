@@ -93,6 +93,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 		dis_instructions.bytes_used = 0;
 		printf("eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
 			memory_reg[2].offset_value, offset);
+		/* the calling program must define this function. This is a callback. */
 		result = disassemble(handle, &dis_instructions, inst, offset);
 		printf("bytes used = %d\n", dis_instructions.bytes_used);
 		/* Memory not used yet */

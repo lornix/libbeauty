@@ -262,4 +262,9 @@ extern int process_block(struct self_s *self, struct process_state_s *process_st
 extern int output_label(struct label_s *label, FILE *fd);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
+extern int print_inst_short(struct self_s *self, struct instruction_s *instruction);
+extern int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
+
+#include <analyse.h>
+
 #endif /* __REV__ */

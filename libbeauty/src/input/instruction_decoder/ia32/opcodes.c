@@ -29,41 +29,6 @@
 #include <rev.h>
 #include "internal.h"
 
-char * opcode_table[] = {
-	"NOP",
-	"MOV",
-	"ADD",
-	"ADC",
-	"SUB",
-	"SBB",
-	"OR ",
-	"XOR",
-	"AND",
-	"NOT",
-	"TEST",
-	"NEG",
-	"CMP",
-	"MUL",
-	"IMUL",
-	"DIV",
-	"IDIV",
-	"JMP",
-	"CALL",
-	"IF ",
-	"ROL",  /* ROL,ROR etc. might be reduced to simpler equivalents. */
-	"ROR",
-	"RCL",
-	"RCR",
-	"SHL",
-	"SHR",
-	"SAL",
-	"SAR",
-	"IN ",
-	"OUT",
-	"RET",
-	"SEX"
-};
-
 /*
 #define REG_AX 0x04
 #define REG_CX 0x08
@@ -109,11 +74,6 @@ int shift2_table[] = {
 	NOP,
 	SAR
 };
-
-char *store_table[] = { "i", "r", "m", "s" };
-char *size_table[] = { "/0", "/8", "/16", "/24", "/32" };
-char *indirect_table[] = { "", "m", "s", "p" };
-
 
 /*
 ia32 registers will have their own memory space in the emulator.

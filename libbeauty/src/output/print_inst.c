@@ -35,6 +35,44 @@ int reg_params_order[] = {
         REG_09 /* R09 */
 };
 
+char * opcode_table[] = {
+	"NOP",   // 0x00
+	"MOV",   // 0x01
+	"ADD",   // 0x02
+	"ADC",   // 0x03
+	"SUB",   // 0x04
+	"SBB",   // 0x05
+	"OR ",   // 0x06
+	"XOR",   // 0x07
+	"AND",   // 0x08
+	"NOT",   // 0x09
+	"TEST",  // 0x0A
+	"NEG",   // 0x0B
+	"CMP",   // 0x0C
+	"MUL",   // 0x0D
+	"IMUL",  // 0x0E
+	"DIV",   // 0x0F
+	"IDIV",  // 0x10
+	"JMP",   // 0x11
+	"CALL",  // 0x12
+	"IF ",   // 0x13
+	"ROL",   // 0x14  /* ROL,ROR etc. might be reduced to simpler equivalents. */
+	"ROR",   // 0x15
+	"RCL",   // 0x16
+	"RCR",   // 0x17
+	"SHL",   // 0x18
+	"SHR",   // 0x19
+	"SAL",   // 0x1A
+	"SAR",   // 0x1B
+	"IN ",   // 0x1C
+	"OUT",   // 0x1D
+	"RET",   // 0x1E
+	"SEX"    // 0x1F   /* Signed extension */
+};
+
+char *store_table[] = { "i", "r", "m", "s" };
+char *size_table[] = { "/0", "/8", "/16", "/24", "/32", "/40", "/48", "/56", "/64" };
+char *indirect_table[] = { "", "m", "s", "p" };
 
 int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels)
 {
@@ -182,3 +220,9 @@ int print_inst(struct self_s *self, struct instruction_s *instruction, int instr
 	return ret;
 }
 
+int print_inst_short(struct self_s *self, struct instruction_s *instruction) {
+	printf("Execute Instruction %d:%s%s\n",
+		instruction->opcode,
+		opcode_table[instruction->opcode],
+		dis_flags_table[instruction->flags]);
+}

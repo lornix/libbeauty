@@ -98,10 +98,10 @@ struct dis_instructions_s {
 } ;
 
 /* Little endian */
-uint32_t getbyte(uint8_t *base_address, uint64_t offset);
+extern uint32_t getbyte(uint8_t *base_address, uint64_t offset);
 
-uint32_t getdword(uint8_t *base_address, uint64_t offset);
+extern uint32_t getdword(uint8_t *base_address, uint64_t offset);
 
-int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
+extern int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
 
 #endif /* __DIS__ */
