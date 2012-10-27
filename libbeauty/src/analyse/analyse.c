@@ -487,9 +487,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	for(n = 1; n <= *nodes_size; n++) {
 		type = 0;
 		start_node = n;
+		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
 			continue;
 		}
+		/* A normal IF statement */
 		if ((nodes[n].link_next[0].is_normal == 1) &&
 			(nodes[n].link_next[1].is_normal == 1)) {
 			if (nodes[n].path_size >= 2) {
@@ -502,6 +504,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				preferred = 0;
 			}
 		}
+		/* A loop_head statement */
 		if (nodes[n].loop_head) {
 			if (nodes[n].link_next[0].is_loop_exit == 1) {
 				method = 1;
@@ -513,6 +516,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				preferred = 1;
 			}
 		}
+		/* Control flow within a loop */
 		if (!nodes[n].loop_head) {
 			if (nodes[n].link_next[0].is_loop_exit == 1) {
 				method = 1;
@@ -536,10 +540,19 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 
 		node_b = n;
 		while ((node_b != 0) ) {
+			struct node_link_s *link;
 			if (nodes[node_b].next_size == 0) {
 				break;
 			}
-			tmp = nodes[node_b].link_next[preferred].node;
+			/* FIXME: preferred is only valid the first time round the loop */
+			link = &(nodes[node_b].link_next[preferred]);
+			/* Do not follow loop edges */
+			if (link->is_loop_edge) {
+				link = &(nodes[node_b].link_next[preferred ^ 1]);
+			}
+			printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
+				node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
+			tmp = link->node;
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
@@ -553,6 +566,8 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			count++;
 			if (count > 1000) {
 				printf("node_if_tail: failed, too many if_tails\n");
+				printf("Start node: 0x%x is_norm = %d, is_loop_edge = %d is_loop_exit = %d is_loop_entry = %d\n",
+					n, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 				exit(1);
 			}
 			if (tmp) {
