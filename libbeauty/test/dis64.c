@@ -62,25 +62,6 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 int local_counter = 0x100;
 struct self_s *self = NULL;
 
-char *condition_table[] = {
-	"OVERFLOW_0", /* Signed */
-	"NOT_OVERFLOW_1", /* Signed */
-	"BELOW_2",	/* Unsigned */
-	"NOT_BELOW_3",	/* Unsigned */
-	"EQUAL_4",	/* Signed or Unsigned */
-	"NOT_EQUAL_5",	/* Signed or Unsigned */
-	"BELOW_EQUAL_6",	/* Unsigned */
-	"ABOVE_7",	/* Unsigned */
-	"SIGNED_8",	/* Signed */
-	"NO_SIGNED_9",	/* Signed */
-	"PARITY_10",	/* Signed or Unsigned */
-	"NOT_PARITY_11",/* Signed or Unsigned */
-	"LESS_12",	/* Signed */
-	"GREATER_EQUAL_13", /* Signed */
-	"LESS_EQUAL_14",    /* Signed */
-	"GREATER_15"	/* Signed */
-};
-
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
