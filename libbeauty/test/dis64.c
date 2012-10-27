@@ -901,7 +901,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	FILE *fd;
 	int node;
 	int tmp;
+	int index;
 	int n;
+	int m;
 	int container;
 	const char *font = "graph.font";
 	const char *color;
@@ -919,13 +921,110 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
-	for (container = 0; container <= container_index; container++) {
+	for (n = 0; n < container_index; n++) {
 		name = "";
 		tmp = fprintf(fd, " \"Container:0x%08x\" ["
                                         "URL=\"Container:0x%08x\" color=\"%s\", label=\"Container:0x%08x:%s\\l",
-                                        container,
-					container, "lightgray", container, name);
+                                        n,
+					n, "lightgray", n, name);
 		tmp = fprintf(fd, "\"]\n");
+		for (m = 0; m < ast_container[n].length; m++) {
+			index = ast_container[n].object[m].index;
+			switch (ast_container[n].object[m].type) {
+			case AST_TYPE_NODE:
+				tmp = fprintf(fd, " \"Node:0x%08x\" ["
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
+                                        index,
+					index, "lightgray", index, name);
+				tmp = fprintf(fd, "\"]\n");
+				color = "red";
+				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+					n, index, color);
+				break;
+			case AST_TYPE_CONTAINER:
+				break;
+			case AST_TYPE_IF:
+				color = "blue";
+				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
+					n, index, color);
+				break;
+			case AST_TYPE_LOOP:
+				color = "blue";
+				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+					n, index, color);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	for (n = 0; n < if_index; n++) {
+		name = "";
+		tmp = fprintf(fd, " \"if_then_else:0x%08x\" ["
+                                        "URL=\"if_then_else:0x%08x\" color=\"%s\", label=\"if_then_else:0x%08x:%s\\l",
+                                        n,
+					n, "lightgray", n, name);
+		tmp = fprintf(fd, "\"]\n");
+		switch (ast_if[n].expression_node.type) {
+		case AST_TYPE_CONTAINER:
+			color = "blue";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
+				n, ast_if[n].expression_node.index, color);
+			break;
+		default:
+			break;
+		}
+		switch (ast_if[n].if_then.type) {
+		case AST_TYPE_CONTAINER:
+			color = "green";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
+				n, ast_if[n].if_then.index, color);
+			break;
+		default:
+			break;
+		}
+		switch (ast_if[n].if_else.type) {
+		case AST_TYPE_CONTAINER:
+			color = "red";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
+				n, ast_if[n].if_else.index, color);
+			break;
+		default:
+			break;
+		}
+	}
+	for (n = 0; n < loop_index; n++) {
+		name = "";
+		tmp = fprintf(fd, " \"loop:0x%08x\" ["
+                                        "URL=\"loop:0x%08x\" color=\"%s\", label=\"loop:0x%08x:%s\\l",
+                                        n,
+					n, "lightgray", n, name);
+		tmp = fprintf(fd, "\"]\n");
+		index = ast_loop[n].body.index;
+		switch (ast_loop[n].body.type) {
+		case AST_TYPE_NODE:
+			color = "red";
+			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_CONTAINER:
+			color = "red";
+			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_IF:
+			color = "blue";
+			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_LOOP:
+			color = "blue";
+			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		default:
+			break;
+		}
 	}
 #if 0
 	for (n = 0; n < nodes[node].next_size; n++) {
