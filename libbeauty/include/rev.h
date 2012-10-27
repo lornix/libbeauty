@@ -179,6 +179,16 @@ struct ast_loop_s {
 	struct ast_type_index_s body; /* The rest of the loop body. */
 };
 
+struct ast_s {
+	struct ast_container_s *ast_container;
+	struct ast_if_s *ast_if;
+	struct ast_loop_s *ast_loop;
+	struct ast_entry_s *ast_entry;
+	int container_index;
+	int if_index;
+	int loop_index;
+};
+
 /*	FIXME: the concept of link length. If you were looking at the .dot graph,
  *	would the link be a long line or a short one. This could have some baring
  *      in whether the link should be turned into a goto.

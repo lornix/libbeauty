@@ -502,7 +502,7 @@ int print_ast_container(struct ast_container_s *ast_container)
  *	Loop: For a loop contruct. A loop has First Node, and Subsequent Nodes in the loop body.
  *		Later Loop will be converted to for() or while().
  */
-int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct ast_s *ast)
 {
 	struct ast_container_s *ast_container;
 	struct ast_if_s *ast_if;
@@ -528,6 +528,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_if = calloc(100, sizeof(struct ast_if_s));
 	ast_loop = calloc(100, sizeof(struct ast_loop_s));
 	ast_entry = calloc(100, sizeof(struct ast_entry_s));
+	ast->ast_container = ast_container;
+	ast->ast_if = ast_if;
+	ast->ast_loop = ast_loop;
+	ast->ast_entry = ast_entry;
 
 	ast_entry[0].type = AST_TYPE_CONTAINER;
 	ast_entry[0].index = 0;
@@ -626,6 +630,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 
 			if_index++;
+			if (if_index >= 100) {
+				printf("if_index too large\n");
+				exit(1);
+			}
 			break;
 		case AST_TYPE_NODE:
 			index = ast_entry[entry].index;
@@ -655,8 +663,60 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 			break;
 		case AST_TYPE_LOOP:
+			/* node_end will == loop_head node. */
+			/* This is valid no matter how many loop edges there are */
 			printf("AST_TYPE_LOOP type = 0x%x, node = 0x%x\n", type, node);
-			ast_entry[entry].type = AST_TYPE_EMPTY;
+			index = ast_entry[entry].index;
+			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
+				printf("failed type != 2\n");
+				exit(1);
+			}
+			length = ast_container[index].length;
+			if (0 == length) {
+				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
+				ast_container[index].length = 1;
+			} else {
+				tmp = length + 1;
+				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
+				ast_container[index].length = tmp;
+			}
+			ast_container[index].object[length].type = type;
+			ast_container[index].object[length].index = loop_index;
+			//ast_loop[loop_index].expression_node.type = AST_TYPE_NODE;
+			//ast_loop[loop_index].expression_node.index = node;
+
+			if (nodes[node].link_next[0].is_normal) {
+				printf("Creating loop container 0x%x\n", container_index);
+				ast_loop[loop_index].body.type = AST_TYPE_CONTAINER;
+				ast_loop[loop_index].body.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].link_next[0].node;
+				ast_entry[tmp_entry].node_end = node;
+				container_index++;
+			}
+			if (nodes[node].link_next[1].is_normal) {
+				printf("Creating loop container 0x%x\n", container_index);
+				ast_loop[loop_index].body.type = AST_TYPE_CONTAINER;
+				ast_loop[loop_index].body.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].link_next[1].node;
+				ast_entry[tmp_entry].node_end = node;
+				container_index++;
+			}
+			ast_entry[entry].sub_index = ast_container[index].length;
+			ast_entry[entry].node = nodes[node].if_tail;
+
+			loop_index++;
+			if (loop_index >= 100) { 
+				printf("loop_index too large\n");
+				exit(1);
+			}
 			break;
 		default:
 			printf("UNHANDLED type = 0x%x\n", type);
@@ -672,6 +732,24 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
 
 	} while(1);
+	ast->container_index = container_index;
+	ast->if_index = if_index;
+	ast->loop_index = loop_index;
+	return 0;
+}
+
+int print_ast(struct self_s *self, struct ast_s *ast) {
+	struct ast_container_s *ast_container = ast->ast_container;
+	struct ast_if_s *ast_if = ast->ast_if;
+	struct ast_loop_s *ast_loop = ast->ast_loop;
+	struct ast_entry_s *ast_entry = ast->ast_entry;
+	int container_index = ast->container_index;
+	int if_index = ast->if_index;
+	int loop_index = ast->loop_index;
+	int n;
+	int m;
+	int tmp;
+
 	printf("AST OUTPUT\n");
 	for (m = 0; m < container_index; m++) {
 		printf("ast_container[%d]", m);
@@ -734,7 +812,11 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			break;
 		}
 	}
-
+	for (m = 0; m < loop_index; m++) {
+		printf("ast_loop[%d].body\n", m);
+		tmp = ast_loop[m].body.index;
+		print_ast_container(&ast_container[tmp]);
+	}
 	return 0;
 }
 
@@ -850,6 +932,7 @@ int main(int argc, char *argv[])
 	int paths_size = 20000;
 	struct loop_s *loops;
 	int loops_size = 2000;
+	struct ast_s ast;
 
 	if (argc != 2) {
 		printf("Syntax error\n");
@@ -1192,7 +1275,8 @@ int main(int argc, char *argv[])
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 	/* Control flow graph to Abstract syntax tree */
-	tmp = cfg_to_ast(self, nodes, &nodes_size);
+	tmp = cfg_to_ast(self, nodes, &nodes_size, &ast);
+	tmp = print_ast(self, &ast);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	/* FIXME */
