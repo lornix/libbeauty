@@ -938,3 +938,518 @@ int get_value_from_index(struct operand_s *operand, uint64_t *index)
 	return 1;
 }
 
+/************************************************************
+ * This function uses information from instruction log entries
+ * and creates labels.
+ ************************************************************/
+int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
+	int tmp;
+
+	/* FIXME: May handle by using first switch as switch (indirect) */
+	printf("value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
+				store,
+				indirect,
+				index,
+				relocated,
+				value_scope,
+				value_id,
+				indirect_offset_value,
+				indirect_value_id);
+
+
+	switch (store) {
+	case STORE_DIRECT:
+		/* FIXME: Handle the case of an immediate value being &data */
+		/* but it is very difficult to know if the value is a pointer (&data) */
+		/* or an offset (data[x]) */
+		/* need to use the relocation table to find out */
+		/* no relocation table entry == offset */
+		/* relocation table entry == pointer */
+		/* this info should be gathered at disassembly point */
+		/* FIXME: relocation table not present in 16bit x86 mode, so another method will need to be found */
+		if (indirect == IND_MEM) {
+			label->scope = 3;
+			label->type = 1;
+			label->lab_pointer = 1;
+			label->value = index;
+		} else if (relocated) {
+			label->scope = 3;
+			label->type = 2;
+			label->lab_pointer = 0;
+			label->value = index;
+		} else {
+			label->scope = 3;
+			label->type = 3;
+			label->lab_pointer = 0;
+			label->value = index;
+		}
+		break;
+	case STORE_REG:
+		switch (value_scope) {
+		case 1:
+			/* params */
+			if (IND_STACK == indirect) {
+				label->scope = 2;
+				label->type = 2;
+				label->lab_pointer = 0;
+				label->value = indirect_offset_value;
+				printf("PARAM_STACK^\n");
+			} else if (0 == indirect) {
+				label->scope = 2;
+				label->type = 1;
+				label->lab_pointer = 0;
+				label->value = index;
+				printf("PARAM_REG^\n");
+			} else {
+				printf("JCD: UNKNOWN PARAMS\n");
+			}
+			break;
+		case 2:
+			/* locals */
+			if (IND_STACK == indirect) {
+				label->scope = 1;
+				label->type = 2;
+				label->lab_pointer = 0;
+				label->value = value_id;
+			} else if (0 == indirect) {
+				label->scope = 1;
+				label->type = 1;
+				label->lab_pointer = 0;
+				label->value = value_id;
+			} else {
+				printf("JCD: UNKNOWN LOCAL\n");
+			}
+			break;
+		case 3: /* Data */
+			/* FIXME: introduce indirect_value_id and indirect_value_scope */
+			/* in order to resolve somewhere */
+			/* It will always be a register, and therefore can re-use the */
+			/* value_id to identify it. */
+			/* It will always be a local and not a param */
+			/* FIXME: This should be handled scope = 1, type = 1 above. */
+			/* was scope = 4*/
+			/* FIXME: get the label->value right */
+			label->scope = 1;
+			label->type = 1;
+			label->lab_pointer = 1;
+			label->value = indirect_value_id;
+			break;
+		default:
+			label->scope = 0;
+			label->type = value_scope;
+			label->lab_pointer = 0;
+			label->value = 0;
+			printf("unknown value scope: %04"PRIx64";\n", (value_scope));
+			return 1;
+			break;
+		}
+		break;
+	default:
+		printf("Unhandled store1\n");
+		return 1;
+		break;
+	}
+	return 0;
+}
+
+int register_label(struct external_entry_point_s *entry_point, uint64_t value_id,
+	struct memory_s *value, struct label_redirect_s *label_redirect, struct label_s *labels)
+{
+	int n;
+	int found;
+	struct label_s *label;
+	int label_offset;
+	label_offset = label_redirect[value_id].redirect;
+	label = &labels[label_offset];
+	label->size_bits = value->length * 8;
+	printf("Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64"\n",
+		value_id,
+		label->scope,
+		label->type,
+		label->value,
+		label->size_bits,
+		label->lab_pointer,
+		label->lab_signed,
+		label->lab_unsigned);
+	//int params_size;
+	//int *params;
+	//int *params_order;
+	//int locals_size;
+	//int *locals;
+	//int *locals_order;
+	found = 0;
+	switch (label->scope) {
+	case 2:
+		printf("PARAM\n");
+		for(n = 0; n < entry_point->params_size; n++) {
+			printf("looping 0x%x\n", n);
+			if (entry_point->params[n] == label_offset) {
+				printf("Duplicate\n");
+				found = 1;
+				break;
+			}
+		}
+		if (found) {
+			break;
+		}
+		(entry_point->params_size)++;
+		entry_point->params = realloc(entry_point->params, entry_point->params_size * sizeof(int));
+		entry_point->params[entry_point->params_size - 1] = label_offset;
+		break;
+	case 1:
+		printf("LOCAL\n");
+		for(n = 0; n < entry_point->locals_size; n++) {
+			printf("looping 0x%x\n", n);
+			if (entry_point->locals[n] == label_offset) {
+				printf("Duplicate\n");
+				found = 1;
+				break;
+			}
+		}
+		if (found) {
+			break;
+		}
+		(entry_point->locals_size)++;
+		entry_point->locals = realloc(entry_point->locals, entry_point->locals_size * sizeof(int));
+		entry_point->locals[entry_point->locals_size - 1] = label_offset;
+		break;
+	case 3:
+		printf("HEX VALUE\n");
+		break;
+	default:
+		printf("VALUE unhandled 0x%"PRIx64"\n", label->scope);
+		break;
+	}
+	printf("params_size = 0x%x, locals_size = 0x%x\n",
+		entry_point->params_size,
+		entry_point->locals_size);
+
+	printf("value: 0x%"PRIx64", 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64"\n",
+		value->start_address,
+		value->length,
+		value->init_value,
+		value->offset_value,
+		value->value_type,
+		value->value_scope,
+		value->value_id);
+	//tmp = register_label(label, &(inst_log1->value3));
+	return 0;
+}
+
+int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_point_s *entry_point,
+			 int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
+{
+	int tmp, n;
+	int err;
+	uint64_t value_id;
+	struct instruction_s *instruction;
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct memory_s *value;
+	struct label_s *label;
+
+	if (!start || !end) {
+		printf("scan_for_labels_in_function:Invalid start or end\n");
+		return 1;
+	}
+	printf("scan_for_labels:start=0x%x, end=0x%x\n", start, end);
+
+	for (n = start; n <= end; n++) {
+		inst_log1 =  &inst_log_entry[n];
+		if (!inst_log1) {
+			printf("scan_for_labels:Invalid inst_log1[0x%x]\n", n);
+			return 1;
+		}
+
+		instruction =  &inst_log1->instruction;
+
+		/* Test to see if we have an instruction to output */
+		printf("Inst 0x%04x: %d: value_type = %d, %d, %d\n", n,
+			instruction->opcode,
+			inst_log1->value1.value_type,
+			inst_log1->value2.value_type,
+			inst_log1->value3.value_type);
+		if ((0 == inst_log1->value3.value_type) ||
+			(1 == inst_log1->value3.value_type) ||
+			(2 == inst_log1->value3.value_type) ||
+			(3 == inst_log1->value3.value_type) ||
+			(4 == inst_log1->value3.value_type) ||
+			(6 == inst_log1->value3.value_type) ||
+			(5 == inst_log1->value3.value_type)) {
+			printf("Instruction Opcode = 0x%x\n", instruction->opcode);
+			switch (instruction->opcode) {
+			case MOV:
+			case SEX:
+				printf("SEX or MOV\n");
+				if (inst_log1->value1.value_type == 6) {
+					printf("ERROR1 %d\n", instruction->opcode);
+					//break;
+				}
+				if (inst_log1->value1.value_type == 5) {
+					printf("ERROR2\n");
+					//break;
+				}
+				if (1 == instruction->dstA.indirect) {
+					value_id = inst_log1->value3.indirect_value_id;
+				} else {
+					value_id = inst_log1->value3.value_id;
+				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				if (1 == instruction->srcA.indirect) {
+					value_id = inst_log1->value1.indirect_value_id;
+				} else {
+					value_id = inst_log1->value1.value_id;
+				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+
+				break;
+			case ADD:
+			case MUL:
+			case IMUL:
+			case SUB:
+			case SBB:
+			case rAND:
+			case OR:
+			case XOR:
+			case NOT:
+			case NEG:
+			case SHL:
+			case SHR:
+			case SAL:
+			case SAR:
+				if (IND_MEM == instruction->dstA.indirect) {
+					value_id = inst_log1->value3.indirect_value_id;
+				} else {
+					value_id = inst_log1->value3.value_id;
+				}
+				printf("value3\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				if (IND_MEM == instruction->srcA.indirect) {
+					value_id = inst_log1->value1.indirect_value_id;
+				} else {
+					value_id = inst_log1->value1.value_id;
+				}
+				printf("value1\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				break;
+			case JMP:
+				break;
+			case CALL:
+				if (IND_MEM == instruction->dstA.indirect) {
+					value_id = inst_log1->value3.indirect_value_id;
+				} else {
+					value_id = inst_log1->value3.value_id;
+				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				/* Special case for function pointers */
+				if (IND_MEM == instruction->srcA.indirect) {
+					value_id = inst_log1->value1.indirect_value_id;
+					tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				}
+				break;
+			case CMP:
+			case TEST:
+				if (IND_MEM == instruction->dstA.indirect) {
+					value_id = inst_log1->value2.indirect_value_id;
+				} else {
+					value_id = inst_log1->value2.value_id;
+				}
+				printf("JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
+				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
+				if (IND_MEM == instruction->srcA.indirect) {
+					value_id = inst_log1->value1.indirect_value_id;
+				} else {
+					value_id = inst_log1->value1.value_id;
+				}
+				printf("JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				break;
+
+			case IF:
+				printf("IF: This might give signed or unsigned info to labels\n");
+				break;
+
+			case NOP:
+				break;
+			case RET:
+				if (IND_MEM == instruction->srcA.indirect) {
+					value_id = inst_log1->value1.indirect_value_id;
+				} else {
+					value_id = inst_log1->value1.value_id;
+				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				break;
+			default:
+				printf("Unhandled scan instruction1\n");
+				if (print_inst(self, instruction, n, labels))
+					return 1;
+				return 1;
+				break;
+			}
+		}
+	}
+	return 0;
+}
+/***********************************************************************************
+ * This is a complex routine. It utilises dynamic lists in order to reduce 
+ * memory usage.
+ **********************************************************************************/
+int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, struct mid_start_s *mid_start, int reg_stack, uint64_t indirect_init_value, uint64_t indirect_offset_value, uint64_t *size, int *search_back_seen, uint64_t **inst_list)
+{
+	struct instruction_s *instruction;
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	uint64_t value_id;
+	uint64_t inst_num;
+	uint64_t tmp;
+	int found = 0;
+	int n;
+
+	*size = 0;
+	/* FIXME: This could be optimized out if the "seen" value just increased on each call */
+	for (n = 0; n < INST_LOG_ENTRY_SIZE; n++) {
+		search_back_seen[n] = 0;
+	}
+
+	printf("search_back_local_stack: 0x%"PRIx64", 0x%"PRIx64"\n", indirect_init_value, indirect_offset_value);
+	if (0 < mid_start_size) {
+		printf("search_back:prev_size=0x%"PRIx64"\n", mid_start_size);
+	}
+	if (0 == mid_start_size) {
+		printf("search_back ended\n");
+		return 1;
+	}
+
+	do {
+		found = 0;
+		for(n = 0; n < mid_start_size; n++) {
+			if (1 == mid_start[n].valid) {
+				inst_num = mid_start[n].mid_start;
+				mid_start[n].valid = 0;
+				found = 1;
+				printf("mid_start removed 0x%"PRIx64" at 0x%x, size=0x%"PRIx64"\n", mid_start[n].mid_start, n, mid_start_size);
+				break;
+			}
+		}
+		if (!found) {
+			printf("mid_start not found, exiting\n");
+			goto search_back_exit_free;
+		}
+		if (search_back_seen[inst_num]) {
+			continue;
+		}
+		search_back_seen[inst_num] = 1;
+		inst_log1 =  &inst_log_entry[inst_num];
+		instruction =  &inst_log1->instruction;
+		value_id = inst_log1->value3.value_id;
+		printf("inst_num:0x%"PRIx64"\n", inst_num);
+		/* STACK */
+		if ((reg_stack == 2) &&
+			(instruction->dstA.store == STORE_REG) &&
+			(inst_log1->value3.value_scope == 2) &&
+			(instruction->dstA.indirect == IND_STACK) &&
+			(inst_log1->value3.indirect_init_value == indirect_init_value) &&
+			(inst_log1->value3.indirect_offset_value == indirect_offset_value)) {
+			tmp = *size;
+			tmp++;
+			*size = tmp;
+			if (tmp == 1) {
+				*inst_list = malloc(sizeof(*inst_list));
+				(*inst_list)[0] = inst_num;
+			} else {
+				*inst_list = realloc(*inst_list, tmp * sizeof(*inst_list));
+				(*inst_list)[tmp - 1] = inst_num;
+			}
+		/* REGISTER */
+		} else if ((reg_stack == 1) &&
+			(instruction->dstA.store == STORE_REG) &&
+			(instruction->dstA.indirect == IND_DIRECT) &&
+			(instruction->dstA.index == indirect_init_value)) {
+			tmp = *size;
+			tmp++;
+			*size = tmp;
+			if (tmp == 1) {
+				*inst_list = malloc(sizeof(*inst_list));
+				(*inst_list)[0] = inst_num;
+				printf("JCD2: inst_list[0] = 0x%"PRIx64"\n", inst_num);
+			} else {
+				*inst_list = realloc(*inst_list, tmp * sizeof(*inst_list));
+				(*inst_list)[tmp - 1] = inst_num;
+			}
+		} else {
+			if ((inst_log1->prev_size > 0) &&
+				(inst_log1->prev[0] != 0)) {
+				int prev_index;
+				found = 0;
+				prev_index = 0;
+				for(n = 0; n < mid_start_size; n++) {
+					if (0 == mid_start[n].valid) {
+						mid_start[n].mid_start = inst_log1->prev[prev_index];
+						prev_index++;
+						mid_start[n].valid = 1;
+						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
+						found = 1;
+					}
+					if (prev_index >= inst_log1->prev_size) {
+						break;
+					}
+				}
+				if (prev_index < inst_log1->prev_size) {
+					uint64_t mid_next;
+					mid_next = mid_start_size + inst_log1->prev_size - prev_index;
+					mid_start = realloc(mid_start, mid_next * sizeof(struct mid_start_s));
+					for(n = mid_start_size; n < mid_next; n++) {
+						mid_start[n].mid_start = inst_log1->prev[prev_index];
+						prev_index++;
+						printf("mid_start realloc added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
+						mid_start[n].valid = 1;
+					}
+					mid_start_size = mid_next;
+				}
+
+				if (!found) {
+					printf("not found\n");
+					goto search_back_exit_free;
+				}
+			}
+		}
+	/* FIXME: There must be deterministic exit point */
+	} while (1);
+	printf("end of loop, exiting\n");
+
+search_back_exit_free:
+	free(mid_start);
+	return 0;
+}
+
+int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct external_entry_point_s *external_entry_points)
+{
+	int n;
+	int l;
+	int tmp;
+
+	for (n = 0; n < handle->reloc_table_code_sz; n++) {
+		int len, len1;
+
+		len = strlen(handle->reloc_table_code[n].symbol_name);
+		for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+			if (external_entry_points[l].valid != 0) {
+				len1 = strlen(external_entry_points[l].name);
+				if (len != len1) {
+					continue;
+				}
+				tmp = strncmp(external_entry_points[l].name, handle->reloc_table_code[n].symbol_name, len);
+				if (0 == tmp) {
+					handle->reloc_table_code[n].external_functions_index = l;
+					handle->reloc_table_code[n].type =
+						external_entry_points[l].type;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+
+
+
