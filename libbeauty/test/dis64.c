@@ -2870,9 +2870,9 @@ int main(int argc, char *argv[])
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	/* FIXME */
-	exit(0);
+	goto end_main;
 
-
+#if 0
 
 	print_dis_instructions(self);
 
@@ -3863,6 +3863,8 @@ int main(int argc, char *argv[])
 			n += tmp;
 		}
 	}
+#endif
+end_main:
 	printf("END - FINISHED PROCESSING\n");
 	return 0;
 }
