@@ -672,6 +672,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				printf("failed type != 2\n");
 				exit(1);
 			}
+			ast_loop[loop_index].first_node.type = AST_TYPE_NODE;
+			ast_loop[loop_index].first_node.index = node;
 			length = ast_container[index].length;
 			if (0 == length) {
 				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
@@ -965,29 +967,47 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
                                         n,
 					n, "lightgray", n, name);
 		tmp = fprintf(fd, "\"]\n");
+		index = ast_if[n].expression_node.index;
 		switch (ast_if[n].expression_node.type) {
+		case AST_TYPE_NODE:
+			color = "gold";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
 		case AST_TYPE_CONTAINER:
-			color = "blue";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
-				n, ast_if[n].expression_node.index, color);
+			color = "gold";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
 			break;
 		default:
 			break;
 		}
+		index = ast_if[n].if_then.index;
 		switch (ast_if[n].if_then.type) {
+		case AST_TYPE_NODE:
+			color = "green";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
 		case AST_TYPE_CONTAINER:
 			color = "green";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
-				n, ast_if[n].if_then.index, color);
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
 			break;
 		default:
 			break;
 		}
+		index = ast_if[n].if_else.index;
 		switch (ast_if[n].if_else.type) {
+		case AST_TYPE_NODE:
+			color = "red";
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08"PRIx64"\" [color=\"%s\"];\n",
-				n, ast_if[n].if_else.index, color);
+			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
 			break;
 		default:
 			break;
@@ -1000,6 +1020,15 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
                                         n,
 					n, "lightgray", n, name);
 		tmp = fprintf(fd, "\"]\n");
+		index = ast_loop[n].first_node.index;
+		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+			"URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
+			index,
+			index, "lightgray", index, name);
+		tmp = fprintf(fd, "\"]\n");
+		color = "gold";
+		tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			n, index, color);
 		index = ast_loop[n].body.index;
 		switch (ast_loop[n].body.type) {
 		case AST_TYPE_NODE:
