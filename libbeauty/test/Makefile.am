@@ -1,6 +1,6 @@
 include $(top_srcdir)/misc/Makefile.common
 
-AM_CFLAGS = -I$(top_srcdir)/test
+AM_CFLAGS = -I$(top_srcdir)/test -O0 -g3 -Wall
 
 #bin_PROGRAMS = dis32 dis64 bf
 noinst_PROGRAMS = dis64
@@ -21,7 +21,7 @@ dis64_SOURCES = \
 
 dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lopcodes -liberty -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbfd -lz
 
-dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0
+dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall
 
 #bf_SOURCES = \
 #	bf.c
