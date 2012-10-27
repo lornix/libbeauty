@@ -491,6 +491,7 @@ int print_ast_container(struct ast_container_s *ast_container)
 			ast_container->object[n].type,
 			ast_container->object[n].index);
 	}
+	return 0;
 }
 
 /* Convert Control flow graph to Abstract syntax tree */
@@ -522,7 +523,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int index;
 	int length;
 	int tmp;
-	int tmp_entry;
+	int tmp_entry = 0;
 
 	ast_container = calloc(100, sizeof(struct ast_container_s));
 	ast_if = calloc(100, sizeof(struct ast_if_s));
@@ -882,6 +883,57 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 				node, nodes[node].link_next[n].node, color);
 		}
 	}
+	tmp = fprintf(fd, "}\n");
+	fclose(fd);
+	return 0;
+}
+
+int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_node_s *nodes, int *node_size)
+{
+	struct ast_container_s *ast_container = ast->ast_container;
+	struct ast_if_s *ast_if = ast->ast_if;
+	struct ast_loop_s *ast_loop = ast->ast_loop;
+	struct ast_entry_s *ast_entry = ast->ast_entry;
+	int container_index = ast->container_index;
+	int if_index = ast->if_index;
+	int loop_index = ast->loop_index;
+	char *filename;
+	FILE *fd;
+	int node;
+	int tmp;
+	int n;
+	int container;
+	const char *font = "graph.font";
+	const char *color;
+	const char *name;
+	filename = "test-ast.dot";
+
+	fd = fopen(filename, "w");
+	if (!fd) {
+		printf("Failed to open file %s, error=%p\n", filename, fd);
+		return 1;
+	}
+	printf(".dot fd=%p\n", fd);
+	printf("writing out dot to file\n");
+	tmp = fprintf(fd, "digraph code {\n"
+		"\tgraph [bgcolor=white];\n"
+		"\tnode [color=lightgray, style=filled shape=box"
+		" fontname=\"%s\" fontsize=\"8\"];\n", font);
+	for (container = 0; container <= container_index; container++) {
+		name = "";
+		tmp = fprintf(fd, " \"Container:0x%08x\" ["
+                                        "URL=\"Container:0x%08x\" color=\"%s\", label=\"Container:0x%08x:%s\\l",
+                                        container,
+					container, "lightgray", container, name);
+		tmp = fprintf(fd, "\"]\n");
+	}
+#if 0
+	for (n = 0; n < nodes[node].next_size; n++) {
+		color = "blue";
+		tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			node, nodes[node].link_next[n].node, color);
+	}
+#endif
 	tmp = fprintf(fd, "}\n");
 	fclose(fd);
 	return 0;
@@ -1279,6 +1331,7 @@ int main(int argc, char *argv[])
 	tmp = print_ast(self, &ast);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
+	tmp = output_ast_dot(self, &ast, nodes, &nodes_size);
 	/* FIXME */
 	goto end_main;
 
