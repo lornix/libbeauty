@@ -104,6 +104,9 @@ struct loop_s {
 	int *list;
 };
 
+#define PATH_TYPE_UNKNOWN 0
+#define PATH_TYPE_LOOP 1
+
 struct path_s {
 	int used;
 	int path_prev;
@@ -225,6 +228,11 @@ struct node_link_s {
 	int elasticity;
 };
 
+#define NODE_TYPE_UNKNOWN 0
+#define NODE_TYPE_LOOP 1
+#define NODE_TYPE_IF_THEN_ELSE 2
+#define NODE_TYPE_IF_THEN_GOTO 3
+#define NODE_TYPE_NORMAL 4
 
 struct control_flow_node_s {
 	int entry_point; /* Can use this to find the name on the node. */

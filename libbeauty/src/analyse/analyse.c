@@ -156,7 +156,7 @@ int path_loop_check(struct path_s *paths, int path, int step, int node, int limi
 		//	path, step, paths[path].path[step], node);
 		if (paths[path].path[step] ==  node) {
 			// printf("Loop found\n");
-			paths[path1].type = 1;
+			paths[path1].type = PATH_TYPE_LOOP;
 			return 1;
 		}
 	};
@@ -496,11 +496,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			(nodes[n].link_next[1].is_normal == 1)) {
 			if (nodes[n].path_size >= 2) {
 				method = 1;
-				type = 2;
+				type = NODE_TYPE_IF_THEN_ELSE;
 				preferred = 0;
 			} else {
 				method = 0;
-				type = 2;
+				type = NODE_TYPE_IF_THEN_ELSE;
 				preferred = 0;
 			}
 		}
@@ -508,11 +508,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 		if (nodes[n].loop_head) {
 			if (nodes[n].link_next[0].is_loop_exit == 1) {
 				method = 1;
-				type = 1;
+				type = NODE_TYPE_LOOP;
 				preferred = 0;
 			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
 				method = 1;
-				type = 1;
+				type = NODE_TYPE_LOOP;
 				preferred = 1;
 			}
 		}
@@ -520,14 +520,14 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 		if (!nodes[n].loop_head) {
 			if (nodes[n].link_next[0].is_loop_exit == 1) {
 				method = 1;
-				type = 3;
+				type = NODE_TYPE_IF_THEN_GOTO;
 				preferred = 0;
 				if (nodes[n].member_of_loop_size == 1) {
 					start_node = nodes[n].member_of_loop[0];
 				}
 			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
 				method = 1;
-				type = 3;
+				type = NODE_TYPE_IF_THEN_GOTO;
 				preferred = 1;
 				if (nodes[n].member_of_loop_size == 1) {
 					start_node = nodes[n].member_of_loop[0];
@@ -594,7 +594,7 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 		if (paths[l].path_size > 0) {
 			while (1) {
 				printf("Path=0x%x, offset=%d, Node=0x%x\n", l, offset, paths[path].path[offset]);
-				if (paths[l].type == 1) {
+				if (paths[l].type == PATH_TYPE_LOOP) {
 					add_looped_path_to_node(&(nodes[paths[path].path[offset]]), l);
 				} else {
 					add_path_to_node(&(nodes[paths[path].path[offset]]), l);
@@ -658,7 +658,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 				if (loop) {
 					printf("JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
 					paths[path].loop_head = node;
-					nodes[node].type = 1;
+					nodes[node].type = NODE_TYPE_LOOP;
 					nodes[node].loop_head = 1;
 					/* Loops with more than one block */
 					if (step >= 2) {
@@ -674,7 +674,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						printf("JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
 							node, step, path);
 						paths[path].loop_head = node;
-						nodes[node].type = 1;
+						nodes[node].type = NODE_TYPE_LOOP;
 						nodes[node].loop_head = 1;
 						for (n = 0; n < nodes[node].next_size; n++) {
 							if (nodes[node].link_next[n].node == node) {

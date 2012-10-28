@@ -563,9 +563,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		node = ast_entry[entry].node;
 		node_end = ast_entry[entry].node_end;
 		type = AST_TYPE_EMPTY;
-		if ((nodes[node].if_tail) && (nodes[node].type == 2)) {
+		if ((nodes[node].if_tail) && (nodes[node].type == NODE_TYPE_IF_THEN_ELSE)) {
 			type = AST_TYPE_IF_THEN_ELSE;
-		} else if ((nodes[node].loop_head) && (nodes[node].type == 1)) {
+		} else if ((nodes[node].loop_head) && (nodes[node].type == NODE_TYPE_LOOP)) {
 			type = AST_TYPE_LOOP;
 		} else {
 			type = AST_TYPE_NODE;
@@ -1383,7 +1383,7 @@ int main(int argc, char *argv[])
 				paths[n].path_prev = 0;
 				paths[n].path_prev_index = 0;
 				paths[n].path_size = 0;
-				paths[n].type = 0;
+				paths[n].type = PATH_TYPE_UNKNOWN;
 				paths[n].loop_head = 0;
 			}
 			for (n = 0; n < loops_size; n++) {
