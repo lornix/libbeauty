@@ -506,7 +506,7 @@ int print_ast_container(struct ast_container_s *ast_container)
 int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct ast_s *ast)
 {
 	struct ast_container_s *ast_container;
-	struct ast_if_s *ast_if;
+	struct ast_if_then_else_s *ast_if_then_else;
 	struct ast_loop_s *ast_loop;
 	struct ast_entry_s *ast_entry;
 	int found;
@@ -517,7 +517,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int node;
 	int node_end;
 	int container_index = 0;
-	int if_index = 0;
+	int if_then_else_index = 0;
 	int loop_index = 0;
 	int entry_index = 0;
 	int index;
@@ -526,11 +526,11 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int tmp_entry = 0;
 
 	ast_container = calloc(100, sizeof(struct ast_container_s));
-	ast_if = calloc(100, sizeof(struct ast_if_s));
+	ast_if_then_else = calloc(100, sizeof(struct ast_if_then_else_s));
 	ast_loop = calloc(100, sizeof(struct ast_loop_s));
 	ast_entry = calloc(100, sizeof(struct ast_entry_s));
 	ast->ast_container = ast_container;
-	ast->ast_if = ast_if;
+	ast->ast_if_then_else = ast_if_then_else;
 	ast->ast_loop = ast_loop;
 	ast->ast_entry = ast_entry;
 
@@ -564,7 +564,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		node_end = ast_entry[entry].node_end;
 		type = AST_TYPE_EMPTY;
 		if ((nodes[node].if_tail) && (nodes[node].type == 2)) {
-			type = AST_TYPE_IF;
+			type = AST_TYPE_IF_THEN_ELSE;
 		} else if ((nodes[node].loop_head) && (nodes[node].type == 1)) {
 			type = AST_TYPE_LOOP;
 		} else {
@@ -573,7 +573,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		printf("new_node_end = 0x%x\n", node_end);
 		printf("AST: Type = 0x%x\n", type);
 		switch (type) {
-		case AST_TYPE_IF:
+		case AST_TYPE_IF_THEN_ELSE:
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
 				printf("failed type != 2\n");
@@ -589,16 +589,16 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_container[index].length = tmp;
 			}
 			ast_container[index].object[length].type = type;
-			ast_container[index].object[length].index = if_index;
-			ast_if[if_index].expression_node.type = AST_TYPE_NODE;
-			ast_if[if_index].expression_node.index = node;
+			ast_container[index].object[length].index = if_then_else_index;
+			ast_if_then_else[if_then_else_index].expression_node.type = AST_TYPE_NODE;
+			ast_if_then_else[if_then_else_index].expression_node.index = node;
 
 			if (nodes[node].link_next[0].node == nodes[node].if_tail) {
-				ast_if[if_index].if_then.type = AST_TYPE_EMPTY;
+				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_then container 0x%x\n", container_index);
-				ast_if[if_index].if_then.type = AST_TYPE_CONTAINER;
-				ast_if[if_index].if_then.index = container_index;
+				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_CONTAINER;
+				ast_if_then_else[if_then_else_index].if_then.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
 				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
 				ast_entry[tmp_entry].index = container_index;
@@ -609,11 +609,11 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 
 			if (nodes[node].link_next[1].node == nodes[node].if_tail) {
-				ast_if[if_index].if_else.type = AST_TYPE_EMPTY;
+				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_else container 0x%x\n", container_index);
-				ast_if[if_index].if_else.type = AST_TYPE_CONTAINER;
-				ast_if[if_index].if_else.index = container_index;
+				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_CONTAINER;
+				ast_if_then_else[if_then_else_index].if_else.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
 				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
 				ast_entry[tmp_entry].index = container_index;
@@ -630,9 +630,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[entry].node = nodes[node].if_tail;
 			}
 
-			if_index++;
-			if (if_index >= 100) {
-				printf("if_index too large\n");
+			if_then_else_index++;
+			if (if_then_else_index >= 100) {
+				printf("if_then_else_index too large\n");
 				exit(1);
 			}
 			break;
@@ -735,20 +735,20 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
 
 	} while(1);
-	ast->container_index = container_index;
-	ast->if_index = if_index;
-	ast->loop_index = loop_index;
+	ast->container_size = container_index;
+	ast->if_then_else_size = if_then_else_index;
+	ast->loop_size = loop_index;
 	return 0;
 }
 
 int print_ast(struct self_s *self, struct ast_s *ast) {
 	struct ast_container_s *ast_container = ast->ast_container;
-	struct ast_if_s *ast_if = ast->ast_if;
+	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
 	struct ast_entry_s *ast_entry = ast->ast_entry;
-	int container_index = ast->container_index;
-	int if_index = ast->if_index;
-	int loop_index = ast->loop_index;
+	int container_index = ast->container_size;
+	int if_then_else_index = ast->if_then_else_size;
+	int loop_index = ast->loop_size;
 	int n;
 	int m;
 	int tmp;
@@ -758,60 +758,60 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		printf("ast_container[%d]", m);
 		print_ast_container(&ast_container[m]);
 	}
-	for (m = 0; m < if_index; m++) {
+	for (m = 0; m < if_then_else_index; m++) {
 		int type;
-		type = ast_if[m].expression_node.type;
+		type = ast_if_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if expression_node empty\n");
+			printf("ast_if_then_else expression_node empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if[%d].expression_node.type = 0x%x\n", m, ast_if[m].expression_node.type);
-			printf("ast_if[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if[m].expression_node.index);
+			printf("ast_if_then_else[%d].expression_node.type = 0x%x\n", m, ast_if_then_else[m].expression_node.type);
+			printf("ast_if_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].expression_node.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if[%d].expression_node\n", m);
-			tmp = ast_if[m].expression_node.index;
+			printf("ast_if_then_else[%d].expression_node\n", m);
+			tmp = ast_if_then_else[m].expression_node.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if expression_node default\n");
+			printf("ast_if_then_else expression_node default\n");
 			break;
 		}
-		type = ast_if[m].if_then.type;
+		type = ast_if_then_else[m].if_then.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if if_then empty\n");
+			printf("ast_if_then_else if_then empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if[%d].if_then.type = 0x%x\n", m, ast_if[m].if_then.type);
-			printf("ast_if[%d].if_then.index = 0x%"PRIx64"\n", m, ast_if[m].if_then.index);
+			printf("ast_if_then_else[%d].if_then.type = 0x%x\n", m, ast_if_then_else[m].if_then.type);
+			printf("ast_if_then_else[%d].if_then.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_then.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if[%d].if_then\n", m);
-			tmp = ast_if[m].if_then.index;
+			printf("ast_if_then_else[%d].if_then\n", m);
+			tmp = ast_if_then_else[m].if_then.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if if_then default\n");
+			printf("ast_if_then_else if_then default\n");
 			break;
 		}
-		type = ast_if[m].if_else.type;
+		type = ast_if_then_else[m].if_else.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if if_else empty\n");
+			printf("ast_if_then_else if_else empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if[%d].if_else.type = 0x%x\n", m, ast_if[m].if_else.type);
-			printf("ast_if[%d].if_else.index = 0x%"PRIx64"\n", m, ast_if[m].if_else.index);
+			printf("ast_if_then_else[%d].if_else.type = 0x%x\n", m, ast_if_then_else[m].if_else.type);
+			printf("ast_if_then_else[%d].if_else.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_else.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if[%d].if_else\n", m);
-			tmp = ast_if[m].if_else.index;
+			printf("ast_if_then_else[%d].if_else\n", m);
+			tmp = ast_if_then_else[m].if_else.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if if_else default\n");
+			printf("ast_if_then_else if_else default\n");
 			break;
 		}
 	}
@@ -893,12 +893,12 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_node_s *nodes, int *node_size)
 {
 	struct ast_container_s *ast_container = ast->ast_container;
-	struct ast_if_s *ast_if = ast->ast_if;
+	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
 	struct ast_entry_s *ast_entry = ast->ast_entry;
-	int container_index = ast->container_index;
-	int if_index = ast->if_index;
-	int loop_index = ast->loop_index;
+	int container_index = ast->container_size;
+	int if_then_else_index = ast->if_then_else_size;
+	int loop_index = ast->loop_size;
 	char *filename;
 	FILE *fd;
 	int node;
@@ -945,7 +945,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 				break;
 			case AST_TYPE_CONTAINER:
 				break;
-			case AST_TYPE_IF:
+			case AST_TYPE_IF_THEN_ELSE:
 				color = "blue";
 				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
@@ -960,15 +960,15 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			}
 		}
 	}
-	for (n = 0; n < if_index; n++) {
+	for (n = 0; n < if_then_else_index; n++) {
 		name = "";
 		tmp = fprintf(fd, " \"if_then_else:0x%08x\" ["
                                         "URL=\"if_then_else:0x%08x\" color=\"%s\", label=\"if_then_else:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
 		tmp = fprintf(fd, "\"]\n");
-		index = ast_if[n].expression_node.index;
-		switch (ast_if[n].expression_node.type) {
+		index = ast_if_then_else[n].expression_node.index;
+		switch (ast_if_then_else[n].expression_node.type) {
 		case AST_TYPE_NODE:
 			color = "gold";
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
@@ -982,8 +982,8 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		default:
 			break;
 		}
-		index = ast_if[n].if_then.index;
-		switch (ast_if[n].if_then.type) {
+		index = ast_if_then_else[n].if_then.index;
+		switch (ast_if_then_else[n].if_then.type) {
 		case AST_TYPE_NODE:
 			color = "green";
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
@@ -997,8 +997,8 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		default:
 			break;
 		}
-		index = ast_if[n].if_else.index;
-		switch (ast_if[n].if_else.type) {
+		index = ast_if_then_else[n].if_else.index;
+		switch (ast_if_then_else[n].if_else.type) {
 		case AST_TYPE_NODE:
 			color = "red";
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
@@ -1041,7 +1041,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
-		case AST_TYPE_IF:
+		case AST_TYPE_IF_THEN_ELSE:
 			color = "blue";
 			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
@@ -1112,7 +1112,6 @@ int main(int argc, char *argv[])
 	int paths_size = 20000;
 	struct loop_s *loops;
 	int loops_size = 2000;
-	struct ast_s ast;
 
 	if (argc != 2) {
 		printf("Syntax error\n");
@@ -1406,6 +1405,9 @@ int main(int argc, char *argv[])
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
+			/* Control flow graph to Abstract syntax tree */
+			tmp = cfg_to_ast(self, nodes, &nodes_size, &(external_entry_points[l].ast));
+			tmp = print_ast(self, &(external_entry_points[l].ast));
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
@@ -1454,12 +1456,8 @@ int main(int argc, char *argv[])
 	}
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
-	/* Control flow graph to Abstract syntax tree */
-	tmp = cfg_to_ast(self, nodes, &nodes_size, &ast);
-	tmp = print_ast(self, &ast);
-
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
-	tmp = output_ast_dot(self, &ast, nodes, &nodes_size);
+	tmp = output_ast_dot(self, &(external_entry_points[0].ast), nodes, &nodes_size);
 	/* FIXME */
 	goto end_main;
 

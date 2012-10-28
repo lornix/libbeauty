@@ -140,8 +140,9 @@ struct node_mid_start_s {
 #define AST_TYPE_EMPTY 0	// This entry has not been used yet or it is not used any more.
 #define AST_TYPE_NODE 1		// This points to the existing Node table.
 #define AST_TYPE_CONTAINER 2	// This points to the "container" table.
-#define AST_TYPE_IF 3		// This points to the "if" table.
-#define AST_TYPE_LOOP 4		// This points to the "loop" table.
+#define AST_TYPE_IF_THEN_ELSE 3	// This points to the "if else" table.
+#define AST_TYPE_IF_THEN_GOTO 4	// This points to the "if goto" table.
+#define AST_TYPE_LOOP 5		// This points to the "loop" table.
 
 struct ast_type_index_s {
 /* Parent data will not be stored here.
@@ -158,7 +159,7 @@ struct ast_container_s {
 };
 
 /* An IF is a special branch condition that does not result in a loop structure. */
-struct ast_if_s {
+struct ast_if_then_else_s {
 /* FIXME: Must do a sanity check to ensure that a single node contains the BRANCH instruction,
  * 	  and also the associated instruction modifying flags. So the IF expression can be created.
  *	If not the case, throw an exception for now, but then think about what to do about it.
@@ -171,6 +172,20 @@ struct ast_if_s {
 	struct ast_type_index_s if_else; /* IF expression is false, The "else" path. */
 };
 
+/* An IF is a special branch condition that does not result in a loop structure. */
+struct ast_if_then_goto_s {
+/* FIXME: Must do a sanity check to ensure that a single node contains the BRANCH instruction,
+ * 	  and also the associated instruction modifying flags. So the IF expression can be created.
+ *	If not the case, throw an exception for now, but then think about what to do about it.
+ *	Most likely solution would be trying to migrate the BRANCH up to the flags instruction.
+ *	This would potentially duplicate the BRANCH instruction if is crossed a join point.
+ */
+	struct ast_type_index_s parent; /* So we can traverse the tree */
+	struct ast_type_index_s expression_node; /* Normally this would point to the node containing the if expression */
+	struct ast_type_index_s if_then_goto;  /* IF expression is true. The "then" path, ending in a goto . */
+};
+
+
 /* A LOOP is a special branch condition that does result in a loop structure. */
 /* This will later be broken out into whether it is a for() or a while() */
 struct ast_loop_s {
@@ -181,12 +196,15 @@ struct ast_loop_s {
 
 struct ast_s {
 	struct ast_container_s *ast_container;
-	struct ast_if_s *ast_if;
+	struct ast_if_then_else_s *ast_if_then_else;
+	struct ast_if_then_goto_s *ast_if_then_goto;
 	struct ast_loop_s *ast_loop;
 	struct ast_entry_s *ast_entry;
-	int container_index;
-	int if_index;
-	int loop_index;
+	int container_size;
+	int if_then_else_size;
+	int if_then_goto;
+	int loop_size;
+	int entry_size;
 };
 
 /*	FIXME: the concept of link length. If you were looking at the .dot graph,
@@ -253,6 +271,7 @@ struct external_entry_point_s {
 	struct path_s *paths;
 	int loops_size;
 	struct loop_s *loops;
+	struct ast_s ast;
 	/* FIXME: add function return type and param types */
 };
 
