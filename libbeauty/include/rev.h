@@ -279,7 +279,7 @@ struct external_entry_point_s {
 	struct path_s *paths;
 	int loops_size;
 	struct loop_s *loops;
-	struct ast_s ast;
+	int start_ast_container;
 	/* FIXME: add function return type and param types */
 };
 

@@ -62,6 +62,7 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 int local_counter = 0x100;
 struct self_s *self = NULL;
 
+#define AST_SIZE 4000
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
@@ -503,7 +504,7 @@ int print_ast_container(struct ast_container_s *ast_container)
  *	Loop: For a loop contruct. A loop has First Node, and Subsequent Nodes in the loop body.
  *		Later Loop will be converted to for() or while().
  */
-int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct ast_s *ast)
+int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct ast_s *ast, int start_node)
 {
 	struct ast_container_s *ast_container;
 	struct ast_if_then_else_s *ast_if_then_else;
@@ -521,7 +522,6 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int if_then_else_index = 0;
 	int if_then_goto_index = 0;
 	int loop_index = 0;
-	int entry_index = 0;
 	int index;
 	int length;
 	int tmp;
@@ -529,27 +529,30 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int link_goto = 0;
 	int link_norm = 1;
 
-	ast_container = calloc(100, sizeof(struct ast_container_s));
-	ast_if_then_else = calloc(100, sizeof(struct ast_if_then_else_s));
-	ast_if_then_goto = calloc(100, sizeof(struct ast_if_then_goto_s));
-	ast_loop = calloc(100, sizeof(struct ast_loop_s));
-	ast_entry = calloc(100, sizeof(struct ast_entry_s));
-	ast->ast_container = ast_container;
-	ast->ast_if_then_else = ast_if_then_else;
-	ast->ast_if_then_goto = ast_if_then_goto;
-	ast->ast_loop = ast_loop;
-	ast->ast_entry = ast_entry;
+	ast_container = ast->ast_container;
+	ast_if_then_else = ast->ast_if_then_else;
+	ast_if_then_goto = ast->ast_if_then_goto;
+	ast_loop = ast->ast_loop;
+	ast_entry = ast->ast_entry;
+	container_index = ast->container_size;
+	if_then_else_index = ast->if_then_else_size;
+	if_then_goto_index = ast->if_then_goto_size;
+	loop_index = ast->loop_size;
 
 	ast_entry[0].type = AST_TYPE_CONTAINER;
-	ast_entry[0].index = 0;
+	ast_entry[0].index = container_index;
 	ast_entry[0].sub_index = 0;
-	ast_entry[0].node = 1;
+	ast_entry[0].node = start_node;
 	ast_entry[0].node_end = 0;
 	container_index++;
+	if (container_index >= AST_SIZE) { 
+		printf("container_index too large\n");
+		exit(1);
+	}
 
 	do {
 		found = 0;
-		for (n = 0; n < 100; n++) {
+		for (n = 0; n < AST_SIZE; n++) {
 			if (ast_entry[n].type) {
 				found = 1;
 				entry = n;
@@ -614,6 +617,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node = nodes[node].link_next[0].node;
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large\n");
+					exit(1);
+				}
 			}
 			/* Handle the if_else path */
 			if (nodes[node].link_next[1].node == nodes[node].if_tail) {
@@ -629,6 +636,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node = nodes[node].link_next[1].node;
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large\n");
+					exit(1);
+				}
 			}
 
 			if (nodes[node].if_tail == ast_entry[entry].node_end) {
@@ -639,7 +650,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 
 			if_then_else_index++;
-			if (if_then_else_index >= 100) {
+			if (if_then_else_index >= AST_SIZE) {
 				printf("if_then_else_index too large\n");
 				exit(1);
 			}
@@ -690,6 +701,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node = nodes[node].link_next[link_goto].node;
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large\n");
+					exit(1);
+				}
 			}
 
 			ast_entry[entry].sub_index = ast_container[index].length;
@@ -699,7 +714,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 
 			if_then_goto_index++;
-			if (if_then_goto_index >= 100) {
+			if (if_then_goto_index >= AST_SIZE) {
 				printf("if_then_goto_index too large\n");
 				exit(1);
 			}
@@ -767,6 +782,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node = nodes[node].link_next[0].node;
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large\n");
+					exit(1);
+				}
 			}
 			if (nodes[node].link_next[1].is_normal) {
 				printf("Creating loop container 0x%x\n", container_index);
@@ -779,12 +798,16 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node = nodes[node].link_next[1].node;
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large\n");
+					exit(1);
+				}
 			}
 			ast_entry[entry].sub_index = ast_container[index].length;
 			ast_entry[entry].node = nodes[node].if_tail;
 
 			loop_index++;
-			if (loop_index >= 100) { 
+			if (loop_index >= AST_SIZE) { 
 				printf("loop_index too large\n");
 				exit(1);
 			}
@@ -1267,6 +1290,7 @@ int main(int argc, char *argv[])
 	int paths_size = 20000;
 	struct loop_s *loops;
 	int loops_size = 2000;
+	struct ast_s *ast;
 
 	if (argc != 2) {
 		printf("Syntax error\n");
@@ -1523,6 +1547,18 @@ int main(int argc, char *argv[])
 		loops[n].list = calloc(1000, sizeof(int));
 	}
 
+	ast = calloc(1, sizeof(struct ast_s));
+	ast->ast_container = calloc(AST_SIZE, sizeof(struct ast_container_s));
+	ast->ast_if_then_else = calloc(AST_SIZE, sizeof(struct ast_if_then_else_s));
+	ast->ast_if_then_goto = calloc(AST_SIZE, sizeof(struct ast_if_then_goto_s));
+	ast->ast_loop = calloc(AST_SIZE, sizeof(struct ast_loop_s));
+	ast->ast_entry = calloc(AST_SIZE, sizeof(struct ast_entry_s));
+	ast->container_size = 0;
+	ast->if_then_else_size = 0;
+	ast->if_then_goto_size = 0;
+	ast->loop_size = 0;
+
+
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {
@@ -1561,8 +1597,9 @@ int main(int argc, char *argv[])
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
 			/* Control flow graph to Abstract syntax tree */
-			tmp = cfg_to_ast(self, nodes, &nodes_size, &(external_entry_points[l].ast));
-			tmp = print_ast(self, &(external_entry_points[l].ast));
+			external_entry_points[l].start_ast_container = ast->container_size;
+			tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
+			//tmp = print_ast(self, ast);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
@@ -1612,7 +1649,7 @@ int main(int argc, char *argv[])
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
-	tmp = output_ast_dot(self, &(external_entry_points[0].ast), nodes, &nodes_size);
+	tmp = output_ast_dot(self, ast, nodes, &nodes_size);
 	/* FIXME */
 	goto end_main;
 
