@@ -205,7 +205,7 @@ struct ast_s {
 	struct ast_entry_s *ast_entry;
 	int container_size;
 	int if_then_else_size;
-	int if_then_goto;
+	int if_then_goto_size;
 	int loop_size;
 	int entry_size;
 };
