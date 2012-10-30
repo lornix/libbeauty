@@ -547,7 +547,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast->ast_container[container_index].start_node = start_node;
 	container_index++;
 	if (container_index >= AST_SIZE) { 
-		printf("container_index too large\n");
+		printf("container_index too large 0\n");
 		exit(1);
 	}
 
@@ -619,7 +619,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large\n");
+					printf("container_index too large 1\n");
 					exit(1);
 				}
 			}
@@ -638,7 +638,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large\n");
+					printf("container_index too large 2\n");
 					exit(1);
 				}
 			}
@@ -703,7 +703,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large\n");
+					printf("container_index too large 3\n");
 					exit(1);
 				}
 			}
@@ -784,7 +784,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large\n");
+					printf("container_index too large 4\n");
 					exit(1);
 				}
 			}
@@ -800,7 +800,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large\n");
+					printf("container_index too large 5\n");
 					exit(1);
 				}
 			}
@@ -1567,8 +1567,8 @@ int main(int argc, char *argv[])
 	ast->loop_size = 0;
 
 
-//	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-	for (l = 17; l < 18; l++) {
+//	for (l = 18; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+	for (l = 18; l < 23; l++) {
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
 			nodes[external_entry_points[l].start_node].entry_point = l + 1;

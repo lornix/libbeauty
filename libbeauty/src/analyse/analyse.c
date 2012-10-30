@@ -543,12 +543,22 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			struct node_link_s *link;
 			if (nodes[node_b].next_size == 0) {
 				break;
-			}
+			} else if (nodes[node_b].next_size == 1) {
+				link = &(nodes[node_b].link_next[0]);
+				if (link->is_loop_edge) {
+					break;
+				}
+			} else if (nodes[node_b].next_size == 2) {
 			/* FIXME: preferred is only valid the first time round the loop */
-			link = &(nodes[node_b].link_next[preferred]);
-			/* Do not follow loop edges */
-			if (link->is_loop_edge) {
-				link = &(nodes[node_b].link_next[preferred ^ 1]);
+			/* FIXME: what to do if the node is a loop edge and no other links */
+				link = &(nodes[node_b].link_next[preferred]);
+				/* Do not follow loop edges */
+				if (link->is_loop_edge) {
+					link = &(nodes[node_b].link_next[preferred ^ 1]);
+				}
+			} else {
+				printf("BROKEN\n");
+				break;
 			}
 			//printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
 			//	node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
