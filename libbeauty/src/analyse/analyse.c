@@ -451,7 +451,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 					continue;
 				}
 				prev_link_index = nodes[node_b].prev_link_index[m];
-				printf("dom: prev_node = 0x%x, prev_link_index = 0x%x\n", prev_node, prev_link_index);
+				//printf("dom: prev_node = 0x%x, prev_link_index = 0x%x\n", prev_node, prev_link_index);
 				if (!(nodes[prev_node].link_next[prev_link_index].is_loop_edge)) {
 					tmp = prev_node;
 					break;
@@ -462,7 +462,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 				break;
 			}
 			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
-			printf("node_dominance: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			//printf("node_dominance: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			if (tmp) {
 				nodes[n].dominator = node_b;
 				break;
@@ -550,8 +550,8 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			if (link->is_loop_edge) {
 				link = &(nodes[node_b].link_next[preferred ^ 1]);
 			}
-			printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
-				node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
+			//printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
+			//	node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 			tmp = link->node;
 			node_b = tmp;
 			if (0 == node_b) {
@@ -562,7 +562,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			} else {
 				tmp = is_subset(nodes[start_node].looped_path_size, nodes[start_node].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
 			}
-			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			//printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			count++;
 			if (count > 1000) {
 				printf("node_if_tail: failed, too many if_tails\n");

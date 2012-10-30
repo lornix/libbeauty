@@ -544,6 +544,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_entry[0].sub_index = 0;
 	ast_entry[0].node = start_node;
 	ast_entry[0].node_end = 0;
+	ast->ast_container[container_index].start_node = start_node;
 	container_index++;
 	if (container_index >= AST_SIZE) { 
 		printf("container_index too large\n");
@@ -1030,13 +1031,14 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	struct ast_if_then_goto_s *ast_if_then_goto = ast->ast_if_then_goto;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
 	struct ast_entry_s *ast_entry = ast->ast_entry;
+	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	int container_index = ast->container_size;
 	int if_then_else_index = ast->if_then_else_size;
 	int if_then_goto_index = ast->if_then_goto_size;
 	int loop_index = ast->loop_size;
 	char *filename;
 	FILE *fd;
-	int node;
+	int start_node;
 	int tmp;
 	int index;
 	int n;
@@ -1059,12 +1061,18 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (n = 0; n < container_index; n++) {
-		name = "";
+		start_node = ast_container[n].start_node;
+		if (start_node && nodes[start_node].entry_point) {
+			name = external_entry_points[nodes[start_node].entry_point - 1].name;
+		} else {
+			name = "";
+		}
 		tmp = fprintf(fd, " \"Container:0x%08x\" ["
                                         "URL=\"Container:0x%08x\" color=\"%s\", label=\"Container:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
 		tmp = fprintf(fd, "\"]\n");
+		name = "";
 		for (m = 0; m < ast_container[n].length; m++) {
 			index = ast_container[n].object[m].index;
 			switch (ast_container[n].object[m].type) {
@@ -1559,8 +1567,8 @@ int main(int argc, char *argv[])
 	ast->loop_size = 0;
 
 
-	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-//	for (l = 21; l < 22; l++) {
+//	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+	for (l = 17; l < 18; l++) {
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
 			nodes[external_entry_points[l].start_node].entry_point = l + 1;
@@ -1596,10 +1604,13 @@ int main(int argc, char *argv[])
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
-			/* Control flow graph to Abstract syntax tree */
-			external_entry_points[l].start_ast_container = ast->container_size;
-			tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
-			//tmp = print_ast(self, ast);
+			//if (l == 17) {
+				/* Control flow graph to Abstract syntax tree */
+				printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
+				external_entry_points[l].start_ast_container = ast->container_size;
+				tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
+				//tmp = print_ast(self, ast);
+			//}
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));

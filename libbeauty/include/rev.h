@@ -157,6 +157,7 @@ struct ast_type_index_s {
 };
 struct ast_container_s {
 	struct ast_type_index_s parent; /* So we can traverse the tree */
+	int start_node;
 	int length; /* Number of objects. */
 	struct ast_type_index_s *object; /* Array of objects */
 };
