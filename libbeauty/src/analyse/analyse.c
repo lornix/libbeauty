@@ -942,6 +942,22 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 			}
 		}
 	}
+	/* If is_loop_edge or is_loop_exit is set, reset is_normal to 0 */
+	for (n = 1; n <= *node_size; n++) {
+		node = &nodes[n];
+		for (l = 0; l < node->next_size; l++) {
+			int is_loop_edge; 
+			int is_loop_exit; 
+			int is_normal; 
+			is_loop_edge = node->link_next[l].is_loop_edge;
+			is_loop_exit = node->link_next[l].is_loop_exit;
+			is_normal = node->link_next[l].is_normal;
+			if ((is_loop_edge && is_normal) ||
+				(is_loop_exit && is_normal)) {
+				node->link_next[l].is_normal = 0;
+			}
+		}
+	}
 	return 0;
 }
 

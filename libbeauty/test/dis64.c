@@ -792,6 +792,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				printf("Creating loop container 0x%x\n", container_index);
 				ast_loop[loop_index].body.type = AST_TYPE_CONTAINER;
 				ast_loop[loop_index].body.index = container_index;
+				/* FIXME: Only add this if the container first node != if_tail */
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
 				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
 				ast_entry[tmp_entry].index = container_index;
@@ -800,7 +801,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 5\n");
+					printf("container_index too large 5 node = 0x%x, if_tail = 0x%x\n", node, nodes[node].if_tail);
 					exit(1);
 				}
 			}
@@ -1567,8 +1568,8 @@ int main(int argc, char *argv[])
 	ast->loop_size = 0;
 
 
-//	for (l = 18; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-	for (l = 18; l < 23; l++) {
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+//	for (l = 17; l < 19; l++) {
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
 			nodes[external_entry_points[l].start_node].entry_point = l + 1;
@@ -1596,7 +1597,6 @@ int main(int argc, char *argv[])
 
 			printf("tmp = %d, PATHS used = %d\n", tmp, paths_used);
 			tmp = print_control_flow_paths(self, paths, &paths_size);
-//			exit(1);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
 			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
@@ -1604,13 +1604,6 @@ int main(int argc, char *argv[])
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
-			//if (l == 17) {
-				/* Control flow graph to Abstract syntax tree */
-				printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
-				external_entry_points[l].start_ast_container = ast->container_size;
-				tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
-				//tmp = print_ast(self, ast);
-			//}
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
@@ -1660,6 +1653,16 @@ int main(int argc, char *argv[])
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid) {
+			/* Control flow graph to Abstract syntax tree */
+			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
+			external_entry_points[l].start_ast_container = ast->container_size;
+			tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
+			//tmp = print_ast(self, ast);
+		}
+	}
 	tmp = output_ast_dot(self, ast, nodes, &nodes_size);
 	/* FIXME */
 	goto end_main;
