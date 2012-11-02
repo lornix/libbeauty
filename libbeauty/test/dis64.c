@@ -605,7 +605,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_if_then_else[if_then_else_index].expression_node.type = AST_TYPE_NODE;
 			ast_if_then_else[if_then_else_index].expression_node.index = node;
 			/* Handle the if_then path */
-			if (nodes[node].link_next[0].node == nodes[node].if_tail) {
+			if (!(nodes[node].next_size)) {
+				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[0].node == nodes[node].if_tail) {
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_then container 0x%x\n", container_index);
@@ -624,7 +626,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				}
 			}
 			/* Handle the if_else path */
-			if (nodes[node].link_next[1].node == nodes[node].if_tail) {
+			if (!(nodes[node].next_size)) {
+				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[1].node == nodes[node].if_tail) {
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_else container 0x%x\n", container_index);
@@ -689,7 +693,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			/* Only handle the is_exit path.
 			 * There is not "else" path with a if_then_goto
 			 */
-			if (nodes[node].link_next[link_goto].node == nodes[node].if_tail) {
+			if (!(nodes[node].next_size)) {
+				ast_if_then_goto[if_then_goto_index].if_then_goto.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[link_goto].node == nodes[node].if_tail) {
 				ast_if_then_goto[if_then_goto_index].if_then_goto.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_then container 0x%x\n", container_index);
