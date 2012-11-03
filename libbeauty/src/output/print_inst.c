@@ -225,4 +225,5 @@ int print_inst_short(struct self_s *self, struct instruction_s *instruction) {
 		instruction->opcode,
 		opcode_table[instruction->opcode],
 		dis_flags_table[instruction->flags]);
+	return 0;
 }

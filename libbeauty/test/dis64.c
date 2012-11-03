@@ -380,11 +380,11 @@ int external_entry_points_init(struct external_entry_point_s *external_entry_poi
 {
 	int n;
 	int l;
-	struct memory_s *memory_text;
+	//struct memory_s *memory_text;
 	struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
 	struct memory_s *memory_data;
-	int *memory_used;
+	//int *memory_used;
 
 	/* Print the symtab */
 	printf("symtab_sz = %lu\n", handle->symtab_sz);
@@ -434,11 +434,11 @@ int external_entry_points_init(struct external_entry_point_s *external_entry_poi
 				calloc(MEMORY_DATA_SIZE, sizeof(struct memory_s));
 			external_entry_points[n].process_state.memory_used =
 				calloc(MEMORY_USED_SIZE, sizeof(int));
-			memory_text = external_entry_points[n].process_state.memory_text;
+			//memory_text = external_entry_points[n].process_state.memory_text;
 			memory_stack = external_entry_points[n].process_state.memory_stack;
 			memory_reg = external_entry_points[n].process_state.memory_reg;
 			memory_data = external_entry_points[n].process_state.memory_data;
-			memory_used = external_entry_points[n].process_state.memory_used;
+			//memory_used = external_entry_points[n].process_state.memory_used;
 
 			ram_init(memory_data);
 			reg_init(memory_reg);
@@ -513,7 +513,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	struct ast_entry_s *ast_entry;
 	int found;
 	int n;
-	int m;
+	//int m;
 	int entry;
 	int type;
 	int node;
@@ -846,12 +846,12 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_if_then_goto_s *ast_if_then_goto = ast->ast_if_then_goto;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
-	struct ast_entry_s *ast_entry = ast->ast_entry;
+	//struct ast_entry_s *ast_entry = ast->ast_entry;
 	int container_index = ast->container_size;
 	int if_then_else_index = ast->if_then_else_size;
 	int if_then_goto_index = ast->if_then_goto_size;
 	int loop_index = ast->loop_size;
-	int n;
+	//int n;
 	int m;
 	int tmp;
 
@@ -1037,7 +1037,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_if_then_goto_s *ast_if_then_goto = ast->ast_if_then_goto;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
-	struct ast_entry_s *ast_entry = ast->ast_entry;
+	//struct ast_entry_s *ast_entry = ast->ast_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	int container_index = ast->container_size;
 	int if_then_else_index = ast->if_then_else_size;
@@ -1050,7 +1050,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	int index;
 	int n;
 	int m;
-	int container;
+	//int container;
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
@@ -1661,6 +1661,7 @@ int main(int argc, char *argv[])
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+//	for (l = 0; l < 21; l++) {
 		if (external_entry_points[l].valid) {
 			/* Control flow graph to Abstract syntax tree */
 			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);

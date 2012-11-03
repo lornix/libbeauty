@@ -108,6 +108,7 @@ static void print_sections(struct rev_eng* ret)
 #undef PF
 }
 
+#if 0
 static void print_code_section(struct rev_eng* ret)
 {
   asection          *section = ret->section[0];
@@ -127,6 +128,7 @@ static void print_code_section(struct rev_eng* ret)
   free(data);
   data = NULL;
 }
+#endif
 
 int64_t bf_get_code_size(struct rev_eng* ret)
 {
@@ -164,8 +166,8 @@ static void
 dump_reloc_set (bfd *abfd, asection *sec, arelent **relpp, long relcount)
 {
   arelent **p;
-  char *last_filename, *last_functionname;
-  unsigned int last_line;
+//  char *last_filename, *last_functionname;
+//  unsigned int last_line;
 
   /* Get column headers lined up reasonably.  */
   {
@@ -181,9 +183,9 @@ dump_reloc_set (bfd *abfd, asection *sec, arelent **relpp, long relcount)
     printf ("OFFSET %*s TYPE %*s VALUE \n", width, "", 12, "");
   }
 
-  last_filename = NULL;
-  last_functionname = NULL;
-  last_line = 0;
+//  last_filename = NULL;
+//  last_functionname = NULL;
+//  last_line = 0;
 
   for (p = relpp; relcount && *p != NULL; p++, relcount--)
     {
@@ -296,7 +298,7 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 	arelent		*rel;
 	uint64_t relcount;
 	int n;
-	const char *sym_name;
+//	const char *sym_name;
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
 	relpp = malloc (datasize);
@@ -328,7 +330,7 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 			continue;
 		}
 		
-		sym_name = bfd_asymbol_name(*rel->sym_ptr_ptr);
+		//sym_name = bfd_asymbol_name(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_data[n].section_index = sym_sec->index;
 		

@@ -75,16 +75,16 @@ struct memory_s *search_store(
 {
 	int n = 0;
 	uint64_t start = index;
-	uint64_t end = index + size;
+	//uint64_t end = index + size;
 	uint64_t memory_start;
-	uint64_t memory_end;
+	//uint64_t memory_end;
 	struct memory_s *result = NULL;
 
 	printf("memory=%p, index=%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
 		printf("looping\n");
 		memory_start = memory[n].start_address;
-		memory_end = memory[n].start_address + memory[n].length;
+		//memory_end = memory[n].start_address + memory[n].length;
 		/* FIXME: for now ignore size */
 /*		if ((start >= memory_start) &&
 			(end <= memory_end)) {
@@ -104,16 +104,16 @@ struct memory_s *add_new_store(
 {
 	int n = 0;
 	uint64_t start = index;
-	uint64_t end = index + size;
+	//uint64_t end = index + size;
 	uint64_t memory_start;
-	uint64_t memory_end;
+	//uint64_t memory_end;
 	struct memory_s *result = NULL;
 
 	printf("add_new_store: memory=%p, index=0x%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
 		printf("looping\n");
 		memory_start = memory[n].start_address;
-		memory_end = memory[n].start_address + memory[n].length;
+		//memory_end = memory[n].start_address + memory[n].length;
 		/* FIXME: for now ignore size */
 /*		if ((start >= memory_start) &&
 			(end <= memory_end)) {
@@ -169,18 +169,18 @@ static int get_value_RTL_instruction(
 	struct memory_s *value_data = NULL;
 	struct memory_s *value_stack = NULL;
 	uint64_t data_index;
-	char *info;
-	struct memory_s *memory_text;
+	char *info = NULL;
+	//struct memory_s *memory_text;
 	struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
 	struct memory_s *memory_data;
-	int *memory_used;
+	//int *memory_used;
 
-	memory_text = process_state->memory_text;
+	//memory_text = process_state->memory_text;
 	memory_stack = process_state->memory_stack;
 	memory_reg = process_state->memory_reg;
 	memory_data = process_state->memory_data;
-	memory_used = process_state->memory_used;
+	//memory_used = process_state->memory_used;
 
 	if (info_id == 0) info = "srcA";
 	if (info_id == 1) info = "dstA";
@@ -478,17 +478,17 @@ static int put_value_RTL_instruction(
 	struct memory_s *value_data;
 	struct memory_s *value_stack;
 	uint64_t data_index;
-	struct memory_s *memory_text;
+	//struct memory_s *memory_text;
 	struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
 	struct memory_s *memory_data;
-	int *memory_used;
+	//int *memory_used;
 
-	memory_text = process_state->memory_text;
+	//memory_text = process_state->memory_text;
 	memory_stack = process_state->memory_stack;
 	memory_reg = process_state->memory_reg;
 	memory_data = process_state->memory_data;
-	memory_used = process_state->memory_used;
+	//memory_used = process_state->memory_used;
 
 	/* Put result in dstA */
 	instruction = &inst->instruction;
@@ -732,11 +732,11 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 {
 	struct instruction_s *instruction;
 	struct memory_s *value;
-	struct memory_s *memory_text;
-	struct memory_s *memory_stack;
+	//struct memory_s *memory_text;
+	//struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
-	struct memory_s *memory_data;
-	int *memory_used;
+	//struct memory_s *memory_data;
+	//int *memory_used;
 	struct operand_s operand;
 	int16_t tmp16s;
 	int32_t tmp32s;
@@ -744,12 +744,12 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 	uint64_t tmp64u;
 	int tmp;
 
-	memory_text = process_state->memory_text;
-	memory_stack = process_state->memory_stack;
+	//memory_text = process_state->memory_text;
+	//memory_stack = process_state->memory_stack;
 	memory_reg = process_state->memory_reg;
-	memory_data = process_state->memory_data;
-	memory_used = process_state->memory_used;
-	int ret;
+	//memory_data = process_state->memory_data;
+	//memory_used = process_state->memory_used;
+	int ret = 0;
 
 	instruction = &inst->instruction;
 
@@ -1636,9 +1636,9 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 
 	default:
 		printf("Unhandled EXE intruction 0x%x\n", instruction->opcode);
-		return 1;
+		ret = 1;
 		break;
 	}
-	return 0;
+	return ret;
 }
 

@@ -435,7 +435,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 	int n,m;
 	int node_b = 1;
 	int tmp;
-	int type;
+	//int type;
 
 	for(n = 1; n <= *nodes_size; n++) {
 		node_b = n;
@@ -478,7 +478,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int node_b = 1;
 	int tmp;
 	int count = 0;
-	int m;
+	// int m;
 	int method = 0;
 	int type = 0;
 	int preferred = 0;
@@ -593,7 +593,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size)
 
 {
-	int l,m,n;
+	int l;
 	int path;
 	int offset;
 
@@ -631,8 +631,8 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 	int path = 0;
 	int step = 0;
 	int n;
-	int l;
-	int m;
+	//int l;
+	//int m;
 	int node = 1;
 	int tmp;
 	int loop = 0;
@@ -894,13 +894,13 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 /* Try to identify the node link types for each node */
 int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
-	int l, m, n, n2;
+	int l, n;
 	struct control_flow_node_s *node;
 	struct control_flow_node_s *next_node;
-	int head;
+	//int head;
 	int next;
-	int type;
-	int found;
+	//int type;
+	//int found;
 	int tmp;
 
 	for (n = 1; n <= *node_size; n++) {
@@ -911,7 +911,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 				/* Only modify when the type is undefined == 0 */
 				continue;
 			}
-			type = 0;
+			//type = 0;
 			next = node->link_next[l].node;
 			next_node = &nodes[next];
 			if (next_node->loop_head != 0) {
@@ -984,7 +984,7 @@ int get_value_from_index(struct operand_s *operand, uint64_t *index)
  * and creates labels.
  ************************************************************/
 int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
-	int tmp;
+	//int tmp;
 
 	/* FIXME: May handle by using first switch as switch (indirect) */
 	printf("value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
@@ -1181,13 +1181,13 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			 int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
 {
 	int tmp, n;
-	int err;
+	//int err;
 	uint64_t value_id;
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
-	struct memory_s *value;
-	struct label_s *label;
+	//struct memory_s *value;
+	//struct label_s *label;
 
 	if (!start || !end) {
 		printf("scan_for_labels_in_function:Invalid start or end\n");
@@ -1340,7 +1340,7 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
-	uint64_t value_id;
+	//uint64_t value_id;
 	uint64_t inst_num;
 	uint64_t tmp;
 	int found = 0;
@@ -1382,7 +1382,7 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 		search_back_seen[inst_num] = 1;
 		inst_log1 =  &inst_log_entry[inst_num];
 		instruction =  &inst_log1->instruction;
-		value_id = inst_log1->value3.value_id;
+		//value_id = inst_log1->value3.value_id;
 		printf("inst_num:0x%"PRIx64"\n", inst_num);
 		/* STACK */
 		if ((reg_stack == 2) &&

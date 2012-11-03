@@ -232,14 +232,14 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	int opcode;
 	int err = 0;
 	int tmp;
-	int store;
-	int indirect;
-	uint64_t index;
-	uint64_t relocated;
-	uint64_t value_scope;
+	//int store;
+	//int indirect;
+	//uint64_t index;
+	//uint64_t relocated;
+	//uint64_t value_scope;
 	uint64_t value_id;
-	uint64_t indirect_offset_value;
-	uint64_t indirect_value_id;
+	//uint64_t indirect_offset_value;
+	//uint64_t indirect_value_id;
 	struct label_s *label;
 	const char *condition_string;
 
@@ -455,8 +455,7 @@ uint32_t relocated_data(struct rev_eng *handle, uint64_t offset, uint64_t size)
 uint32_t output_function_name(FILE *fd,
 		struct external_entry_point_s *external_entry_point)
 {
-	int commas = 0;
-	int tmp, n;
+	int tmp;
 
 	printf("int %s()\n{\n", external_entry_point->name);
 	printf("value = %"PRIx64"\n", external_entry_point->value);
@@ -467,21 +466,21 @@ uint32_t output_function_name(FILE *fd,
 int output_function_body(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
 {
-	int tmp, l, m, n, n2;
+	int tmp, l, n, n2;
 	int tmp_state;
 	int err;
 	int found;
 	uint64_t value_id;
 	struct instruction_s *instruction;
-	struct instruction_s *instruction_prev;
+	//struct instruction_s *instruction_prev;
 	struct inst_log_entry_s *inst_log1 = NULL;
 	struct inst_log_entry_s *inst_log1_prev;
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
-	struct memory_s *value;
+	//struct memory_s *value;
 	struct label_s *label;
-	struct extension_call_s *call;
+	//struct extension_call_s *call;
 
 	if (!start || !end) {
 		printf("output_function_body:Invalid start or end\n");
@@ -501,7 +500,7 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 			return 1;
 		}
 		instruction =  &inst_log1->instruction;
-		instruction_prev =  &inst_log1_prev->instruction;
+		//instruction_prev =  &inst_log1_prev->instruction;
 
 		write_inst(self, fd, instruction, n, labels);
 

@@ -121,7 +121,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	struct instruction_s *instruction;
 	int	tmp;
 	int	result = 0;
-	struct reloc_table *reloc_table_entry;
+	//struct reloc_table *reloc_table_entry;
 	/* Does not always start at zero.
 	 * e.g. 0xff 0x71 0xfd pushl -0x4(%ecx)
 	 * inserts an RTL dis_instructions before calling here
@@ -1093,13 +1093,13 @@ int dis_Ex(struct rev_eng *handle, int *table, uint8_t rex, struct dis_instructi
 	uint8_t reg;
 	uint8_t reg_mem;
 	uint8_t mod;
-	int number;
+	//int number;
 	int tmp;
 	int result = 0;
 	struct reloc_table *reloc_table_entry;
 	struct instruction_s *instruction;
 
-	number = dis_instructions->instruction_number;
+	//number = dis_instructions->instruction_number;
 	split_ModRM(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &reg, &reg_mem, &mod);
 	dis_instructions->bytes_used++;
 	switch (mod) {
@@ -1173,13 +1173,13 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	int64_t long_signed;
 	uint8_t byte;
 	int tmp;
-	int8_t rel8;
+	//int8_t rel8;
 	int32_t rel32;
 	int64_t rel64;
 	struct reloc_table *reloc_table_entry;
 	uint64_t width = 4;
 	uint8_t rex = 0;
-	uint8_t p66 = 0;
+	//uint8_t p66 = 0;
 	uint8_t repz = 0;
 	uint8_t repz_handled = 0;
 	uint8_t repnz = 0;
@@ -1209,7 +1209,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	}
 	if (byte == 0x66) {
 		/* Detect Operand length prefix. */
-		p66 = 1;
+		//p66 = 1;
 		width = 2;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;

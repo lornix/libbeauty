@@ -25,7 +25,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 	int tmp;
 	int result = 0;
 	uint8_t byte;
-	int8_t rel8 = 0;
+	//int8_t rel8 = 0;
 	int32_t rel32 = 0;
 	int64_t rel64 = 0;
 	struct instruction_s *instruction;

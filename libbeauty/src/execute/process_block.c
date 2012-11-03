@@ -60,20 +60,20 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 	struct instruction_s *instruction;
 	int instruction_offset = 0;
 	int octets = 0;
-	struct memory_s *memory_text;
-	struct memory_s *memory_stack;
+	//struct memory_s *memory_text;
+	//struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
-	struct memory_s *memory_data;
+	//struct memory_s *memory_data;
 	struct dis_instructions_s dis_instructions;
 	int *memory_used;
 	disassembler_ftype disassemble_fn = self->disassemble_fn;
 	struct entry_point_s *entry = self->entry_point;
 	uint64_t list_length = self->entry_point_list_length;
 
-	memory_text = process_state->memory_text;
-	memory_stack = process_state->memory_stack;
+	//memory_text = process_state->memory_text;
+	//memory_stack = process_state->memory_stack;
 	memory_reg = process_state->memory_reg;
-	memory_data = process_state->memory_data;
+	//memory_data = process_state->memory_data;
 	memory_used = process_state->memory_used;
 
 	printf("process_block entry\n");
