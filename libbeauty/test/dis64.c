@@ -509,6 +509,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	struct ast_if_then_else_s *ast_if_then_else;
 	struct ast_if_then_goto_s *ast_if_then_goto;
 	struct ast_loop_s *ast_loop;
+	struct ast_loop_then_else_s *ast_loop_then_else;
 	struct ast_entry_s *ast_entry;
 	int found;
 	int n;
@@ -521,6 +522,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int if_then_else_index = 0;
 	int if_then_goto_index = 0;
 	int loop_index = 0;
+	int loop_then_else_index = 0;
 	int index;
 	int length;
 	int tmp;
@@ -532,11 +534,13 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_if_then_else = ast->ast_if_then_else;
 	ast_if_then_goto = ast->ast_if_then_goto;
 	ast_loop = ast->ast_loop;
+	ast_loop_then_else = ast->ast_loop_then_else;
 	ast_entry = ast->ast_entry;
 	container_index = ast->container_size;
 	if_then_else_index = ast->if_then_else_size;
 	if_then_goto_index = ast->if_then_goto_size;
 	loop_index = ast->loop_size;
+	loop_then_else_index = ast->loop_then_else_size;
 
 	ast_entry[0].type = AST_TYPE_CONTAINER;
 	ast_entry[0].index = container_index;
@@ -578,6 +582,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			type = AST_TYPE_IF_THEN_GOTO;
 		} else if (nodes[node].type == NODE_TYPE_LOOP) {
 			type = AST_TYPE_LOOP;
+		} else if (nodes[node].type == NODE_TYPE_LOOP_THEN_ELSE) {
+			type = AST_TYPE_LOOP_THEN_ELSE;
 		} else {
 			type = AST_TYPE_NODE;
 		};
@@ -826,6 +832,85 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				exit(1);
 			}
 			break;
+		case AST_TYPE_LOOP_THEN_ELSE:
+			index = ast_entry[entry].index;
+			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
+				printf("failed type != 2\n");
+				exit(1);
+			}
+			length = ast_container[index].length;
+			if (0 == length) {
+				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
+				ast_container[index].length = 1;
+			} else {
+				tmp = length + 1;
+				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
+				ast_container[index].length = tmp;
+			}
+			ast_container[index].object[length].type = type;
+			ast_container[index].object[length].index = loop_then_else_index;
+			ast_loop_then_else[loop_then_else_index].expression_node.type = AST_TYPE_NODE;
+			ast_loop_then_else[loop_then_else_index].expression_node.index = node;
+			/* Handle the loop_then path */
+			if (!(nodes[node].next_size)) {
+				ast_loop_then_else[loop_then_else_index].loop_then.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[0].node == nodes[node].if_tail) {
+				ast_loop_then_else[loop_then_else_index].loop_then.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[0].is_loop_edge) {
+				ast_loop_then_else[loop_then_else_index].loop_then.type = AST_TYPE_EMPTY;
+			} else {
+				printf("Creating loop_then container 0x%x\n", container_index);
+				ast_loop_then_else[loop_then_else_index].loop_then.type = AST_TYPE_CONTAINER;
+				ast_loop_then_else[loop_then_else_index].loop_then.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].link_next[0].node;
+				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
+				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large 1\n");
+					exit(1);
+				}
+			}
+			/* Handle the loop_else path */
+			if (!(nodes[node].next_size)) {
+				ast_loop_then_else[loop_then_else_index].loop_else.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[1].node == nodes[node].if_tail) {
+				ast_loop_then_else[loop_then_else_index].loop_else.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[1].is_loop_edge) {
+				ast_loop_then_else[loop_then_else_index].loop_else.type = AST_TYPE_EMPTY;
+			} else {
+				printf("Creating loop_else container 0x%x\n", container_index);
+				ast_loop_then_else[loop_then_else_index].loop_else.type = AST_TYPE_CONTAINER;
+				ast_loop_then_else[loop_then_else_index].loop_else.index = container_index;
+				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
+				ast_entry[tmp_entry].type = AST_TYPE_CONTAINER;
+				ast_entry[tmp_entry].index = container_index;
+				ast_entry[tmp_entry].sub_index = 0;
+				ast_entry[tmp_entry].node = nodes[node].link_next[1].node;
+				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
+				container_index++;
+				if (container_index >= AST_SIZE) { 
+					printf("container_index too large 2\n");
+					exit(1);
+				}
+			}
+
+			if (nodes[node].if_tail == ast_entry[entry].node_end) {
+				ast_entry[entry].type = AST_TYPE_EMPTY;
+			} else {
+				ast_entry[entry].sub_index = ast_container[index].length;
+				ast_entry[entry].node = nodes[node].if_tail;
+			}
+
+			loop_then_else_index++;
+			if (loop_then_else_index >= AST_SIZE) {
+				printf("loop_then_else_index too large\n");
+				exit(1);
+			}
+			break;
 		default:
 			printf("UNHANDLED type = 0x%x\n", type);
 			ast_entry[entry].type = AST_TYPE_EMPTY;
@@ -1043,12 +1128,14 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_if_then_goto_s *ast_if_then_goto = ast->ast_if_then_goto;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
+	struct ast_loop_then_else_s *ast_loop_then_else = ast->ast_loop_then_else;
 	//struct ast_entry_s *ast_entry = ast->ast_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	int container_index = ast->container_size;
 	int if_then_else_index = ast->if_then_else_size;
 	int if_then_goto_index = ast->if_then_goto_size;
 	int loop_index = ast->loop_size;
+	int loop_then_else_index = ast->loop_then_else_size;
 	char *filename;
 	FILE *fd;
 	int start_node;
@@ -1114,6 +1201,11 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			case AST_TYPE_LOOP:
 				color = "blue";
 				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+					n, index, color);
+				break;
+			case AST_TYPE_LOOP_THEN_ELSE:
+				color = "blue";
+				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"loop_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			default:
@@ -1248,6 +1340,59 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		case AST_TYPE_LOOP:
 			color = "blue";
 			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		default:
+			break;
+		}
+	}
+	for (n = 0; n < loop_then_else_index; n++) {
+		name = "";
+		tmp = fprintf(fd, " \"loop_then_else:0x%08x\" ["
+                                        "URL=\"loop_then_else:0x%08x\" color=\"%s\", label=\"loop_then_else:0x%08x:%s\\l",
+                                        n,
+					n, "lightgray", n, name);
+		tmp = fprintf(fd, "\"]\n");
+		index = ast_loop_then_else[n].expression_node.index;
+		switch (ast_loop_then_else[n].expression_node.type) {
+		case AST_TYPE_NODE:
+			color = "gold";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_CONTAINER:
+			color = "gold";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		default:
+			break;
+		}
+		index = ast_loop_then_else[n].loop_then.index;
+		switch (ast_loop_then_else[n].loop_then.type) {
+		case AST_TYPE_NODE:
+			color = "green";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_CONTAINER:
+			color = "green";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		default:
+			break;
+		}
+		index = ast_loop_then_else[n].loop_else.index;
+		switch (ast_loop_then_else[n].loop_else.type) {
+		case AST_TYPE_NODE:
+			color = "red";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				n, index, color);
+			break;
+		case AST_TYPE_CONTAINER:
+			color = "red";
+			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -1574,11 +1719,13 @@ int main(int argc, char *argv[])
 	ast->ast_if_then_else = calloc(AST_SIZE, sizeof(struct ast_if_then_else_s));
 	ast->ast_if_then_goto = calloc(AST_SIZE, sizeof(struct ast_if_then_goto_s));
 	ast->ast_loop = calloc(AST_SIZE, sizeof(struct ast_loop_s));
+	ast->ast_loop_then_else = calloc(AST_SIZE, sizeof(struct ast_loop_then_else_s));
 	ast->ast_entry = calloc(AST_SIZE, sizeof(struct ast_entry_s));
 	ast->container_size = 0;
 	ast->if_then_else_size = 0;
 	ast->if_then_goto_size = 0;
 	ast->loop_size = 0;
+	ast->loop_then_else_size = 0;
 
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
@@ -1667,7 +1814,7 @@ int main(int argc, char *argv[])
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
 
-	for (l = 22; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			/* Control flow graph to Abstract syntax tree */

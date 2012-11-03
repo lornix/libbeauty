@@ -514,6 +514,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				method = 1;
 				type = NODE_TYPE_LOOP;
 				preferred = 1;
+			} else {
+				/* Loop head with both links of type is_normal */
+				method = 1;
+				type = NODE_TYPE_LOOP_THEN_ELSE;
+				preferred = 0;
 			}
 		}
 		/* Control flow within a loop */
