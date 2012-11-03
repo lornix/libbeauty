@@ -59,7 +59,6 @@ struct rev_eng *handle;
 struct disassemble_info disasm_info;
 char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
-int local_counter = 0x100;
 struct self_s *self = NULL;
 
 #define AST_SIZE 4000
@@ -1377,6 +1376,7 @@ int main(int argc, char *argv[])
 	self->external_entry_points = external_entry_points;
 	self->entry_point = calloc(ENTRY_POINTS_SIZE, sizeof(struct entry_point_s));
 	self->entry_point_list_length = ENTRY_POINTS_SIZE;
+	self->local_counter = 0x100;
 
 	nodes = calloc(1000, sizeof(struct control_flow_node_s));
 	nodes_size = 0;
@@ -1694,11 +1694,11 @@ int main(int argc, char *argv[])
 	 * This section deals with correcting SSA for branches/joins.
 	 * This bit creates the labels table, ready for the next step.
 	 ************************************************************/
-	printf("Number of labels = 0x%x\n", local_counter);
+	printf("Number of labels = 0x%x\n", self->local_counter);
 	/* FIXME: +1 added as a result of running valgrind, but need a proper fix */
-	label_redirect = calloc(local_counter + 1, sizeof(struct label_redirect_s));
-	labels = calloc(local_counter + 1, sizeof(struct label_s));
-	printf("JCD6: local_counter=%d\n", local_counter);
+	label_redirect = calloc(self->local_counter + 1, sizeof(struct label_redirect_s));
+	labels = calloc(self->local_counter + 1, sizeof(struct label_s));
+	printf("JCD6: self->local_counter=%d\n", self->local_counter);
 	labels[0].lab_pointer = 1; /* EIP */
 	labels[1].lab_pointer = 1; /* ESP */
 	labels[2].lab_pointer = 1; /* EBP */
@@ -1744,7 +1744,7 @@ int main(int argc, char *argv[])
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
-			if (value_id3 > local_counter) {
+			if (value_id3 > self->local_counter) {
 				printf("SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
@@ -1774,7 +1774,7 @@ int main(int argc, char *argv[])
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
-			if (value_id > local_counter) {
+			if (value_id > self->local_counter) {
 				printf("SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
@@ -1808,7 +1808,7 @@ int main(int argc, char *argv[])
 			} else {
 				value_id2 = inst_log1->value2.value_id;
 			}
-			if (value_id2 > local_counter) {
+			if (value_id2 > self->local_counter) {
 				printf("SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
@@ -1838,7 +1838,7 @@ int main(int argc, char *argv[])
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
-			if (value_id > local_counter) {
+			if (value_id > self->local_counter) {
 				printf("SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
@@ -1871,7 +1871,7 @@ int main(int argc, char *argv[])
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
-			if (value_id > local_counter) {
+			if (value_id > self->local_counter) {
 				printf("SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
@@ -1898,7 +1898,7 @@ int main(int argc, char *argv[])
 
 			if (IND_MEM == instruction->srcA.indirect) {
 				value_id = inst_log1->value1.indirect_value_id;
-				if (value_id > local_counter) {
+				if (value_id > self->local_counter) {
 					printf("SSA Failed at inst_log 0x%x\n", n);
 					return 1;
 				}
@@ -1934,7 +1934,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-	for (n = 0; n < local_counter; n++) {
+	for (n = 0; n < self->local_counter; n++) {
 		printf("labels 0x%x: redirect=0x%"PRIx64", scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", value=0x%"PRIx64"\n",
 			n, label_redirect[n].redirect, labels[n].scope, labels[n].type, labels[n].lab_pointer, labels[n].value);
 	}
@@ -2050,7 +2050,7 @@ int main(int argc, char *argv[])
 		instruction =  &inst_log1->instruction;
 		value_id1 = inst_log1->value1.value_id;
 		
-		if (value_id1 > local_counter) {
+		if (value_id1 > self->local_counter) {
 			printf("SSA Failed at inst_log 0x%x\n", n);
 			return 1;
 		}
@@ -2152,7 +2152,7 @@ int main(int argc, char *argv[])
          * from the labels table: FIXME: THIS IS NOT NEEDED NOW
 	 ********************************************************/
 #if 0
-	for (n = 0; n < (local_counter - 1); n++) {
+	for (n = 0; n < (self->local_counter - 1); n++) {
 		int tmp1;
 		tmp1 = label_redirect[n].redirect;
 		printf("param_reg:scanning base label 0x%x\n", n);
@@ -2161,7 +2161,7 @@ int main(int argc, char *argv[])
 			(labels[tmp1].type == 1)) {
 			int tmp2;
 			/* This is a param_stack */
-			for (l = n + 1; l < local_counter; l++) {
+			for (l = n + 1; l < self->local_counter; l++) {
 				printf("param_reg:scanning label 0x%x\n", l);
 				tmp2 = label_redirect[l].redirect;
 				if ((tmp2 == n) &&
@@ -2212,7 +2212,7 @@ int main(int argc, char *argv[])
 				uint64_t tmp_param;
 				tmp = external_entry_points[l].params[n];
 				printf("JCD5: labels 0x%x, params_size=%d\n", tmp, external_entry_points[l].params_size);
-				if (tmp >= local_counter) {
+				if (tmp >= self->local_counter) {
 					printf("Invalid entry point 0x%x, l=%d, m=%d, n=%d, params_size=%d\n",
 						tmp, l, m, n, external_entry_points[l].params_size);
 					return 0;
@@ -2236,8 +2236,8 @@ int main(int argc, char *argv[])
 								realloc(external_entry_points[l].params, external_entry_points[l].params_size * sizeof(int));
 							/* FIXME: Need to get label right */
 							external_entry_points[l].params[external_entry_points[l].params_size - 1] =
-								local_counter;
-							local_counter++;
+								self->local_counter;
+							self->local_counter++;
 						}
 						tmp_param = external_entry_points[l].params[n];
 						external_entry_points[l].params[n] =
@@ -2275,7 +2275,7 @@ int main(int argc, char *argv[])
 		instruction =  &inst_log1->instruction;
 		value_id1 = inst_log1->value1.value_id;
 		
-		if (value_id1 > local_counter) {
+		if (value_id1 > self->local_counter) {
 			printf("PARAM Failed at inst_log 0x%x\n", n);
 			return 1;
 		}

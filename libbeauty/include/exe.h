@@ -127,7 +127,6 @@ extern struct disassemble_info disasm_info;
 extern char *dis_flags_table[];
 extern uint64_t inst_log;      /* Pointer to the current free instruction log entry. */
 extern char out_buf[1024];
-extern int local_counter;
 extern size_t inst_size;
 
 #endif /* __EXE__ */

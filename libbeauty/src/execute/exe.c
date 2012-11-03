@@ -212,8 +212,8 @@ static int get_value_RTL_instruction(
 			/* unknown */
 			destination->value_scope = 0;
 			/* 1 - Entry Used */
-			destination->value_id = local_counter;
-			local_counter++;
+			destination->value_id = self->local_counter;
+			self->local_counter++;
 			destination->valid = 1;
 			printf("value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
 				destination->init_value,
@@ -238,12 +238,12 @@ static int get_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						source->index,
 						source->value_size);
-				value->value_id = local_counter;
+				value->value_id = self->local_counter;
 				value->value_scope = 1;
 				if (1 == info_id) {
 					value->value_scope = 2;
 				}
-				local_counter++;
+				self->local_counter++;
 			}
 			if (!value) {
 				printf("GET CASE0:STORE_REG ERROR!\n");
@@ -299,8 +299,8 @@ static int get_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						source->index,
 						source->indirect_size);
-				value->value_id = local_counter;
-				local_counter++;
+				value->value_id = self->local_counter;
+				self->local_counter++;
 			}
 			if (!value) {
 				printf("GET CASE2:STORE_REG ERROR!\n");
@@ -331,8 +331,8 @@ static int get_value_RTL_instruction(
 			value_data->value_scope = 3;
 			/* Param number */
 			value_data->value_id =
-				local_counter;
-			local_counter++;
+				self->local_counter;
+			self->local_counter++;
 		}
 		printf("variable on data:0x%"PRIx64"\n",
 			data_index);
@@ -385,8 +385,8 @@ static int get_value_RTL_instruction(
 			value = add_new_store(memory_reg,
 					source->index,
 					source->indirect_size);
-			value->value_id = local_counter;
-			local_counter++;
+			value->value_id = self->local_counter;
+			self->local_counter++;
 		}
 		if (!value) {
 			printf("GET CASE2:STORE_REG ERROR!\n");
@@ -413,15 +413,15 @@ static int get_value_RTL_instruction(
 				/* Param */
 				value_stack->value_scope = 1;
 				/* Param number */
-				value_stack->value_id = local_counter;
-				local_counter++;
+				value_stack->value_id = self->local_counter;
+				self->local_counter++;
 			} else {
 				printf("LOCAL\n");
 				/* Local */
 				value_stack->value_scope = 2;
 				/* Local number */
-				value_stack->value_id = local_counter;
-				local_counter++;
+				value_stack->value_id = self->local_counter;
+				self->local_counter++;
 			}
 /* Section ends */
 		}
@@ -585,8 +585,8 @@ static int put_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						instruction->dstA.index,
 						instruction->dstA.indirect_size);
-				value->value_id = local_counter;
-				local_counter++;
+				value->value_id = self->local_counter;
+				self->local_counter++;
 			}
 			if (!value) {
 				printf("GET CASE2:STORE_REG ERROR!\n");
@@ -728,7 +728,7 @@ static int put_value_RTL_instruction(
 
 
 
-int execute_instruction(void *self, struct process_state_s *process_state, struct inst_log_entry_s *inst)
+int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst)
 {
 	struct instruction_s *instruction;
 	struct memory_s *value;
@@ -828,9 +828,9 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
-		inst->value3.value_id = local_counter;
-		inst->value2.value_id = local_counter;
-		local_counter++;
+		inst->value3.value_id = self->local_counter;
+		inst->value2.value_id = self->local_counter;
+		self->local_counter++;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -915,9 +915,9 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
-		inst->value3.value_id = local_counter;
-		inst->value2.value_id = local_counter;
-		local_counter++;
+		inst->value3.value_id = self->local_counter;
+		inst->value2.value_id = self->local_counter;
+		self->local_counter++;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -1582,7 +1582,7 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
  
 		/* Get value of dstA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
-		printf("CALL local_counter = 0x%x\n", local_counter);
+		printf("CALL self->local_counter = 0x%x\n", self->local_counter);
 		/* FIXME: Currently this is a NOP. */
 		/* Get value of dstA */
 		inst->value3.start_address = inst->value2.start_address;
@@ -1610,9 +1610,9 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 			inst->value2.ref_log;
 		inst->value3.value_scope = inst->value2.value_scope;
 		/* Counter */
-		inst->value3.value_id = local_counter;
-		inst->value2.value_id = local_counter;
-		local_counter++;
+		inst->value3.value_id = self->local_counter;
+		inst->value2.value_id = self->local_counter;
+		self->local_counter++;
 		/* 1 - Entry Used */
 		inst->value2.valid = 1;
 		inst->value3.valid = 1;
@@ -1631,7 +1631,7 @@ int execute_instruction(void *self, struct process_state_s *process_state, struc
 		operand.value_size = instruction->dstA.value_size;
 
 		ret = get_value_RTL_instruction(self, process_state, &(operand), &(inst->value2), 1); 
-		printf("CALL local_counter = 0x%x\n", local_counter);
+		printf("CALL self->local_counter = 0x%x\n", self->local_counter);
 		break;
 
 	default:
