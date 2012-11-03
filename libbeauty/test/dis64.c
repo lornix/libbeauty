@@ -608,6 +608,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else if (nodes[node].link_next[0].node == nodes[node].if_tail) {
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[0].is_loop_edge) {
+				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_then container 0x%x\n", container_index);
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_CONTAINER;
@@ -628,6 +630,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if (!(nodes[node].next_size)) {
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else if (nodes[node].link_next[1].node == nodes[node].if_tail) {
+				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
+			} else if (nodes[node].link_next[1].is_loop_edge) {
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
 				printf("Creating if_else container 0x%x\n", container_index);
@@ -776,6 +780,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index].object[length].index = loop_index;
 			//ast_loop[loop_index].expression_node.type = AST_TYPE_NODE;
 			//ast_loop[loop_index].expression_node.index = node;
+			/* Default to an empty body. This covers the edge to self case */
+			ast_loop[loop_index].body.type = AST_TYPE_EMPTY;
+			ast_loop[loop_index].body.index = 0;
 
 			if (nodes[node].link_next[0].is_normal) {
 				printf("Creating loop container 0x%x\n", container_index);
@@ -1660,9 +1667,9 @@ int main(int argc, char *argv[])
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
 
-	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+	for (l = 22; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
-		if (external_entry_points[l].valid) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			/* Control flow graph to Abstract syntax tree */
 			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
 			external_entry_points[l].start_ast_container = ast->container_size;
