@@ -937,11 +937,13 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	struct ast_if_then_else_s *ast_if_then_else = ast->ast_if_then_else;
 	struct ast_if_then_goto_s *ast_if_then_goto = ast->ast_if_then_goto;
 	struct ast_loop_s *ast_loop = ast->ast_loop;
+	struct ast_loop_then_else_s *ast_loop_then_else = ast->ast_loop_then_else;
 	//struct ast_entry_s *ast_entry = ast->ast_entry;
 	int container_index = ast->container_size;
 	int if_then_else_index = ast->if_then_else_size;
 	int if_then_goto_index = ast->if_then_goto_size;
 	int loop_index = ast->loop_size;
+	int loop_then_else_index = ast->loop_then_else_size;
 	//int n;
 	int m;
 	int tmp;
@@ -1051,6 +1053,63 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		printf("ast_loop[%d].body\n", m);
 		tmp = ast_loop[m].body.index;
 		print_ast_container(&ast_container[tmp]);
+	}
+	for (m = 0; m < loop_then_else_index; m++) {
+		int type;
+		type = ast_loop_then_else[m].expression_node.type;
+		switch (type) {
+		case AST_TYPE_EMPTY:
+			printf("ast_loop_then_else expression_node empty\n");
+			break;
+		case AST_TYPE_NODE:
+			printf("ast_loop_then_else[%d].expression_node.type = 0x%x\n", m, ast_loop_then_else[m].expression_node.type);
+			printf("ast_loop_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].expression_node.index);
+			break;
+		case AST_TYPE_CONTAINER:
+			printf("ast_loop_then_else[%d].expression_node\n", m);
+			tmp = ast_loop_then_else[m].expression_node.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_loop_then_else expression_node default\n");
+			break;
+		}
+		type = ast_loop_then_else[m].loop_then.type;
+		switch (type) {
+		case AST_TYPE_EMPTY:
+			printf("ast_loop_then_else loop_then empty\n");
+			break;
+		case AST_TYPE_NODE:
+			printf("ast_loop_then_else[%d].loop_then.type = 0x%x\n", m, ast_loop_then_else[m].loop_then.type);
+			printf("ast_loop_then_else[%d].loop_then.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_then.index);
+			break;
+		case AST_TYPE_CONTAINER:
+			printf("ast_loop_then_else[%d].loop_then\n", m);
+			tmp = ast_loop_then_else[m].loop_then.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_loop_then_else loop_then default\n");
+			break;
+		}
+		type = ast_loop_then_else[m].loop_else.type;
+		switch (type) {
+		case AST_TYPE_EMPTY:
+			printf("ast_loop_then_else loop_else empty\n");
+			break;
+		case AST_TYPE_NODE:
+			printf("ast_loop_then_else[%d].loop_else.type = 0x%x\n", m, ast_loop_then_else[m].loop_else.type);
+			printf("ast_loop_then_else[%d].loop_else.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_else.index);
+			break;
+		case AST_TYPE_CONTAINER:
+			printf("ast_loop_then_else[%d].loop_else\n", m);
+			tmp = ast_loop_then_else[m].loop_else.index;
+			print_ast_container(&ast_container[tmp]);
+			break;
+		default:
+			printf("ast_loop_then_else loop_else default\n");
+			break;
+		}
 	}
 	return 0;
 }

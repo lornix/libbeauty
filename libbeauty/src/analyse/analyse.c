@@ -795,7 +795,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		}
 	}
 	*node_size = node - 1;
-
+	/* Start by building the entire node table, with prev and next node. */
 	for (n = 1; n <= *node_size; n++) {
 		inst_log1 =  &inst_log_entry[nodes[n].inst_start];
 		if (inst_log1->prev_size > 0) {
@@ -806,11 +806,6 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			for (m = 0; m < inst_log1->prev_size; m++) {
 				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->prev[m]);
 				nodes[n].prev_node[m] = tmp;
-				for (l = 0; l < nodes[tmp].next_size; l++) {
-					if (nodes[tmp].link_next[l].node == n) {
-						nodes[n].prev_link_index[m] = l;
-					}
-				}
 			}
 		}
 		inst_log1 =  &inst_log_entry[nodes[n].inst_end];
@@ -825,6 +820,22 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			for (m = 0; m < inst_log1->next_size; m++) {
 				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->next[m]);
 				nodes[n].link_next[m].node = tmp;
+			}
+		}
+	}
+	/* Once the full prev/next node table is completed,
+	 * add in the prev_link_index.
+	 * the prev_link_index can only be built once the prev/next node table is complete.
+	 */
+	for (n = 1; n <= *node_size; n++) {
+		for (m = 0; m < nodes[n].next_size; m++) {
+			tmp = nodes[n].link_next[m].node;
+			for (l = 0; l < nodes[tmp].prev_size; l++) {
+				if (nodes[tmp].prev_node[l] == n) {
+					nodes[tmp].prev_link_index[l] = m;
+					printf("prev_link_index: 0x%x, 0x%x 0x%x\n",
+						tmp, m, l);
+				}
 			}
 		}
 	}
