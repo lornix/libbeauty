@@ -273,6 +273,7 @@ struct control_flow_node_s {
 	int member_of_loop_size; /* Number of member_of_loop entries in the list */
 	int *member_of_loop; /* The list of member_of_loop entries. One entry for each loop this node belongs to */
 	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
+	int depth; /* Where abouts in a graph does it go. 1 = Top of graph, 10 = 10th step down */
 };
 
 struct external_entry_point_s {

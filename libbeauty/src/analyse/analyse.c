@@ -735,6 +735,39 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 	return 0;
 }
 
+int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start)
+{
+	int n, m;
+	int node;
+	int depth;
+	
+	node = paths[0].path[0];
+	nodes[node].depth = 1;
+	
+
+	for (m = 0; m < *paths_size; m++) {
+		if (paths[m].used && (paths[m].type != 1)) {
+			if (m == 0) {
+				depth = 1;
+			} else {
+				node = paths[paths[m].path_prev].path[paths[m].path_prev_index];
+				depth = nodes[node].depth + 1;
+			}
+			for (n = 0; n < paths[m].path_size; n++) {
+				node = paths[m].path[n];
+				if (nodes[node].depth < depth) {
+					nodes[node].depth = depth;
+					depth++;
+				} else {
+					depth = nodes[node].depth + 1;
+				}
+			}
+		}
+	}
+	return 0;
+}	
+
+
 int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *paths_size)
 {
 	int n, m;
@@ -853,7 +886,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 	printf("print_control_flow_nodes: size = %d\n", *node_size);	
 	for (n = 1; n <= *node_size; n++) {
-		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x\n",
+		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, depth=0x%x\n",
 			n,
 			nodes[n].type,
 			nodes[n].dominator,
@@ -861,7 +894,8 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].loop_head,
 			nodes[n].inst_start,
 			nodes[n].inst_end,
-			nodes[n].entry_point);
+			nodes[n].entry_point,
+			nodes[n].depth);
 		for (m = 0; m < nodes[n].prev_size; m++) {
 			prev_node = nodes[n].prev_node[m];
 			prev_link_index = nodes[n].prev_link_index[m];
