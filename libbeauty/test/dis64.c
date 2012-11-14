@@ -955,7 +955,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast->if_then_goto_size = if_then_goto_index;
 	ast->loop_size = loop_index;
 	ast->loop_then_else_size = loop_then_else_index;
-	ast->loop_container_size = container_index;
+	ast->loop_container_size = loop_container_index;
 	return 0;
 }
 
