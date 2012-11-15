@@ -139,6 +139,15 @@ struct node_mid_start_s {
  * FIXME: jump tables and call tables not taken into account yet.
  */
 
+struct ast_entry_s {
+	int type;
+	int sub_type;
+	int index;
+	int sub_index;
+	int node;
+	int node_end; // Node to end at.
+};
+
 /* Types: */
 #define AST_TYPE_EMPTY 0	// This entry has not been used yet or it is not used any more.
 #define AST_TYPE_NODE 1		// This points to the existing Node table.
@@ -165,6 +174,7 @@ struct ast_type_parent_s {
 struct ast_container_s {
 	struct ast_type_parent_s parent; /* So we can traverse the tree */
 	int start_node;
+	int sub_type; /* 0 = normal container, 1 = loop container */
 	int length; /* Number of objects. */
 	struct ast_type_index_s *object; /* Array of objects */
 };
