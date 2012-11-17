@@ -61,7 +61,7 @@ char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
-#define AST_SIZE 4000
+#define AST_SIZE 20
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
@@ -538,6 +538,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	int tmp_entry = 0;
 	int link_goto = 0;
 	int link_norm = 1;
+	int ret = 0;
 
 	ast_container = ast->ast_container;
 	ast_if_then_else = ast->ast_if_then_else;
@@ -563,7 +564,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	container_index++;
 	if (container_index >= AST_SIZE) { 
 		printf("container_index too large 0\n");
-		exit(1);
+		ret = 1;
+		goto exit_cfg_to_ast;
 	}
 
 	do {
@@ -642,7 +644,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 1\n");
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			/* Handle the if_else path */
@@ -666,7 +669,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 2\n");
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 
@@ -680,7 +684,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if_then_else_index++;
 			if (if_then_else_index >= AST_SIZE) {
 				printf("if_then_else_index too large\n");
-				exit(1);
+				ret = 1;
+				goto exit_cfg_to_ast;
 			}
 			break;
 		case AST_TYPE_IF_THEN_GOTO:
@@ -738,7 +743,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 3\n");
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			/* FIXME: Fix case where link_norm is a loop edge, and link_goto does not exit the loop */
@@ -765,7 +771,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if_then_goto_index++;
 			if (if_then_goto_index >= AST_SIZE) {
 				printf("if_then_goto_index too large\n");
-				exit(1);
+				ret = 1;
+				goto exit_cfg_to_ast;
 			}
 			break;
 		case AST_TYPE_NODE:
@@ -837,7 +844,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 4\n");
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			if (nodes[node].link_next[1].is_normal) {
@@ -855,7 +863,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 5 node = 0x%x, if_tail = 0x%x\n", node, nodes[node].if_tail);
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			ast_entry[entry].sub_index = ast_container[index].length;
@@ -864,7 +873,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			loop_index++;
 			if (loop_index >= AST_SIZE) { 
 				printf("loop_index too large\n");
-				exit(1);
+				ret = 1;
+				goto exit_cfg_to_ast;
 			}
 			break;
 		case AST_TYPE_LOOP_THEN_ELSE:
@@ -911,8 +921,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				index + 1, index, ast_container[index].length);
 			container_index++;
 			if (container_index >= AST_SIZE) { 
-				printf("container_index too large 1\n");
-				exit(1);
+				printf("container_index too large 2\n");
+				ret = 1;
+				goto exit_cfg_to_ast;
 			}
 			ast_if_then_else[if_then_else_index].parent.type = AST_TYPE_CONTAINER;
 			ast_if_then_else[if_then_else_index].parent.index = index + 1 ;
@@ -939,8 +950,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 1\n");
-					exit(1);
+					printf("container_index too large 3\n");
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			/* Handle the loop_else path */
@@ -964,7 +976,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				container_index++;
 				if (container_index >= AST_SIZE) { 
 					printf("container_index too large 2\n");
-					exit(1);
+					ret = 1;
+					goto exit_cfg_to_ast;
 				}
 			}
 			if (!is_member_of_loop(nodes, node, nodes[node].if_tail)) {
@@ -987,7 +1000,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if_then_else_index++;
 			if (if_then_else_index >= AST_SIZE) {
 				printf("if_then_else_index too large\n");
-				exit(1);
+				ret = 1;
+				goto exit_cfg_to_ast;
 			}
 #if 0
 			loop_container_index++;
@@ -1014,13 +1028,14 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
 
 	} while(1);
+exit_cfg_to_ast:
 	ast->container_size = container_index;
 	ast->if_then_else_size = if_then_else_index;
 	ast->if_then_goto_size = if_then_goto_index;
 	ast->loop_size = loop_index;
 	ast->loop_then_else_size = loop_then_else_index;
 	ast->loop_container_size = loop_container_index;
-	return 0;
+	return ret;
 }
 
 int print_ast(struct self_s *self, struct ast_s *ast) {
