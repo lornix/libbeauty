@@ -700,6 +700,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			}
 			ast_container[index].object[length].type = type;
 			ast_container[index].object[length].index = if_then_goto_index;
+			ast_if_then_goto[if_then_goto_index].parent.type = AST_TYPE_CONTAINER;
+			ast_if_then_goto[if_then_goto_index].parent.index = index;
+			ast_if_then_goto[if_then_goto_index].parent.offset = length; /* Point to the parent that points to us */
+
 			ast_if_then_goto[if_then_goto_index].expression_node.type = AST_TYPE_NODE;
 			ast_if_then_goto[if_then_goto_index].expression_node.index = node;
 
@@ -737,14 +741,22 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 					exit(1);
 				}
 			}
-
+			/* FIXME: Fix case where link_norm is a loop edge, and link_goto does not exit the loop */
 			ast_entry[entry].sub_index = ast_container[index].length;
 			ast_entry[entry].node = nodes[node].link_next[link_norm].node;
 			if (ast_entry[entry].sub_type == 1) {
 				if (!is_member_of_loop(nodes, node, ast_entry[entry].node)) {
-					ast_entry[entry].type = AST_TYPE_EMPTY;
-					printf("FIXME: need to redirect ast_entry to parent\n");
-				//	exit(1);
+					int exit_index = ast_entry[entry].index;
+					printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+						ast_container[ast_entry[entry].index].parent.type,
+						ast_container[ast_entry[entry].index].parent.index,
+						ast_container[ast_entry[entry].index].parent.offset);
+					ast_entry[entry].type = ast_container[exit_index].parent.type;
+					ast_entry[entry].sub_type = ast_container[exit_index].sub_type;
+					ast_entry[entry].index = ast_container[exit_index].parent.index;
+					ast_entry[entry].sub_index = ast_container[exit_index].parent.offset;
+					ast_entry[entry].node = nodes[node].link_next[link_goto].node;
+					ast_entry[entry].node_end = ast_container[exit_index].length;
 				}
 			} else if (ast_entry[entry].node == ast_entry[entry].node_end) {
 				ast_entry[entry].type = AST_TYPE_EMPTY;
@@ -902,6 +914,9 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				printf("container_index too large 1\n");
 				exit(1);
 			}
+			ast_if_then_else[if_then_else_index].parent.type = AST_TYPE_CONTAINER;
+			ast_if_then_else[if_then_else_index].parent.index = index + 1 ;
+			ast_if_then_else[if_then_else_index].parent.offset = 0; /* Point to the parent that points to us */
 			ast_if_then_else[if_then_else_index].expression_node.type = AST_TYPE_NODE;
 			ast_if_then_else[if_then_else_index].expression_node.index = node;
 			/* Handle the loop_then path */
