@@ -169,7 +169,7 @@ struct ast_type_index_s {
 struct ast_type_parent_s {
 	int type; /* Object type. e.g. If, for, while. */
 	uint64_t index; /* index into the specific object table */
-	int offset; /* Specific entry in the object list */
+	int offset; /* Specific entry in the object list. Point to the object that points to us */
 };
 struct ast_container_s {
 	struct ast_type_parent_s parent; /* So we can traverse the tree */

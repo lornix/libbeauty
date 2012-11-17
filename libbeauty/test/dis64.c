@@ -477,6 +477,8 @@ int print_ast_container(struct ast_container_s *ast_container)
 	if (ast_container->length) {
 		printf("ast_container->length = 0x%x\n", ast_container->length);
 	}
+	printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+		ast_container->parent.type, ast_container->parent.index, ast_container->parent.offset);
 	for (n = 0; n < ast_container->length; n++) {
 		printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
 			n,
@@ -888,8 +890,13 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index + 1].object[0].index = if_then_else_index;
 			ast_container[index + 1].length = 1;
 			ast_container[index + 1].start_node = node;
+			ast_container[index + 1].parent.type = AST_TYPE_CONTAINER;
+			ast_container[index + 1].parent.index = index;
+			ast_container[index + 1].parent.offset = length; /* Point to the parent that points to us */
 			printf("ast_container[0x%x].object[0x%x] set to AST_TYPE_IF_THEN_ELSE and index = 0x%x\n",
 				index + 1, 0, if_then_else_index);
+			printf("ast_container[0x%x].parent set to AST_TYPE_CONTAINER, 0x%x, 0x%x\n",
+				index + 1, index, ast_container[index].length);
 			container_index++;
 			if (container_index >= AST_SIZE) { 
 				printf("container_index too large 1\n");
@@ -1024,6 +1031,10 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < if_then_else_index; m++) {
 		int type;
+		printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+			ast_if_then_else[m].parent.type,
+			ast_if_then_else[m].parent.index,
+			ast_if_then_else[m].parent.offset);
 		type = ast_if_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
@@ -1081,6 +1092,10 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < if_then_goto_index; m++) {
 		int type;
+		printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+			ast_if_then_goto[m].parent.type,
+			ast_if_then_goto[m].parent.index,
+			ast_if_then_goto[m].parent.offset);
 		type = ast_if_then_goto[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
