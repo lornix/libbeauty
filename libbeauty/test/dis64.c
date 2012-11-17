@@ -741,6 +741,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if (ast_entry[entry].sub_type == 1) {
 				if (!is_member_of_loop(nodes, node, ast_entry[entry].node)) {
 					ast_entry[entry].type = AST_TYPE_EMPTY;
+					printf("FIXME: need to redirect ast_entry to parent\n");
+				//	exit(1);
 				}
 			} else if (ast_entry[entry].node == ast_entry[entry].node_end) {
 				ast_entry[entry].type = AST_TYPE_EMPTY;
@@ -872,12 +874,15 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			/* Create two containers. The loop_container, and inside the loop_container, the if_then_else */
 			ast_container[index].object[length].type = AST_TYPE_CONTAINER;
 			ast_container[index].object[length].index = container_index;
+			printf("JCD: container_index 0x%x, index 0x%x, length 0x%x  container_length 0x%x\n",
+				container_index, index, length, ast_container[index].length);
 			ast_container[index + 1].object = malloc(sizeof(struct ast_type_index_s));
 			ast_container[index + 1].length = 1;
 			ast_container[index + 1].object[0].type = AST_TYPE_IF_THEN_ELSE;
 			ast_container[index + 1].sub_type = 1;
 			ast_container[index + 1].object[0].index = if_then_else_index;
 			ast_container[index + 1].length = 1;
+			ast_container[index + 1].start_node = node;
 			container_index++;
 			if (container_index >= AST_SIZE) { 
 				printf("container_index too large 1\n");
@@ -941,8 +946,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				printf("JCD: loop_container_node = 0x%x\n", nodes[node].if_tail);
 				ast_entry[entry].type = AST_TYPE_CONTAINER;
 				ast_entry[entry].sub_type = 1; /* for LOOP container */
-				ast_entry[entry].index = loop_container_index;
-				ast_entry[entry].sub_index = ast_loop_container[loop_container_index].length;
+				ast_entry[entry].index = container_index;
+				ast_entry[entry].sub_index = ast_container[container_index].length;
 				ast_entry[entry].node = nodes[node].if_tail;
 				ast_entry[entry].node_end = 0; /* Unknown */
 			}
@@ -1305,6 +1310,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 					n, index, color);
 				break;
 			case AST_TYPE_CONTAINER:
+				color = "blue";
+				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+					n, index, color);
 				break;
 			case AST_TYPE_LOOP_CONTAINER:
 				color = "blue";
@@ -2006,7 +2014,7 @@ int main(int argc, char *argv[])
 			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
 			external_entry_points[l].start_ast_container = ast->container_size;
 			tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
-			//tmp = print_ast(self, ast);
+			tmp = print_ast(self, ast);
 		}
 	}
 	tmp = output_ast_dot(self, ast, nodes, &nodes_size);
