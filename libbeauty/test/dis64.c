@@ -866,23 +866,30 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if (0 == length) {
 				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
 				ast_container[index].length = 1;
+				printf("Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
 			} else {
 				tmp = length + 1;
 				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
 				ast_container[index].length = tmp;
+				printf("Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
 			}
 			/* Create two containers. The loop_container, and inside the loop_container, the if_then_else */
 			ast_container[index].object[length].type = AST_TYPE_CONTAINER;
 			ast_container[index].object[length].index = container_index;
+			printf("ast_container[0x%x].object[0x%x] set to AST_TYPE_CONTAINER and index = 0x%x\n",
+				index, length, container_index);
 			printf("JCD: container_index 0x%x, index 0x%x, length 0x%x  container_length 0x%x\n",
 				container_index, index, length, ast_container[index].length);
 			ast_container[index + 1].object = malloc(sizeof(struct ast_type_index_s));
 			ast_container[index + 1].length = 1;
+			printf("Add object 0x%x to container 0x%x\n", ast_container[index + 1].length - 1, index + 1);
 			ast_container[index + 1].object[0].type = AST_TYPE_IF_THEN_ELSE;
 			ast_container[index + 1].sub_type = 1;
 			ast_container[index + 1].object[0].index = if_then_else_index;
 			ast_container[index + 1].length = 1;
 			ast_container[index + 1].start_node = node;
+			printf("ast_container[0x%x].object[0x%x] set to AST_TYPE_IF_THEN_ELSE and index = 0x%x\n",
+				index + 1, 0, if_then_else_index);
 			container_index++;
 			if (container_index >= AST_SIZE) { 
 				printf("container_index too large 1\n");
@@ -946,8 +953,8 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				printf("JCD: loop_container_node = 0x%x\n", nodes[node].if_tail);
 				ast_entry[entry].type = AST_TYPE_CONTAINER;
 				ast_entry[entry].sub_type = 1; /* for LOOP container */
-				ast_entry[entry].index = container_index;
-				ast_entry[entry].sub_index = ast_container[container_index].length;
+				ast_entry[entry].index = index + 1;
+				ast_entry[entry].sub_index = ast_container[index + 1].length;
 				ast_entry[entry].node = nodes[node].if_tail;
 				ast_entry[entry].node_end = 0; /* Unknown */
 			}
