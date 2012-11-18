@@ -61,7 +61,7 @@ char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
-#define AST_SIZE 20
+#define AST_SIZE 300
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
@@ -479,11 +479,15 @@ int print_ast_container(struct ast_container_s *ast_container)
 	}
 	printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
 		ast_container->parent.type, ast_container->parent.index, ast_container->parent.offset);
-	for (n = 0; n < ast_container->length; n++) {
-		printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
-			n,
-			ast_container->object[n].type,
-			ast_container->object[n].index);
+	if (ast_container->object) {
+		for (n = 0; n < ast_container->length; n++) {
+			printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
+				n,
+				ast_container->object[n].type,
+				ast_container->object[n].index);
+		}
+	} else if (ast_container->length > 0) {
+		printf("print_ast_container invalid\n");
 	}
 	return 0;
 }
@@ -1029,6 +1033,31 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 	} while(1);
 exit_cfg_to_ast:
+#if 0
+	if (container_index >= AST_SIZE) {
+		container_index = AST_SIZE - 1;
+	}
+	if (if_then_else_index >= AST_SIZE) {
+		exit(1);
+		if_then_else_index = AST_SIZE - 1;
+	}
+	if (if_then_goto_index >= AST_SIZE) {
+		exit(1);
+		if_then_goto_index = AST_SIZE - 1;
+	}
+	if (loop_index >= AST_SIZE) {
+		exit(1);
+		loop_index = AST_SIZE - 1;
+	}
+	if (loop_then_else_index >= AST_SIZE) {
+		exit(1);
+		loop_then_else_index = AST_SIZE - 1;
+	}
+	if (loop_container_index >= AST_SIZE) {
+		exit(1);
+		loop_container_index = AST_SIZE - 1;
+	}
+#endif
 	ast->container_size = container_index;
 	ast->if_then_else_size = if_then_else_index;
 	ast->if_then_goto_size = if_then_goto_index;
@@ -1057,6 +1086,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	printf("AST OUTPUT\n");
 	for (m = 0; m < container_index; m++) {
 		printf("ast_container[%d]", m);
+		if (container_index >= AST_SIZE) {
+			break;
+		}
 		print_ast_container(&ast_container[m]);
 	}
 	for (m = 0; m < if_then_else_index; m++) {
@@ -1065,6 +1097,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			ast_if_then_else[m].parent.type,
 			ast_if_then_else[m].parent.index,
 			ast_if_then_else[m].parent.offset);
+		if (if_then_else_index >= AST_SIZE) {
+			break;
+		}
 		type = ast_if_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
@@ -1126,6 +1161,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			ast_if_then_goto[m].parent.type,
 			ast_if_then_goto[m].parent.index,
 			ast_if_then_goto[m].parent.offset);
+		if (if_then_goto_index >= AST_SIZE) {
+			break;
+		}
 		type = ast_if_then_goto[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
@@ -1138,6 +1176,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		case AST_TYPE_CONTAINER:
 			printf("ast_if_then_goto[%d].expression_node\n", m);
 			tmp = ast_if_then_goto[m].expression_node.index;
+			if (tmp >= AST_SIZE) {
+				break;
+			}
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -1156,6 +1197,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		case AST_TYPE_CONTAINER:
 			printf("ast_if_then_goto[%d].if_then_goto\n", m);
 			tmp = ast_if_then_goto[m].if_then_goto.index;
+			if (tmp >= AST_SIZE) {
+				break;
+			}
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -1165,11 +1209,20 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < loop_index; m++) {
 		printf("ast_loop[%d].body\n", m);
+		if (loop_index >= AST_SIZE) {
+			break;
+		}
 		tmp = ast_loop[m].body.index;
+		if (tmp >= AST_SIZE) {
+			break;
+		}
 		print_ast_container(&ast_container[tmp]);
 	}
 	for (m = 0; m < loop_then_else_index; m++) {
 		int type;
+		if (loop_then_else_index >= AST_SIZE) {
+			break;
+		}
 		type = ast_loop_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
@@ -1182,6 +1235,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		case AST_TYPE_CONTAINER:
 			printf("ast_loop_then_else[%d].expression_node\n", m);
 			tmp = ast_loop_then_else[m].expression_node.index;
+			if (tmp >= AST_SIZE) {
+				break;
+			}
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -1200,6 +1256,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		case AST_TYPE_CONTAINER:
 			printf("ast_loop_then_else[%d].loop_then\n", m);
 			tmp = ast_loop_then_else[m].loop_then.index;
+			if (tmp >= AST_SIZE) {
+				break;
+			}
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -1218,6 +1277,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		case AST_TYPE_CONTAINER:
 			printf("ast_loop_then_else[%d].loop_else\n", m);
 			tmp = ast_loop_then_else[m].loop_else.index;
+			if (tmp >= AST_SIZE) {
+				break;
+			}
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
@@ -1336,6 +1398,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (n = 0; n < container_index; n++) {
+		if (container_index >= AST_SIZE) {
+			break;
+		}
 		start_node = ast_container[n].start_node;
 		if (start_node && nodes[start_node].entry_point) {
 			name = external_entry_points[nodes[start_node].entry_point - 1].name;
@@ -1397,6 +1462,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_container_index; n++) {
+		if (loop_container_index >= AST_SIZE) {
+			break;
+		}
 		start_node = ast_loop_container[n].start_node;
 		if (start_node && nodes[start_node].entry_point) {
 			name = external_entry_points[nodes[start_node].entry_point - 1].name;
@@ -1455,6 +1523,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < if_then_else_index; n++) {
+		if (if_then_else_index >= AST_SIZE) {
+			break;
+		}
 		name = "";
 		tmp = fprintf(fd, " \"if_then_else:0x%08x\" ["
                                         "URL=\"if_then_else:0x%08x\" color=\"%s\", label=\"if_then_else:0x%08x:%s\\l",
@@ -1508,6 +1579,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < if_then_goto_index; n++) {
+		if (if_then_goto_index >= AST_SIZE) {
+			break;
+		}
 		name = "";
 		tmp = fprintf(fd, " \"if_then_goto:0x%08x\" ["
                                         "URL=\"if_then_goto:0x%08x\" color=\"%s\", label=\"if_then_goto:0x%08x:%s\\l",
@@ -1546,6 +1620,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_index; n++) {
+		if (loop_index >= AST_SIZE) {
+			break;
+		}
 		name = "";
 		tmp = fprintf(fd, " \"loop:0x%08x\" ["
                                         "URL=\"loop:0x%08x\" color=\"%s\", label=\"loop:0x%08x:%s\\l",
@@ -1588,6 +1665,9 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_then_else_index; n++) {
+		if (loop_then_else_index >= AST_SIZE) {
+			break;
+		}
 		name = "";
 		tmp = fprintf(fd, " \"loop_then_else:0x%08x\" ["
                                         "URL=\"loop_then_else:0x%08x\" color=\"%s\", label=\"loop_then_else:0x%08x:%s\\l",

@@ -605,7 +605,10 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				if (branch_follow_exit) {
 					link = link_exit;
 				}
-
+				if (!link) {
+					printf("node_if_tail: empty link\n");
+					break;
+				}
 				/* Do not follow loop edges */
 				if (link->is_loop_edge) {
 					break;
