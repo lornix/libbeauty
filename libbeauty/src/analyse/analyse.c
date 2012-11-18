@@ -472,6 +472,51 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 	return 0;
 }
 
+int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
+{
+	int n;
+	int tmp;
+	int count = 0;
+	int type = 0;
+
+	for(n = 1; n <= *nodes_size; n++) {
+		type = 0;
+		/* Check that it is a branch statement */
+		if (2 != nodes[n].next_size) {
+			continue;
+		}
+		/* A loop_head statement */
+		if (nodes[n].loop_head) {
+			if (nodes[n].link_next[0].is_loop_exit == 1) {
+				type = NODE_TYPE_LOOP;
+			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
+				type = NODE_TYPE_LOOP;
+			} else if ((nodes[n].link_next[0].is_normal == 1) &&
+					(nodes[n].link_next[1].is_normal == 1)) {
+				/* Loop head with both links of type is_normal */
+				type = NODE_TYPE_LOOP_THEN_ELSE;
+			}
+		} else {
+			/* Control flow within a loop */
+			if (nodes[n].link_next[0].is_loop_exit == 1) {
+				type = NODE_TYPE_IF_THEN_GOTO;
+			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
+				type = NODE_TYPE_IF_THEN_GOTO;
+			} else if ((nodes[n].link_next[0].is_normal == 1) &&
+					(nodes[n].link_next[1].is_normal == 1)) {
+				/* A normal IF statement */
+				type = NODE_TYPE_IF_THEN_ELSE;
+			}
+		}
+		if (!type) {
+			continue;
+		}
+		nodes[n].type = type;
+		printf("node_type: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
+	}
+	return 0;
+}
+
 int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
 	int n;
@@ -479,73 +524,56 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int tmp;
 	int count = 0;
 	// int m;
-	int method = 0;
+	int subset_method = 0;
 	int type = 0;
-	int preferred = 0;
+	int branch_follow_exit = 0;
 	int start_node;
 
 	for(n = 1; n <= *nodes_size; n++) {
-		type = 0;
+		type = nodes[n].type;
 		start_node = n;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
 			continue;
 		}
-		/* A normal IF statement */
-		if ((nodes[n].link_next[0].is_normal == 1) &&
-			(nodes[n].link_next[1].is_normal == 1)) {
-			if (nodes[n].path_size >= 2) {
-				method = 1;
-				type = NODE_TYPE_IF_THEN_ELSE;
-				preferred = 0;
+		printf("if_tail: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
+		switch (nodes[n].type) {
+		case NODE_TYPE_IF_THEN_ELSE:
+			/* A normal IF statement */
+			if (nodes[n].looped_path_size >= 2) {
+				subset_method = 1; /* loops */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
 			} else {
-				method = 0;
-				type = NODE_TYPE_IF_THEN_ELSE;
-				preferred = 0;
+				subset_method = 0; /* paths */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
 			}
-		}
-		/* A loop_head statement */
-		if (nodes[n].loop_head) {
-			if (nodes[n].link_next[0].is_loop_exit == 1) {
-				method = 1;
-				type = NODE_TYPE_LOOP;
-				preferred = 0;
-			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
-				method = 1;
-				type = NODE_TYPE_LOOP;
-				preferred = 1;
-			} else {
-				/* Loop head with both links of type is_normal */
-				method = 1;
-				type = NODE_TYPE_LOOP_THEN_ELSE;
-				preferred = 0;
-			}
-		}
-		/* Control flow within a loop */
-		if (!nodes[n].loop_head) {
-			if (nodes[n].link_next[0].is_loop_exit == 1) {
-				method = 1;
-				type = NODE_TYPE_IF_THEN_GOTO;
-				preferred = 0;
-				if (nodes[n].member_of_loop_size == 1) {
-					start_node = nodes[n].member_of_loop[0];
-				}
-			} else if (nodes[n].link_next[1].is_loop_exit == 1) {
-				method = 1;
-				type = NODE_TYPE_IF_THEN_GOTO;
-				preferred = 1;
-				if (nodes[n].member_of_loop_size == 1) {
-					start_node = nodes[n].member_of_loop[0];
-				}
-			}
-		}
-		if (!type) {
-			continue;
+			break;
+		case NODE_TYPE_IF_THEN_GOTO:
+			/* Control flow within a loop */
+			subset_method = 0; /* paths */
+			branch_follow_exit = 1;  /* 0 = non-exit link, 1 = exit_links */
+			break;
+		case NODE_TYPE_LOOP:
+			/* A loop_head statement */
+			subset_method = 0; /* paths */
+			branch_follow_exit = 1;  /* 0 = non-exit link, 1 = exit_links */
+			break;
+		case NODE_TYPE_LOOP_THEN_ELSE:
+			/* Loop head with both links of type is_normal */
+			subset_method = 1; /* loops */
+			branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+			break;
+		default:
+			printf("if_tail unknown\n");
+			exit(1);
 		}
 
+		printf("if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x\n", subset_method, branch_follow_exit);
 		node_b = n;
 		while ((node_b != 0) ) {
 			struct node_link_s *link;
+			struct node_link_s *link_exit;
+
 			if (nodes[node_b].next_size == 0) {
 				break;
 			} else if (nodes[node_b].next_size == 1) {
@@ -556,28 +584,51 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			} else if (nodes[node_b].next_size == 2) {
 			/* FIXME: preferred is only valid the first time round the loop */
 			/* FIXME: what to do if the node is a loop edge and no other links */
-				link = &(nodes[node_b].link_next[preferred]);
+				link_exit = NULL;
+				if (nodes[node_b].link_next[0].is_loop_exit == 1) {
+					link_exit = &(nodes[node_b].link_next[0]);
+				} else if (nodes[node_b].link_next[1].is_loop_exit == 1) {
+					link_exit = &(nodes[node_b].link_next[1]);
+				} if ((nodes[node_b].link_next[0].is_loop_exit == 1) &&
+					(nodes[node_b].link_next[1].is_loop_exit == 1)) {
+					break;
+				}
+
+				link = NULL;
+				if (nodes[node_b].link_next[0].is_normal == 1) {
+					link = &(nodes[node_b].link_next[0]);
+				} else if (nodes[node_b].link_next[1].is_normal == 1) {
+					link = &(nodes[node_b].link_next[1]);
+				}
+				if (link) printf("link node = 0x%x\n", link->node);
+				if (link_exit) printf("link_exit node = 0x%x\n", link_exit->node);
+				if (branch_follow_exit) {
+					link = link_exit;
+				}
+
 				/* Do not follow loop edges */
 				if (link->is_loop_edge) {
-					link = &(nodes[node_b].link_next[preferred ^ 1]);
+					break;
 				}
 			} else {
 				printf("BROKEN\n");
 				break;
 			}
-			//printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
-			//	node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
+			printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
+				node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 			tmp = link->node;
+			printf("next node=0x%x\n", tmp);
+
 			node_b = tmp;
 			if (0 == node_b) {
 				break;
 			}
-			if (method == 1) {
+			if (subset_method == 0) {
 				tmp = is_subset(nodes[start_node].path_size, nodes[start_node].path, nodes[node_b].path_size, nodes[node_b].path);
 			} else {
 				tmp = is_subset(nodes[start_node].looped_path_size, nodes[start_node].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
 			}
-			//printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, start_node, node_b);
 			count++;
 			if (count > 1000) {
 				printf("node_if_tail: failed, too many if_tails\n");
@@ -587,13 +638,13 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 			if (tmp) {
 				nodes[n].if_tail = node_b;
-				nodes[n].type = type;
 				break;
 			}
 		}
 	}
 	return 0;
 }
+
 
 int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size)
 

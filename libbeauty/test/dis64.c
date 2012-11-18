@@ -2006,6 +2006,7 @@ int main(int argc, char *argv[])
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
 			tmp = build_node_dominance(self, nodes, &nodes_size);
 			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
+			tmp = build_node_type(self, nodes, &nodes_size);
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
 			tmp = build_control_flow_depth(self, nodes, &nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
