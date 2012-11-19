@@ -1086,7 +1086,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	printf("AST OUTPUT\n");
 	for (m = 0; m < container_index; m++) {
 		printf("ast_container[%d]", m);
-		if (container_index >= AST_SIZE) {
+		if (m >= AST_SIZE) {
 			break;
 		}
 		print_ast_container(&ast_container[m]);
@@ -1097,7 +1097,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			ast_if_then_else[m].parent.type,
 			ast_if_then_else[m].parent.index,
 			ast_if_then_else[m].parent.offset);
-		if (if_then_else_index >= AST_SIZE) {
+		if (m >= AST_SIZE) {
 			break;
 		}
 		type = ast_if_then_else[m].expression_node.type;
@@ -1161,7 +1161,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			ast_if_then_goto[m].parent.type,
 			ast_if_then_goto[m].parent.index,
 			ast_if_then_goto[m].parent.offset);
-		if (if_then_goto_index >= AST_SIZE) {
+		if (m >= AST_SIZE) {
 			break;
 		}
 		type = ast_if_then_goto[m].expression_node.type;
@@ -1209,7 +1209,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < loop_index; m++) {
 		printf("ast_loop[%d].body\n", m);
-		if (loop_index >= AST_SIZE) {
+		if (m >= AST_SIZE) {
 			break;
 		}
 		tmp = ast_loop[m].body.index;
@@ -1220,7 +1220,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < loop_then_else_index; m++) {
 		int type;
-		if (loop_then_else_index >= AST_SIZE) {
+		if (m >= AST_SIZE) {
 			break;
 		}
 		type = ast_loop_then_else[m].expression_node.type;
@@ -1327,6 +1327,9 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
 					node, "lightgray", node, name);
+		if (nodes[node].if_tail) {
+			tmp = fprintf(fd, "if_tail = 0x%x\\l", nodes[node].if_tail);
+		}
 		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
 			inst_log1 =  &inst_log_entry[n];
 			instruction =  &inst_log1->instruction;
@@ -1398,7 +1401,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (n = 0; n < container_index; n++) {
-		if (container_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		start_node = ast_container[n].start_node;
@@ -1462,7 +1465,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_container_index; n++) {
-		if (loop_container_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		start_node = ast_loop_container[n].start_node;
@@ -1523,7 +1526,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < if_then_else_index; n++) {
-		if (if_then_else_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		name = "";
@@ -1579,7 +1582,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < if_then_goto_index; n++) {
-		if (if_then_goto_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		name = "";
@@ -1620,7 +1623,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_index; n++) {
-		if (loop_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		name = "";
@@ -1665,7 +1668,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		}
 	}
 	for (n = 0; n < loop_then_else_index; n++) {
-		if (loop_then_else_index >= AST_SIZE) {
+		if (n >= AST_SIZE) {
 			break;
 		}
 		name = "";
