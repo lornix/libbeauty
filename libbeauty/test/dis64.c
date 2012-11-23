@@ -2145,6 +2145,10 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
+//	for (l = 21; l < 22; l++) {
+//	for (l = 4; l < 5; l++) {
+//		if (l == 21) continue;
+
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			/* Control flow graph to Abstract syntax tree */
 			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
