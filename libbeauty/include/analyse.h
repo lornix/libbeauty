@@ -34,6 +34,7 @@ extern int build_control_flow_nodes(struct self_s *self, struct control_flow_nod
 extern int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
 extern int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size);
 extern int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int *node_size);
+extern int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int *multi_ret);
 extern int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int node_a, int node_b);
 extern int get_value_from_index(struct operand_s *operand, uint64_t *index);
 extern int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label);

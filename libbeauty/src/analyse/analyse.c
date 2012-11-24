@@ -1064,6 +1064,27 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	}
 	return 0;
 }
+
+int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int *multi_ret)
+{
+	int n;
+	int first_node = 0;
+
+	for (n = 0; n < *paths_size; n++) {
+		if ((paths[n].used == 1) && (!paths[n].loop_head)) {
+			if (!first_node) {
+				first_node = paths[n].path[paths[n].path_size - 1];
+			} else {
+				if (paths[n].path[paths[n].path_size - 1] != first_node) {
+					printf("multi_ret: 0x%x: size = 0x%x\n", n, paths[n].path_size);
+					printf("multi_ret: 0x%x: 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 int compare_inst(struct self_s *self, int inst_a, int inst_b) {
 	struct inst_log_entry_s *inst_log_a;
 	struct inst_log_entry_s *inst_log_b;
