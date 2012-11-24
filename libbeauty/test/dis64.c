@@ -1318,6 +1318,16 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
 	for (node = 1; node <= *node_size; node++) {
+#if 0
+		if ((node != 0x13) && 
+			(node != 0x14) && 
+			(node != 0x15) && 
+			(node != 0x16) && 
+			(node != 0x17) &&
+			(node != 0x123)) {
+			continue;
+		}
+#endif
 		if (nodes[node].entry_point) {
 			name = external_entry_points[nodes[node].entry_point - 1].name;
 		} else {
@@ -2064,6 +2074,9 @@ int main(int argc, char *argv[])
 			printf("Starting external entry point %d:%s\n", l, external_entry_points[l].name);
 			int paths_used = 0;
 			int loops_used = 0;
+			int *multi_ret = NULL;
+			int multi_ret_size;
+
 			for (n = 0; n < paths_size; n++) {
 				paths[n].used = 0;
 				paths[n].path_prev = 0;
@@ -2080,8 +2093,19 @@ int main(int argc, char *argv[])
 
 			tmp = build_control_flow_paths(self, nodes, &nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
-
 			printf("tmp = %d, PATHS used = %d\n", tmp, paths_used);
+			tmp = analyse_multi_ret(self, paths, &paths_size, &multi_ret_size, &multi_ret);
+			if (multi_ret_size) {
+				printf("tmp = %d, multi_ret_size = %d\n", tmp, multi_ret_size);
+				for (m = 0; m < multi_ret_size; m++) {
+					printf("multi_ret: node 0x%x\n", multi_ret[m]);
+				}
+				if (multi_ret_size == 2) {
+					tmp = analyse_merge_nodes(self, nodes, &nodes_size, multi_ret[0], multi_ret[1]);
+					tmp = build_control_flow_paths(self, nodes, &nodes_size,
+						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+				}
+			}
 			tmp = print_control_flow_paths(self, paths, &paths_size);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
@@ -2093,6 +2117,10 @@ int main(int argc, char *argv[])
 			tmp = build_node_if_tail(self, nodes, &nodes_size);
 			tmp = build_control_flow_depth(self, nodes, &nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+			//printf("Merge: 0x%x\n", nodes_size);
+			//tmp = analyse_merge_nodes(self, nodes, &nodes_size, 0x15, 0x17);
+			//printf("Merge: 0x%x\n", nodes_size);
+//			tmp = analyse_merge_nodes(self, nodes, &nodes_size, 0x15, 0x16);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
