@@ -1065,23 +1065,56 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	return 0;
 }
 
-int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int *multi_ret)
+int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int **multi_ret)
 {
-	int n;
+	int n,m;
 	int first_node = 0;
+	int found;
+	int *ret_list = NULL;
+	int size = 0;
 
 	for (n = 0; n < *paths_size; n++) {
 		if ((paths[n].used == 1) && (!paths[n].loop_head)) {
+			//printf("multi_ret2: 0x%x: path_end = 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
 			if (!first_node) {
 				first_node = paths[n].path[paths[n].path_size - 1];
 			} else {
 				if (paths[n].path[paths[n].path_size - 1] != first_node) {
-					printf("multi_ret: 0x%x: size = 0x%x\n", n, paths[n].path_size);
-					printf("multi_ret: 0x%x: 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
+					//printf("multi_ret: 0x%x: path_size = 0x%x, multi_ret_size = 0x%x\n",
+					//	n, paths[n].path_size, size);
+					//printf("multi_ret: 0x%x: 0x%x 0x%x\n", n, first_node, paths[n].path[paths[n].path_size - 1]);
+					found = 0;
+					for (m = 0; m < size; m++) {
+						//printf("multi_ret3: 0x%x: path_end = 0x%x multi_ret = 0x%x\n", m, paths[n].path[paths[n].path_size - 1], ret_list[m]);
+						if (paths[n].path[paths[n].path_size - 1] == ret_list[m]) {
+							found = 1;
+							break;
+						}
+					}
+					if (found) {
+						//printf("found\n");
+						continue;
+					}	
+					//printf("multi_ret2: 0x%x: path_size = 0x%x\n", n, paths[n].path_size);
+					//printf("multi_ret2: 0x%x: 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
+					if (size == 0) {
+						ret_list = malloc(sizeof(int));
+					} else {
+						ret_list = realloc(ret_list, (size + 1) * sizeof(int));
+					}
+					ret_list[size] = paths[n].path[paths[n].path_size - 1];
+					size++;
 				}
 			}
 		}
 	}
+	if (size > 0) {
+		ret_list = realloc(ret_list, (size + 1) * sizeof(int));
+		ret_list[size] = first_node;
+		size++;
+	}
+	*multi_ret_size = size;
+	*multi_ret = ret_list;
 	return 0;
 }
 
