@@ -1064,7 +1064,121 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	}
 	return 0;
 }
+int compare_inst(struct self_s *self, int inst_a, int inst_b) {
+	struct inst_log_entry_s *inst_log_a;
+	struct inst_log_entry_s *inst_log_b;
+	struct instruction_s *instruction_a;
+	struct instruction_s *instruction_b;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	int ret;
 
+	instruction_a =  &(inst_log_entry[inst_a].instruction);
+	instruction_b =  &(inst_log_entry[inst_b].instruction);
+	ret = 0;
+	if ((instruction_a->opcode == instruction_b->opcode) &&
+		(instruction_a->flags == instruction_b->flags)) {
+		if ((instruction_a->srcA.store == instruction_b->srcA.store) &&
+			(instruction_a->srcA.relocated == instruction_b->srcA.relocated) &&
+			(instruction_a->srcA.indirect == instruction_b->srcA.indirect) &&
+			(instruction_a->srcA.indirect_size == instruction_b->srcA.indirect_size) &&
+			(instruction_a->srcA.index == instruction_b->srcA.index) &&
+			(instruction_a->srcA.value_size == instruction_b->srcA.value_size)) {
+			if ((instruction_a->dstA.store == instruction_b->dstA.store) &&
+				(instruction_a->dstA.relocated == instruction_b->dstA.relocated) &&
+				(instruction_a->dstA.indirect == instruction_b->dstA.indirect) &&
+				(instruction_a->dstA.indirect_size == instruction_b->dstA.indirect_size) &&
+				(instruction_a->dstA.index == instruction_b->dstA.index) &&
+				(instruction_a->dstA.value_size == instruction_b->dstA.value_size)) {
+				ret = 1;
+			} else {
+				printf("compare_inst: failed at dstA\n");
+			}
+		} else {
+			printf("compare_inst: failed at srcA\n");
+		}
+	} else {
+		printf("compare_inst: failed at opcode/flags\n");
+	}
+	return ret;
+}
+
+int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int node_a, int node_b) {
+	int inst_a, inst_b;
+	int offset;
+	int ret;
+	int n;
+	int node_new = *node_size + 1;
+	int new_inst_start;
+	int node_a_size;
+	int node_b_size;
+	int tmp;
+
+	node_a_size = nodes[node_a].inst_end - nodes[node_a].inst_start;
+	node_b_size = nodes[node_b].inst_end - nodes[node_b].inst_start;
+	if (node_a_size > node_b_size) {
+		// Swap node_a and node_b
+		tmp = node_a;
+		node_a = node_b;
+		node_b = tmp;
+	}
+	printf("merge_nodes: last a is inst 0x%x\n", nodes[node_a].inst_end);
+	printf("merge_nodes: last b is inst 0x%x\n", nodes[node_b].inst_end);
+	inst_a = nodes[node_a].inst_end;
+	inst_b = nodes[node_b].inst_end;
+	offset = inst_b - inst_a;
+	for (n = inst_a; n >= nodes[node_a].inst_start; n--) {
+		if (!compare_inst(self, n, n + offset)) {
+			printf("Merge0 compare failed at 0x%x\n", n);
+			break;
+		}
+	}
+	new_inst_start = n + 1;
+	printf("Merge inst_a 0x%x, n 0x%x, new_inst_start 0x%x, inst_start 0x%x\n", inst_a, n, new_inst_start, nodes[node_a].inst_start);
+	if (n == inst_a) {
+		printf("Merge1 no match found\n");
+		ret = 0;
+	} else if (new_inst_start == nodes[node_a].inst_start) {
+		int size = nodes[node_a].prev_size;
+		// Whole of node a contained in node b
+		ret = 1;
+		printf("Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+		nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + 1) * sizeof(int));
+		nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + 1) * sizeof(int));
+		nodes[node_a].prev_node[size] = node_b;
+		nodes[node_a].prev_link_index[size] = 0;
+		nodes[node_a].prev_size++;
+		nodes[node_b].inst_end = new_inst_start + offset - 1;
+		nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
+		nodes[node_b].next_size = 1;
+		nodes[node_b].link_next[0].node = node_a;
+	} else {
+		ret = 1;
+		printf("Merge3 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+		// FIXME: Now create a new node, and merge node_a and node_b into it.
+		//	This will create a single ret node for the function. 
+		nodes[node_new].inst_start = new_inst_start;
+		nodes[node_new].inst_end = inst_a;
+		nodes[node_a].inst_end = new_inst_start - 1;
+		nodes[node_b].inst_end = new_inst_start + offset - 1;
+		nodes[node_new].prev_node = calloc(2, sizeof(int));
+		nodes[node_new].prev_link_index = calloc(2, sizeof(int));
+		nodes[node_new].prev_size = 2;
+		nodes[node_new].prev_node[0] = node_a;
+		nodes[node_new].prev_node[1] = node_b;
+		nodes[node_new].prev_link_index[0] = 0;
+		nodes[node_new].prev_link_index[1] = 0;
+		nodes[node_a].link_next = calloc(1, sizeof(struct node_link_s));
+		nodes[node_a].next_size = 1;
+		nodes[node_a].link_next[0].node = node_new;
+		nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
+		nodes[node_b].next_size = 1;
+		nodes[node_b].link_next[0].node = node_new;
+		
+		(*node_size)++;
+	}
+
+	return ret;
+}
 
 int get_value_from_index(struct operand_s *operand, uint64_t *index)
 {
