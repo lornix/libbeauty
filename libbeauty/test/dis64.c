@@ -1337,8 +1337,11 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
 					node, "lightgray", node, name);
+		tmp = fprintf(fd, "type = 0x%x\\l",
+				nodes[node].type);
 		if (nodes[node].if_tail) {
-			tmp = fprintf(fd, "if_tail = 0x%x\\l", nodes[node].if_tail);
+			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+				nodes[node].if_tail);
 		}
 		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
 			inst_log1 =  &inst_log_entry[n];
