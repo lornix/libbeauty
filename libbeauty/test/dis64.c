@@ -2104,6 +2104,9 @@ int main(int argc, char *argv[])
 					tmp = analyse_merge_nodes(self, nodes, &nodes_size, multi_ret[0], multi_ret[1]);
 					tmp = build_control_flow_paths(self, nodes, &nodes_size,
 						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+				} else if (multi_ret_size > 2) {
+					printf("multi_ret_size > 2 not yet handled\n");
+					exit(1);
 				}
 			}
 			tmp = print_control_flow_paths(self, paths, &paths_size);

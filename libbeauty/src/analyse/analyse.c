@@ -1160,13 +1160,14 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 	int inst_a, inst_b;
 	int offset;
 	int ret;
-	int n;
+	int n,m;
 	int node_new = *node_size + 1;
 	int new_inst_start;
 	int node_a_size;
 	int node_b_size;
 	int tmp;
 
+	printf("merge_nodes:  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
 	node_a_size = nodes[node_a].inst_end - nodes[node_a].inst_start;
 	node_b_size = nodes[node_b].inst_end - nodes[node_b].inst_start;
 	if (node_a_size > node_b_size) {
@@ -1192,22 +1193,48 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		printf("Merge1 no match found\n");
 		ret = 0;
 	} else if (new_inst_start == nodes[node_a].inst_start) {
-		int size = nodes[node_a].prev_size;
-		// Whole of node a contained in node b
-		ret = 1;
-		printf("Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
-		nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + 1) * sizeof(int));
-		nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + 1) * sizeof(int));
-		nodes[node_a].prev_node[size] = node_b;
-		nodes[node_a].prev_link_index[size] = 0;
-		nodes[node_a].prev_size++;
-		nodes[node_b].inst_end = new_inst_start + offset - 1;
-		nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
-		nodes[node_b].next_size = 1;
-		nodes[node_b].link_next[0].node = node_a;
+		if (node_a_size == node_b_size) {
+			int size = nodes[node_a].prev_size;
+			int size_node_b = nodes[node_b].prev_size;
+			// node_a identical to node_b
+			ret = 1;
+			printf("Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+			printf("Merge2  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
+			printf("Merge2  node_a prev size = 0x%x, size_node_b prev = 0x%x\n", size, size_node_b);
+			nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + size_node_b) * sizeof(int));
+			nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + size_node_b) * sizeof(int));
+			for (m = 0; m < size_node_b; m++) {
+				int node_b_prev_node = nodes[node_b].prev_node[m];
+				int node_b_prev_link_index = nodes[node_b].prev_link_index[m];
+				nodes[node_a].prev_node[size + m] = node_b_prev_node;
+				nodes[node_a].prev_link_index[size + m] = node_b_prev_link_index;
+				nodes[node_b_prev_node].link_next[node_b_prev_link_index].node = node_a;
+			}
+			nodes[node_a].prev_size += size_node_b;
+			/* Mark the node_b as un-used */
+			nodes[node_b].inst_end = new_inst_start + offset - 1;
+			nodes[node_b].prev_size = 0;
+			free (nodes[node_b].prev_node);
+			free (nodes[node_b].prev_link_index);
+			free (nodes[node_b].link_next);
+		} else {
+			int size = nodes[node_a].prev_size;
+			// Whole of node a contained in node b
+			ret = 1;
+			printf("Merge3  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+			nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + 1) * sizeof(int));
+			nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + 1) * sizeof(int));
+			nodes[node_a].prev_node[size] = node_b;
+			nodes[node_a].prev_link_index[size] = 0;
+			nodes[node_a].prev_size++;
+			nodes[node_b].inst_end = new_inst_start + offset - 1;
+			nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
+			nodes[node_b].next_size = 1;
+			nodes[node_b].link_next[0].node = node_a;
+		}
 	} else {
 		ret = 1;
-		printf("Merge3 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+		printf("Merge4 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 		// FIXME: Now create a new node, and merge node_a and node_b into it.
 		//	This will create a single ret node for the function. 
 		nodes[node_new].inst_start = new_inst_start;
