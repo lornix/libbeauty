@@ -564,7 +564,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
 			break;
 		default:
-			printf("if_tail unknown\n");
+			printf("if_tail node type 0x%x unknown\n", nodes[n].type);
 			exit(1);
 		}
 
@@ -1059,6 +1059,23 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 			if ((is_loop_edge && is_normal) ||
 				(is_loop_exit && is_normal)) {
 				node->link_next[l].is_normal = 0;
+			}
+		}
+	}
+	/* If only is_loop_entry == 1, set is_normal to 1 */
+	for (n = 1; n <= *node_size; n++) {
+		node = &nodes[n];
+		for (l = 0; l < node->next_size; l++) {
+			int is_loop_edge; 
+			int is_loop_exit; 
+			int is_normal; 
+			int is_loop_entry; 
+			is_loop_edge = node->link_next[l].is_loop_edge;
+			is_loop_exit = node->link_next[l].is_loop_exit;
+			is_normal = node->link_next[l].is_normal;
+			is_loop_entry = node->link_next[l].is_loop_entry;
+			if (!is_loop_edge && !is_normal && !is_loop_exit) {
+				node->link_next[l].is_normal = 1;
 			}
 		}
 	}

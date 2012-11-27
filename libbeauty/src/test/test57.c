@@ -1,4 +1,4 @@
-/* A very simple function to test a do while() loop. */
+/* A very simple function to test a do while() loop contained in a if...then...else. */
 
 int test57(int var1) {
 	int n;
