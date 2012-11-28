@@ -1328,7 +1328,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			continue;
 		}
 #endif
-		if (nodes[node].entry_point) {
+		if (node == external_entry_points[nodes[node].entry_point - 1].start_node) {
 			name = external_entry_points[nodes[node].entry_point - 1].name;
 		} else {
 			name = "";
@@ -2070,9 +2070,9 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 17; l < 19; l++) {
 //	for (l = 37; l < 38; l++) {
-		if (external_entry_points[l].valid) {
-			nodes[external_entry_points[l].start_node].entry_point = l + 1;
-		}
+//		if (external_entry_points[l].valid) {
+//			nodes[external_entry_points[l].start_node].entry_point = l + 1;
+//		}
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			printf("Starting external entry point %d:%s\n", l, external_entry_points[l].name);
 			int paths_used = 0;
@@ -2116,17 +2116,7 @@ int main(int argc, char *argv[])
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
 			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
-			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size);
-			tmp = build_node_dominance(self, nodes, &nodes_size);
-			tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
-			tmp = build_node_type(self, nodes, &nodes_size);
-			tmp = build_node_if_tail(self, nodes, &nodes_size, paths, &paths_size);
-			tmp = build_control_flow_depth(self, nodes, &nodes_size,
-				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
-			//printf("Merge: 0x%x\n", nodes_size);
-			//tmp = analyse_merge_nodes(self, nodes, &nodes_size, 0x15, 0x17);
-			//printf("Merge: 0x%x\n", nodes_size);
-//			tmp = analyse_merge_nodes(self, nodes, &nodes_size, 0x15, 0x16);
+			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size, l + 1);
 
 			external_entry_points[l].paths_size = paths_used;
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
@@ -2163,6 +2153,18 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	/* Node specific processing */
+	tmp = build_node_dominance(self, nodes, &nodes_size);
+	tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
+	tmp = build_node_type(self, nodes, &nodes_size);
+	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	//tmp = build_node_if_tail(self, nodes, &nodes_size, paths, &paths_size);
+	//tmp = build_control_flow_depth(self, nodes, &nodes_size,
+	//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+	//printf("Merge: 0x%x\n", nodes_size);
+
+
+
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {

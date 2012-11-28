@@ -574,46 +574,50 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			exit(1);
 		}
 
-		printf("if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x\n", subset_method, branch_follow_exit);
+		printf("if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x, follow_path = 0x%x\n",
+			subset_method, branch_follow_exit, follow_path);
 		node_b = n;
 		while ((node_b != 0) ) {
 			struct node_link_s *link;
 			struct node_link_s *link_exit;
 
 			tmp = 0;
-			if (nodes[node_b].next_size == 0) {
-				break;
-			} else if (nodes[node_b].next_size == 1) {
-				link = &(nodes[node_b].link_next[0]);
-				if (link->is_loop_edge) {
-					break;
-				}
-			} else if (nodes[node_b].next_size == 2) {
-			/* FIXME: preferred is only valid the first time round the loop */
-			/* FIXME: what to do if the node is a loop edge and no other links */
-				if (follow_path && !subset_method) {
-					int path;
-					if (nodes[node_b].path_size) {
-						path = nodes[node_b].path[0];
-						for (m = 0; m < paths[path].path_size; m++) {
-							if (paths[path].path[m] == node_b) {
-								if ((m + 1) < paths[path].path_size) {
-									tmp = paths[path].path[m + 1];
-									break;
-								} else {
-									printf("follow path failed\n");
-									exit(1);
-								}
+			if (follow_path && !subset_method) {
+				int path;
+				if (nodes[start_node].path_size >= 2) {
+					path = nodes[start_node].path[0];
+					for (m = 0; m < paths[path].path_size; m++) {
+						if (paths[path].path[m] == node_b) {
+							if ((m + 1) < paths[path].path_size) {
+								tmp = paths[path].path[m + 1];
+								printf("follow path next = 0x%x\n", tmp);
+								break;
+							} else {
+								printf("follow path failed1\n");
+								exit(1);
 							}
 						}
-					} else {
-						printf("follow path failed\n");
-						exit(1);
 					}
-				} else if (follow_path && subset_method) {
-					printf("follow if...then...else in loop failed\n");
-					exit(1);
 				} else {
+					printf("follow path failed2 path_size = 0x%x\n", nodes[start_node].path_size);
+					exit(1);
+				}
+			} else if (follow_path && subset_method) {
+				printf("follow if...then...else in loop failed\n");
+				exit(1);
+			} else {
+				if (nodes[node_b].next_size == 0) {
+					printf("if_tail: end of function()\n");
+					break;
+				} else if (nodes[node_b].next_size == 1) {
+					link = &(nodes[node_b].link_next[0]);
+					if (link->is_loop_edge) {
+						printf("if_tail: not following loop edge\n");
+						break;
+					}
+				} else if (nodes[node_b].next_size == 2) {
+				/* FIXME: preferred is only valid the first time round the loop */
+				/* FIXME: what to do if the node is a loop edge and no other links */
 					link_exit = NULL;
 					if (nodes[node_b].link_next[0].is_loop_exit == 1) {
 						link_exit = &(nodes[node_b].link_next[0]);
@@ -647,9 +651,6 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 						node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 					tmp = link->node;
 				}
-			} else {
-				printf("BROKEN\n");
-				break;
 			}
 			printf("next node=0x%x\n", tmp);
 
@@ -675,12 +676,14 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				break;
 			}
 		}
+		printf("if_tail:function end\n");
 	}
+	printf("if_tail:end\n");
 	return 0;
 }
 
 
-int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size)
+int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size, int entry_point)
 
 {
 	int l;
@@ -699,6 +702,7 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 				} else {
 					add_path_to_node(&(nodes[paths[path].path[offset]]), l);
 				}
+				nodes[paths[path].path[offset]].entry_point = entry_point;
 				offset--;
 				if (offset < 0) {
 					offset = paths[path].path_prev_index;
