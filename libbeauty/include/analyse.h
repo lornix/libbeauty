@@ -26,7 +26,7 @@ extern int add_looped_path_to_node(struct control_flow_node_s *node, int path);
 extern int is_subset(int size_a, int *a, int size_b, int *b);
 extern int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
 extern int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
-extern int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size);
+extern int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
 extern int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size, int entry_point);
 extern int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
 extern int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *paths_size);

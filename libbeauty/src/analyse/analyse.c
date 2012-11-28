@@ -517,7 +517,7 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 	return 0;
 }
 
-int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size)
+int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
 	int n,m;
 	int node_b = 1;
@@ -529,10 +529,14 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int branch_follow_exit = 0;
 	int follow_path = 0;
 	int start_node;
+	struct path_s *paths;
+	int *paths_size;
 
 	for(n = 1; n <= *nodes_size; n++) {
 		type = nodes[n].type;
 		start_node = n;
+		paths_size = self->external_entry_points[nodes[start_node].entry_point - 1].paths_size;
+		paths = self->external_entry_points[nodes[start_node].entry_point - 1].paths;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
 			continue;
