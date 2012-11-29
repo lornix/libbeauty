@@ -531,26 +531,30 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int start_node;
 	struct path_s *paths;
 	int *paths_size;
+	int loops_size;
+	struct loop_s *loops;
 
 	for(n = 1; n <= *nodes_size; n++) {
 		type = nodes[n].type;
 		start_node = n;
 		paths_size = self->external_entry_points[nodes[start_node].entry_point - 1].paths_size;
 		paths = self->external_entry_points[nodes[start_node].entry_point - 1].paths;
+		loops_size = self->external_entry_points[nodes[start_node].entry_point - 1].loops_size;
+		loops = self->external_entry_points[nodes[start_node].entry_point - 1].loops;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
 			continue;
 		}
-		printf("if_tail: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
+		printf("if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
 		switch (nodes[n].type) {
 		case NODE_TYPE_IF_THEN_ELSE:
 			/* A normal IF statement */
-			if (nodes[n].looped_path_size >= 2) {
-				subset_method = 1; /* loops */
+			if (nodes[n].path_size >= 2) {
+				subset_method = 0; /* paths */
 				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
 				follow_path = 1;
 			} else {
-				subset_method = 0; /* paths */
+				subset_method = 1; /* loops */
 				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
 				follow_path = 1;
 			}
@@ -598,7 +602,8 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 								break;
 							} else {
 								printf("follow path failed1\n");
-								exit(1);
+								tmp = 0;
+								break;
 							}
 						}
 					}
@@ -607,8 +612,31 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					exit(1);
 				}
 			} else if (follow_path && subset_method) {
-				printf("follow if...then...else in loop failed\n");
-				exit(1);
+				int looped_path;
+
+				printf("follow if...then...else in loop. looped_path_size = 0x%x\n",
+					nodes[start_node].looped_path_size);
+				if (nodes[start_node].looped_path_size >= 2) {
+		
+					looped_path = nodes[start_node].looped_path[0];
+					for (m = 0; m < loops[looped_path].size; m++) {
+						printf("node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
+							node_b, looped_path, m);
+						if (loops[looped_path].list[m] == node_b) {
+							if ((m + 1) < loops[looped_path].size) {
+								tmp = loops[looped_path].list[m + 1];
+								printf("follow path next = 0x%x\n", tmp);
+								break;
+							} else {
+								printf("follow path failed1\n");
+								exit(1);
+							}
+						}
+					}
+				} else {
+					printf("follow path failed2 path_size = 0x%x\n", nodes[start_node].path_size);
+					exit(1);
+				}
 			} else {
 				if (nodes[node_b].next_size == 0) {
 					printf("if_tail: end of function()\n");
