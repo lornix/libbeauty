@@ -592,6 +592,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			tmp = 0;
 			if (follow_path && !subset_method) {
 				int path;
+
 				if (nodes[start_node].path_size >= 2) {
 					path = nodes[start_node].path[0];
 					for (m = 0; m < paths[path].path_size; m++) {
@@ -612,19 +613,18 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					exit(1);
 				}
 			} else if (follow_path && subset_method) {
-				int looped_path;
+				int path;
 
 				printf("follow if...then...else in loop. looped_path_size = 0x%x\n",
 					nodes[start_node].looped_path_size);
 				if (nodes[start_node].looped_path_size >= 2) {
-		
-					looped_path = nodes[start_node].looped_path[0];
-					for (m = 0; m < loops[looped_path].size; m++) {
+					path = nodes[start_node].looped_path[0];
+					for (m = 0; m < paths[path].path_size; m++) {
 						printf("node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
-							node_b, looped_path, m);
-						if (loops[looped_path].list[m] == node_b) {
-							if ((m + 1) < loops[looped_path].size) {
-								tmp = loops[looped_path].list[m + 1];
+							node_b, path, m);
+						if (paths[path].path[m] == node_b) {
+							if ((m + 1) < paths[path].path_size) {
+								tmp = paths[path].path[m + 1];
 								printf("follow path next = 0x%x\n", tmp);
 								break;
 							} else {
