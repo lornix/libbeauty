@@ -75,6 +75,8 @@ enum {
 #define OUT 0x1d
 #define RET 0x1e /* Special instruction for helping to print the "return local_regNNNN;" */
 #define SEX 0x1f /* Signed Extention */
+#define JMPT 0x20 /* Jump Table */
+#define CALLT 0x21 /* Call jump table */
 
 #define OVERFLOW 0
 #define NOT_OVERFLOW 1
