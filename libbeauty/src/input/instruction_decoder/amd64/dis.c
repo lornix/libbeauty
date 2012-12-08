@@ -1336,9 +1336,9 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		break;
 	case 0x15:												/* ADC eAX,Iv */
 		break;
-	case 0x16:												/* PUSH SS */		
+	case 0x16:												/* PUSH SS */	
 		break;
-	case 0x17:												/* POP SS */		
+	case 0x17:												/* POP SS */	
 		break;
 	case 0x18:												/* SBB Eb,Gb */
 		break;
@@ -1353,7 +1353,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		break;
 	case 0x1d:												/* SBB eAX,Iv */
 		break;
-	case 0x1e:												/* PUSH DS */		
+	case 0x1e:												/* PUSH DS */	
 		break;
 	case 0x1f:												/* POP DS */
 		break;
@@ -1428,8 +1428,11 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		result = dis_Gx_Ex(handle, XOR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x34:												/* XOR AL,Ib */
+		break;
 	case 0x35:												/* XOR eAX,Iv */
+		break;
 	case 0x36:												/* SEG SS: */
+		break;
 	case 0x37:												/* AAA */
 		break;
 	case 0x38:												/* CMP Eb,Gb */
@@ -1490,6 +1493,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		result = 1;
 		break;
 	case 0x3e:												/* SEG DS: */
+		break;
 	case 0x3f:												/* AAS */
 		break;
 	case 0x40:												/* REX */
@@ -1698,8 +1702,11 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	case 0x6b:												/* IMUL Gv,Ev,Ib */
 		break;
 	case 0x6c:												/* INSB */
+		break;
 	case 0x6d:												/* INSW */
+		break;
 	case 0x6e:												/* OUTSB */
+		break;
 	case 0x6f:												/* OUTSW */
 		break;
 	case 0x70:												/* JO */
@@ -1994,8 +2001,11 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		/* CWD: Signed extention. */
 		break;
 	case 0x9a:												/* CALL Ap */
+		break;
 	case 0x9b:												/* WAIT */
+		break;
 	case 0x9c:												/* PUSHF */
+		break;
 	case 0x9d:												/* POPF */
 		break;
 	case 0x9e:												/* SAHF */
@@ -2214,6 +2224,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	case 0xad:												/* LODSW */
 	case 0xae:												/* SCASB */
 	case 0xaf:												/* SCASW */
+		break;
 	case 0xb0:												/* MOV AL,Ib */
 	case 0xb1:												/* MOV CL,Ib */
 	case 0xb2:												/* MOV DL,Ib */
@@ -2393,7 +2404,9 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		result = 1;
 		break;
 	case 0xc4:												/* LES */
+		break;
 	case 0xc5:												/* LDS */
+		break;
 	case 0xc6:												/* MOV Eb,Ib */
 		result = dis_Ex_Ix(handle, MOV, rex, dis_instructions, base_address, offset, &reg, 1);
 		break;
@@ -2456,14 +2469,19 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		result = 1;
 		break;
 	case 0xca:												/* RETF Iv */
+		break;
 	case 0xcb:												/* RETF */
+		break;
 	case 0xcc:												/* INT3 */
+		break;
 	case 0xcd:												/* INT Ib */	
 		break;
 	case 0xce:												/* INTO */
 		break;
 	case 0xcf:												/* IRET */
+		break;
 	case 0xd0:												/* GRP2 Eb,1 */
+		break;
 	case 0xd1:												/* GRP2 Ev,1 */
 		tmp = rmb(handle, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
@@ -2527,18 +2545,27 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		result = 1;
 		break;
 	case 0xd4:												/* AAM Ib */
+		break;
 	case 0xd5:												/* AAD Ib */
+		break;
 	case 0xd6:												/* SALC */
 		break;
 	case 0xd7:												/* XLAT */
 		break;
 	case 0xd8:												/* FPU ESC 0 */
+		break;
 	case 0xd9:												/* FPU ESC 1 */
+		break;
 	case 0xda:												/* FPU ESC 2 */
+		break;
 	case 0xdb:												/* FPU ESC 3 */
+		break;
 	case 0xdc:												/* FPU ESC 4 */
+		break;
 	case 0xdd:												/* FPU ESC 5 */
+		break;
 	case 0xde:												/* FPU ESC 6 */
+		break;
 	case 0xdf:												/* FPU ESC 7 */
 		break;
 	case 0xe0:												/* LOOPNZ */
@@ -2548,6 +2575,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	case 0xe2:												/* LOOP */
 		break;
 	case 0xe3:												/* JCXZ */
+		break;
 	case 0xe4:												/* IN AL,Ib */
 		break;
 	case 0xe5:												/* IN eAX,Ib */
@@ -2721,6 +2749,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	case 0xf3:												/* REPZ */
 		break;		
 	case 0xf4:												/* HLT */
+		break;
 	case 0xf5:												/* CMC */
 		break;
 	case 0xf6:												/* GRP3 Eb ,Ib: */
