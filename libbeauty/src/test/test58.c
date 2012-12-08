@@ -1,6 +1,6 @@
 /* A very simple jump table. */
 
-int test57(int var1) {
+int test58(int var1) {
 	int n = 0;
 	switch (var1) {
 	case 1:
