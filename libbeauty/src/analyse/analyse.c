@@ -322,6 +322,7 @@ int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow
 			}
 		}
 		loops[m].multi_exit = multi_exit;
+		nodes[loops[m].head].multi_exit = multi_exit;
 	}
 	return 0;
 }
@@ -594,9 +595,15 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			break;
 		case NODE_TYPE_LOOP:
 			/* A loop_head statement */
-			subset_method = 0; /* paths */
-			branch_follow_exit = 1;  /* 0 = non-exit link, 1 = exit_links */
-			follow_path = 0;
+			if (nodes[n].multi_exit > 1) {
+				subset_method = 0; /* paths */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 1;
+			} else {
+				subset_method = 0; /* paths */
+				branch_follow_exit = 1;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 0;
+			}
 			break;
 		case NODE_TYPE_LOOP_THEN_ELSE:
 			/* Loop head with both links of type is_normal */
@@ -1034,7 +1041,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 	printf("print_control_flow_nodes: size = %d\n", *node_size);	
 	for (n = 1; n <= *node_size; n++) {
-		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, depth=0x%x\n",
+		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
 			n,
 			nodes[n].type,
 			nodes[n].dominator,
@@ -1043,6 +1050,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].inst_start,
 			nodes[n].inst_end,
 			nodes[n].entry_point,
+			nodes[n].multi_exit,
 			nodes[n].depth);
 		for (m = 0; m < nodes[n].prev_size; m++) {
 			prev_node = nodes[n].prev_node[m];
