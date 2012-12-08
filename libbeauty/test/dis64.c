@@ -2157,12 +2157,18 @@ int main(int argc, char *argv[])
 	tmp = build_node_dominance(self, nodes, &nodes_size);
 	tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
 	tmp = build_node_type(self, nodes, &nodes_size);
-	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
-	tmp = build_node_if_tail(self, nodes, &nodes_size);
 	//tmp = build_control_flow_depth(self, nodes, &nodes_size,
 	//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 	//printf("Merge: 0x%x\n", nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid) {
+			tmp = build_control_flow_loops_multi_exit(self, nodes, nodes_size,
+				external_entry_points[l].loops, external_entry_points[l].loops_size);
+		}
+	}
 
+	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	tmp = build_node_if_tail(self, nodes, &nodes_size);
 
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {

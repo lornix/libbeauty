@@ -299,6 +299,33 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 	return 0;
 }
 
+int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct loop_s *loops, int loops_size)
+{
+	int l;
+	int n;
+	int m;
+	int multi_exit;
+	int node;
+	/* Detect multi_exit loops */
+	for (m = 0; m < loops_size; m++) {
+		multi_exit = 0;
+		if (loops[m].size > 0) {
+			for (n = 0; n < loops[m].size; n++) {
+				node = loops[m].list[n];
+				printf("multi_exit: node=0x%x\n", node);
+				for (l = 0; l < nodes[node].next_size; l++) {
+					if (nodes[node].link_next[l].is_loop_exit) {
+						printf("multi_exit: exit found\n");
+						multi_exit++;
+					}
+				}
+			}
+		}
+		loops[m].multi_exit = multi_exit;
+	}
+	return 0;
+}
+
 int build_control_flow_loops_node_members(struct self_s *self,
 	struct control_flow_node_s *nodes, int *nodes_size,
 	struct loop_s *loops, int *loops_size)
@@ -331,7 +358,7 @@ int print_control_flow_loops(struct self_s *self, struct loop_s *loops, int *loo
 	printf("Printing loops size = %d\n", *loops_size);
 	for (m = 0; m < *loops_size; m++) {
 		if (loops[m].size > 0) {
-			printf("Loop %d: loop_head=%d, nest=%d\n", m, loops[m].head, loops[m].nest);
+			printf("Loop %d: loop_head=%d, nest=%d, multi_exit=%d\n", m, loops[m].head, loops[m].nest, loops[m].multi_exit);
 			for (n = 0; n < loops[m].size; n++) {
 				printf("Loop %d=0x%x\n", m, loops[m].list[n]);
 			}

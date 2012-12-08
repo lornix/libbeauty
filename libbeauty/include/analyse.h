@@ -17,6 +17,7 @@ extern int node_mid_start_add(struct control_flow_node_s *node, struct node_mid_
 extern int path_loop_check(struct path_s *paths, int path, int step, int node, int limit);
 extern int merge_path_into_loop(struct path_s *paths, struct loop_s *loop, int path);
 extern int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *paths_size, struct loop_s *loops, int *loop_size);
+extern int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct loop_s *loops, int loops_size);
 extern int build_control_flow_loops_node_members(struct self_s *self,
 	struct control_flow_node_s *nodes, int *nodes_size,
 	struct loop_s *loops, int *loops_size);

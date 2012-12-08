@@ -100,6 +100,7 @@ struct process_state_s {
 struct loop_s {
 	int head; /* The associated loop_head node */
 	int nest;
+	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
 	int size;
 	int *list;
 };
@@ -305,6 +306,7 @@ struct control_flow_node_s {
 	int *member_of_loop; /* The list of member_of_loop entries. One entry for each loop this node belongs to */
 	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
 	int depth; /* Where abouts in a graph does it go. 1 = Top of graph, 10 = 10th step down */
+	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
 };
 
 struct external_entry_point_s {
