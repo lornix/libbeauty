@@ -71,7 +71,7 @@ struct self_s *self = NULL;
  * so that a single list can store all program flow.
  */
 // struct inst_log_entry_s inst_log_entry[INST_LOG_ENTRY_SIZE];
-int search_back_seen[INST_LOG_ENTRY_SIZE];
+// int search_back_seen[INST_LOG_ENTRY_SIZE];
 
 /* Used to keep record of where we have been before.
  * Used to identify program flow, branches, and joins.
@@ -1866,6 +1866,7 @@ int main(int argc, char *argv[])
 	self->entry_point = calloc(ENTRY_POINTS_SIZE, sizeof(struct entry_point_s));
 	self->entry_point_list_length = ENTRY_POINTS_SIZE;
 	self->local_counter = 0x100;
+	self->search_back_seen = calloc(INST_LOG_ENTRY_SIZE, sizeof(int));
 
 	nodes = calloc(1000, sizeof(struct control_flow_node_s));
 	nodes_size = 0;
@@ -2206,9 +2207,9 @@ int main(int argc, char *argv[])
 	}
 	tmp = output_ast_dot(self, ast, nodes, &nodes_size);
 	/* FIXME */
-	goto end_main;
+	//goto end_main;
 
-#if 0
+#if 1
 
 	print_dis_instructions(self);
 
@@ -2521,7 +2522,7 @@ int main(int argc, char *argv[])
 						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
 				}
-				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, inst_log1->instruction.srcA.index, 0, &size, &search_back_seen, &inst_list);
+				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, inst_log1->instruction.srcA.index, 0, &size, self->search_back_seen, &inst_list);
 				if (tmp) {
 					printf("SSA search_back Failed at inst_log 0x%x\n", n);
 					return 1;
@@ -2625,7 +2626,7 @@ int main(int argc, char *argv[])
 						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
 				}
-				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.indirect_init_value, inst_log1->value1.indirect_offset_value, &size, &search_back_seen, &inst_list);
+				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.indirect_init_value, inst_log1->value1.indirect_offset_value, &size, self->search_back_seen, &inst_list);
 				if (tmp) {
 					printf("SSA search_back Failed at inst_log 0x%x\n", n);
 					return 1;
@@ -2848,13 +2849,13 @@ int main(int argc, char *argv[])
 				if ((2 == label->scope) &&
 					(1 == label->type)) {
 					printf("PARAM: Searching for REG0x%"PRIx64":0x%"PRIx64" + label->value(0x%"PRIx64")\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
-					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, label->value, 0, &size, &search_back_seen, &inst_list);
+					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, label->value, 0, &size, self->search_back_seen, &inst_list);
 					printf("search_backJCD1: tmp = %d\n", tmp);
 				} else {
 				/* param_stackXXX */
 				/* SP value held in value1 */
 					printf("PARAM: Searching for SP(0x%"PRIx64":0x%"PRIx64") + label->value(0x%"PRIx64") - 8\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
-					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.init_value, inst_log1->value1.offset_value + label->value - 8, &size, &search_back_seen, &inst_list);
+					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.init_value, inst_log1->value1.offset_value + label->value - 8, &size, self->search_back_seen, &inst_list);
 				/* FIXME: Some renaming of local vars will also be needed if size > 1 */
 				}
 				if (tmp) {

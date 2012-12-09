@@ -345,7 +345,8 @@ struct self_s {
 	struct relocation_s *relocations;
 	struct entry_point_s *entry_point; /* This is used to hold return values from process block */
 	uint64_t entry_point_list_length;  /* Number of entry_point entries allocated */
-	int local_counter;	
+	int local_counter;
+	int *search_back_seen;
 };
 
 extern int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);
