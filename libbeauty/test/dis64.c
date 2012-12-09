@@ -2168,8 +2168,14 @@ int main(int argc, char *argv[])
 	}
 
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
-	tmp = build_node_if_tail(self, nodes, &nodes_size);
 
+	tmp = build_node_if_tail(self, nodes, &nodes_size);
+	for (n = 0; n < nodes_size; n++) {
+		if ((nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
+			(nodes[n].if_tail == 0)) {
+			printf("FAILED: Node 0x%x with no if_tail\n", n);
+		}
+	}
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
@@ -2184,7 +2190,6 @@ int main(int argc, char *argv[])
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);
-
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
 //	for (l = 21; l < 22; l++) {

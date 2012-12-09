@@ -545,6 +545,98 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 	return 0;
 }
 
+/* find the position of a node in a base path */
+/* negative results imply that the node is found in a parent path */
+/* returns the "index" */
+int find_node_in_path(struct self_s *self, struct path_s *paths, int paths_size, int base_path, int node, int *index)
+{
+	int position;
+	int position_in_path;
+	int path;
+	int n;
+	int step;
+	int found = 0;
+	int tmp;
+
+	step = paths[base_path].path_size; /* convert size to index */
+	position = step;
+	path = base_path;
+	while (1) {
+		step--;
+		position--;
+		if (step < 0) {
+			/* If path_prev == path, we have reached the beginning of the path list */
+			if (paths[path].path_prev != path) {
+				tmp = paths[path].path_prev;
+				step = paths[path].path_prev_index;
+				path = tmp;
+			} else {
+				found = 0;
+				break;
+			}
+		}
+		if (node == paths[path].path[step]) {
+			found = 1;
+			break;	
+		}
+	}
+	if (found) {
+		printf("found node_in_path base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
+			base_path, node, path, step, position);
+		*index = position;
+		return 0;
+	} else {
+		printf("not found node_in_path\n");
+		return 1;
+	}
+}
+
+/* Returns the "node" */
+int find_node_at_index_in_path(struct self_s *self, struct path_s *paths, int paths_size, int base_path, int index, int *node)
+{
+	int position;
+	int position_in_path;
+	int path;
+	int n;
+	int step;
+	int found = 0;
+	int tmp;
+
+	step = paths[base_path].path_size; /* convert size to index */
+	position = step;
+	path = base_path;
+	/* FIXME: This can be optimised */
+	while (1) {
+		step--;
+		position--;
+		if (step < 0) {
+			/* If path_prev == path, we have reached the beginning of the path list */
+			if (paths[path].path_prev != path) {
+				tmp = paths[path].path_prev;
+				step = paths[path].path_prev_index;
+				path = tmp;
+			} else {
+				found = 0;
+				break;
+			}
+		}
+		if (position == index) {
+			found = 1;
+			break;	
+		}
+	}
+	if (found) {
+		printf("found node_at_index base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
+			base_path, node, path, step, position);
+		*node = paths[path].path[step];
+		return 0;
+	} else {
+		printf("not found node_at_index\n");
+		return 1;
+	}
+	return 0;
+}
+
 int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
 	int n,m;
@@ -607,9 +699,15 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			break;
 		case NODE_TYPE_LOOP_THEN_ELSE:
 			/* Loop head with both links of type is_normal */
-			subset_method = 1; /* loops */
-			branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
-			follow_path = 0;
+			if (nodes[n].multi_exit > 1) {
+				subset_method = 0; /* paths */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 1;
+			} else {
+				subset_method = 1; /* loops */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 0;
+			}
 			break;
 		default:
 			printf("if_tail node type 0x%x unknown\n", nodes[n].type);
@@ -626,21 +724,20 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			tmp = 0;
 			if (follow_path && !subset_method) {
 				int path;
+				int index;
+				int next_node;
 
 				if (nodes[start_node].path_size >= 2) {
 					path = nodes[start_node].path[0];
-					for (m = 0; m < paths[path].path_size; m++) {
-						if (paths[path].path[m] == node_b) {
-							if ((m + 1) < paths[path].path_size) {
-								tmp = paths[path].path[m + 1];
-								printf("follow path next = 0x%x\n", tmp);
-								break;
-							} else {
-								printf("follow path failed1\n");
-								tmp = 0;
-								break;
-							}
-						}
+					printf("Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
+					printf("find_node_in_path=%d, index=%d\n", tmp, index);
+					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
+					printf("find_node_in_path next_node = 0x%x\n", next_node);
+					if (!tmp) {
+						tmp = next_node;
+					} else {
+						tmp = 0;
 					}
 				} else {
 					printf("follow path failed2 path_size = 0x%x\n", nodes[start_node].path_size);
