@@ -135,7 +135,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 0:
 		/* Special case uses SIB, when using ESP or R12 */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB\n");
+			printf("Doing SIB0\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
@@ -181,6 +181,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			if (base == 5) {
 				/* Handle base==5 */
 				/* from Volume2A Table 2-3 Note 1 */
+				/* Here mod == 0 */
+				printf("Got here: base == 5\n");
+#if 0
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
 				if (dis_instructions->instruction_number > number) {
 					instruction->opcode = ADD;
@@ -202,6 +205,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->dstA.relocated = 0;
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
+#endif
 
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 				if (dis_instructions->instruction_number > number) {
@@ -237,6 +241,8 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
 			} else {
+				printf("Got here: base != 5\n");
+#if 0
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 				if (dis_instructions->instruction_number > number) {
 					instruction->opcode = ADD;
@@ -259,6 +265,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->dstA.relocated = 0;
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
+#endif
 			}
 
 			result = 1;
@@ -331,7 +338,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 1:
 		/* Special case uses SIB */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB\n");
+			printf("Doing SIB1\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
@@ -521,7 +528,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 2:
 		/* Special case uses SIB */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB\n");
+			printf("Doing SIB2\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
