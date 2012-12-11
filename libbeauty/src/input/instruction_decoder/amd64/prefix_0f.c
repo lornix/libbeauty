@@ -274,6 +274,8 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 	case 0xce:												/* BSWAP ESI */
 	case 0xcf:												/* BSWAP EDI */
 		break;
+	default:
+		break;
 
 	};
 	return result;

@@ -67,7 +67,9 @@ char * opcode_table[] = {
 	"IN ",   // 0x1C
 	"OUT",   // 0x1D
 	"RET",   // 0x1E
-	"SEX"    // 0x1F   /* Signed extension */
+	"SEX",   // 0x1F   /* Signed extension */
+	"JMPT",	 // 0x20
+	"CALLT"  // 0x21
 };
 
 char *store_table[] = { "i", "r", "m", "s" };
@@ -109,6 +111,47 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	//case DIV:
 	case JMP:
 		if (instruction->srcA.indirect) {
+			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s,",
+				indirect_table[instruction->srcA.indirect],
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				size_table[instruction->srcA.value_size]);
+		} else {
+			tmp = fprintf(fd, " %s0x%"PRIx64"%s,",
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				size_table[instruction->srcA.value_size]);
+		}
+		if (instruction->dstA.indirect) {
+			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s",
+				indirect_table[instruction->dstA.indirect],
+				store_table[instruction->dstA.store],
+				instruction->dstA.index,
+				size_table[instruction->dstA.value_size]);
+		} else {
+			tmp = fprintf(fd, " %s0x%"PRIx64"%s",
+				store_table[instruction->dstA.store],
+				instruction->dstA.index,
+				size_table[instruction->dstA.value_size]);
+		}
+		ret = 0;
+		break;
+	case JMPT:
+		if (instruction->srcA.indirect) {
+			printf("JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
+			if (instruction->srcA.indirect > 4) {
+				instruction->srcA.indirect = 0;
+			}
+			if (instruction->srcA.indirect < 0) {
+				instruction->srcA.indirect = 0;
+			}
+			if (instruction->srcA.store > 4) {
+				instruction->srcA.store = 0;
+			}
+			if (instruction->srcA.store < 0) {
+				instruction->srcA.store = 0;
+			}
+			printf("JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
 			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
