@@ -1790,6 +1790,8 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case JMP:
 				break;
+			case JMPT:
+				break;
 			case CALL:
 				if (IND_MEM == instruction->dstA.indirect) {
 					value_id = inst_log1->value3.indirect_value_id;

@@ -974,6 +974,12 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 						inst_log1->next[0]);
 //				}
 				break;
+			case JMPT:
+				printf("JMPT reached XXXX\n");
+				if (print_inst(self, instruction, n, labels))
+					return 1;
+				tmp = fprintf(fd, "\t");
+				break;
 			case CALL:
 				/* FIXME: This does nothing at the moment. */
 				if (print_inst(self, instruction, n, labels)) {

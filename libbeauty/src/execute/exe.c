@@ -1526,6 +1526,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.valid = 1;
 		/* No put_RTL_value is done for an IF */
 		break;
+	case JMPT:
+		break;
 	case JMP:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 

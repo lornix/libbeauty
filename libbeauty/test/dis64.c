@@ -2462,6 +2462,7 @@ int main(int argc, char *argv[])
 		case IF:
 		case RET:
 		case JMP:
+		case JMPT:
 			break;
 		default:
 			printf("SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
@@ -2670,6 +2671,7 @@ int main(int argc, char *argv[])
 		case IF:
 		case RET:
 		case JMP:
+		case JMPT:
 			break;
 		case CALL:
 			//printf("SSA2 failed for inst:0x%x, CALL\n", n);

@@ -269,10 +269,18 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				}
 				break;
 			}
+			if (JMPT == instruction->opcode) {
+				printf("Function exited. Temporary action for JMPT\n");
+				break;
+			}
 		}
 		instruction_offset += dis_instructions.instruction_number;
 		if (0 == memory_reg[2].offset_value) {
 			printf("Breaking\n");
+			break;
+		}
+		if (JMPT == instruction->opcode) {
+			printf("Function exited. Temporary action for JMPT\n");
 			break;
 		}
 #if 0
