@@ -976,9 +976,44 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 				break;
 			case JMPT:
 				printf("JMPT reached XXXX\n");
+				if (inst_log1->value1.value_type == 6) {
+					printf("ERROR1 %d\n", instruction->opcode);
+					//break;
+				}
+				if (inst_log1->value1.value_type == 5) {
+					printf("ERROR2\n");
+					//break;
+				}
 				if (print_inst(self, instruction, n, labels))
 					return 1;
+				printf("\t");
 				tmp = fprintf(fd, "\t");
+				/* FIXME: Check limits */
+				if (1 == instruction->dstA.indirect) {
+					tmp = fprintf(fd, "*");
+					value_id = inst_log1->value3.indirect_value_id;
+				} else {
+					value_id = inst_log1->value3.value_id;
+				}
+				tmp = label_redirect[value_id].redirect;
+				label = &labels[tmp];
+				//tmp = fprintf(fd, "0x%x:", tmp);
+				tmp = output_label(label, fd);
+				//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+				tmp = fprintf(fd, " = ");
+				printf("\nstore=%d\n", instruction->srcA.store);
+				if (1 == instruction->srcA.indirect) {
+					tmp = fprintf(fd, "*");
+					value_id = inst_log1->value1.indirect_value_id;
+				} else {
+					value_id = inst_log1->value1.value_id;
+				}
+				tmp = label_redirect[value_id].redirect;
+				label = &labels[tmp];
+				//tmp = fprintf(fd, "0x%x:", tmp);
+				tmp = output_label(label, fd);
+				//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+				tmp = fprintf(fd, ";\n");
 				break;
 			case CALL:
 				/* FIXME: This does nothing at the moment. */

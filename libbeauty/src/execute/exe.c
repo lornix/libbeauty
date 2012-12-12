@@ -1527,6 +1527,59 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* No put_RTL_value is done for an IF */
 		break;
 	case JMPT:
+		/* Get value of srcA */
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
+		/* Get value of dstA */
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		/* Create result */
+		printf("JMPT\n");
+		printf("JMPT dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
+		inst->value3.start_address = inst->value2.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
+		inst->value3.offset_value = inst->value1.offset_value;
+		inst->value3.value_type = inst->value1.value_type;
+		if (inst->instruction.dstA.indirect) {
+			inst->value3.indirect_init_value =
+				inst->value2.indirect_init_value;
+			inst->value3.indirect_offset_value =
+				inst->value2.indirect_offset_value;
+			inst->value3.indirect_value_id =
+				inst->value2.indirect_value_id;
+		}
+		inst->value3.ref_memory =
+			inst->value1.ref_memory;
+		inst->value3.ref_log =
+			inst->value1.ref_log;
+		/* Note: value_scope stays from the dst, not the src. */
+		/* FIXME Maybe Exception is the MOV instruction */
+		inst->value3.value_scope = inst->value2.value_scope;
+		/* MOV param to local */
+		/* When the destination is a param_reg,
+		 * Change it to a local_reg */
+		if ((inst->value3.value_scope == 1) &&
+			(STORE_REG == instruction->dstA.store) &&
+			(1 == inst->value2.value_scope) &&
+			(0 == instruction->dstA.indirect)) {
+			inst->value3.value_scope = 2;
+		}
+		/* Counter */
+		//if (inst->value3.value_scope == 2) {
+			/* Only value_id preserves the value2 values */
+		//inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = self->local_counter;
+		inst->value2.value_id = self->local_counter;
+		self->local_counter++;
+		//}
+		/* 1 - Entry Used */
+		inst->value3.valid = 1;
+			printf("value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
+				inst->value3.init_value,
+				inst->value3.offset_value,
+				inst->value3.init_value +
+					inst->value3.offset_value);
+		put_value_RTL_instruction(self, process_state, inst);
 		break;
 	case JMP:
 		/* Get value of srcA */
