@@ -47,65 +47,71 @@ static void insert_section(struct bfd *b, asection *sect, void *obj)
 
 static void print_sections(struct rev_eng* ret)
 {
-  char *comma = "";
-  unsigned int       opb = bfd_octets_per_byte (ret->bfd);
-  asection          *section = ret->section[0];
+	char *comma;
+	unsigned int       opb = bfd_octets_per_byte (ret->bfd);
+	asection          *section;
+	int n;
 
-  printf ("%3d %-13s %08lx  ", section->index,
-          bfd_get_section_name (ret->bfd, section),
-          (unsigned long) bfd_section_size (ret->bfd, section) / opb);
-  bfd_printf_vma (ret->bfd, bfd_get_section_vma (ret->bfd, section));
-  printf ("  ");
-  bfd_printf_vma (ret->bfd, section->lma);
-  printf ("  %08lx  2**%u", (unsigned long) section->filepos,
-          bfd_get_section_alignment (ret->bfd, section));
-  printf ("\n                ");
-  printf ("  ");
+	printf("print_sections: 0x%"PRIx64" sections\n", ret->section_sz);
+	for (n = 0; n < ret->section_sz; n++) {
+		comma = "";
+		section = ret->section[n];
+		printf ("%3d %-13s %08lx  ", section->index,
+		bfd_get_section_name (ret->bfd, section),
+			(unsigned long) bfd_section_size (ret->bfd, section) / opb);
+		bfd_printf_vma (ret->bfd, bfd_get_section_vma (ret->bfd, section));
+		printf ("  ");
+		bfd_printf_vma (ret->bfd, section->lma);
+		printf ("  %08lx  2**%u", (unsigned long) section->filepos,
+		bfd_get_section_alignment (ret->bfd, section));
+		printf ("\n                ");
+		printf ("  ");
 
 #define PF(x, y) \
-  if (section->flags & x) { printf ("%s%s", comma, y); comma = ", "; }
+	if (section->flags & x) { printf ("%s%s", comma, y); comma = ", "; }
 
-  PF (SEC_ALLOC, "ALLOC");
-  PF (SEC_LOAD, "LOAD");
-  PF (SEC_RELOC, "RELOC");
-  PF (SEC_READONLY, "READONLY");
-  PF (SEC_CODE, "CODE");
-  PF (SEC_DATA, "DATA");
-  PF (SEC_ROM, "ROM");
-  PF (SEC_CONSTRUCTOR, "CONSTRUCTOR");
-  PF (SEC_HAS_CONTENTS, "CONTENTS");
-  PF (SEC_NEVER_LOAD, "NEVER_LOAD");
-  PF (SEC_THREAD_LOCAL, "THREAD_LOCAL");
-  PF (SEC_HAS_GOT_REF, "GOT_REF");
-  PF (SEC_IS_COMMON, "IS_COMMON");
-  PF (SEC_DEBUGGING, "DEBUGGING");
-  PF (SEC_IN_MEMORY, "IN_MEMORY");
-  PF (SEC_EXCLUDE, "EXCLUDE");
-  PF (SEC_SORT_ENTRIES, "SORT_ENTRIES");
-  PF (SEC_LINK_ONCE, "LINK_ONCE");
-  PF (SEC_LINK_DUPLICATES, "LINK_DUPLICATES");
-  PF (SEC_LINK_DUPLICATES_ONE_ONLY, "LINK_DUPLICATES_ONE_ONLY");
-  PF (SEC_LINK_DUPLICATES_SAME_SIZE, "LINK_DUPLICATES_SAME_SIZE");
-  PF (SEC_LINKER_CREATED, "LINKER_CREATED");
-  PF (SEC_KEEP, "KEEP");
-  PF (SEC_SMALL_DATA, "SMALL_DATA");
-  PF (SEC_MERGE, "MERGE");
-  PF (SEC_STRINGS, "STRINGS");
-  PF (SEC_GROUP, "GROUP");
-  PF (SEC_COFF_SHARED_LIBRARY, "COFF_SHARED_LIBRARY");
-  PF (SEC_COFF_SHARED, "COFF_SHARED");
-  PF (SEC_TIC54X_BLOCK, "TIC54X_BLOCK");
-  PF (SEC_TIC54X_CLINK, "TIC54X_CLINK");
+		PF (SEC_HAS_CONTENTS, "CONTENTS");
+		PF (SEC_ALLOC, "ALLOC");
+		PF (SEC_LOAD, "LOAD");
+		PF (SEC_RELOC, "RELOC");
+		PF (SEC_READONLY, "READONLY");
+		PF (SEC_CODE, "CODE");
+		PF (SEC_DATA, "DATA");
+		PF (SEC_ROM, "ROM");
+		PF (SEC_CONSTRUCTOR, "CONSTRUCTOR");
+		PF (SEC_NEVER_LOAD, "NEVER_LOAD");
+		PF (SEC_THREAD_LOCAL, "THREAD_LOCAL");
+		PF (SEC_HAS_GOT_REF, "GOT_REF");
+		PF (SEC_IS_COMMON, "IS_COMMON");
+		PF (SEC_DEBUGGING, "DEBUGGING");
+		PF (SEC_IN_MEMORY, "IN_MEMORY");
+		PF (SEC_EXCLUDE, "EXCLUDE");
+		PF (SEC_SORT_ENTRIES, "SORT_ENTRIES");
+		PF (SEC_LINK_ONCE, "LINK_ONCE");
+		PF (SEC_LINK_DUPLICATES, "LINK_DUPLICATES");
+		PF (SEC_LINK_DUPLICATES_ONE_ONLY, "LINK_DUPLICATES_ONE_ONLY");
+		PF (SEC_LINK_DUPLICATES_SAME_SIZE, "LINK_DUPLICATES_SAME_SIZE");
+		PF (SEC_LINKER_CREATED, "LINKER_CREATED");
+		PF (SEC_KEEP, "KEEP");
+		PF (SEC_SMALL_DATA, "SMALL_DATA");
+		PF (SEC_MERGE, "MERGE");
+		PF (SEC_STRINGS, "STRINGS");
+		PF (SEC_GROUP, "GROUP");
+		PF (SEC_COFF_SHARED_LIBRARY, "COFF_SHARED_LIBRARY");
+		PF (SEC_COFF_SHARED, "COFF_SHARED");
+		PF (SEC_TIC54X_BLOCK, "TIC54X_BLOCK");
+		PF (SEC_TIC54X_CLINK, "TIC54X_CLINK");
 
-/*      if (section->comdat != NULL)
- *       printf (" (COMDAT %s %ld)", section->comdat->name,
- *               section->comdat->symbol);
- */
+		/*      if (section->comdat != NULL)
+		 *       printf (" (COMDAT %s %ld)", section->comdat->name,
+		 *               section->comdat->symbol);
+		 */
 
-  comma = ", ";
+		comma = ", ";
 
-  printf ("\n");
-#undef PF
+		printf ("\n");
+	}
+	#undef PF
 }
 
 #if 0
@@ -130,26 +136,58 @@ static void print_code_section(struct rev_eng* ret)
 }
 #endif
 
+int bf_find_section(struct rev_eng* ret, char *name, int name_len, int *section_number)
+{
+	int n;
+	int found = 0;
+	*section_number = 0;
+
+	for (n = 0; n < ret->section_sz; n++) {
+		if (!strncmp(ret->section[n]->name, name, name_len)) {
+			printf("bf_find_section %s\n", ret->section[n]->name);
+			found = 1;
+			*section_number = n;
+			break;
+		}
+	}
+	return found;
+}
+
+
 int64_t bf_get_code_size(struct rev_eng* ret)
 {
-  asection          *section = ret->section[0];
-  bfd_size_type      datasize = 0;
-  int64_t            code_size = 0;
+	asection          *section = ret->section[0];
+	bfd_size_type      datasize = 0;
+	int64_t            code_size = 0;
+	int n;
+	int tmp;
 
-  datasize = bfd_get_section_size(section);
-  code_size = datasize;
-  return code_size;
+	tmp = bf_find_section(ret, ".text", 5, &n);
+	
+	if (tmp) {
+		section = ret->section[n];
+		datasize = bfd_get_section_size(section);
+		code_size = datasize;
+	}
+	return code_size;
 }
 
 int64_t bf_get_data_size(struct rev_eng* ret)
 {
-  asection          *section = ret->section[1];
-  bfd_size_type      datasize = 0;
-  int64_t            code_size = 0;
+	asection          *section = ret->section[1];
+	bfd_size_type      datasize = 0;
+	int64_t            code_size = 0;
+	int n;
+	int tmp;
 
-  datasize = bfd_get_section_size(section);
-  code_size = datasize;
-  return code_size;
+	tmp = bf_find_section(ret, ".data", 5, &n);
+	
+	if (tmp) {
+		section = ret->section[n];
+		datasize = bfd_get_section_size(section);
+		code_size = datasize;
+	}
+	return code_size;
 }
 
 int bf_get_reloc_table_size_code_section(struct rev_eng* ret, uint64_t *size)
@@ -351,15 +389,13 @@ int bf_copy_code_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	if (!ret)
 		return 0;
 
-	for( n=0; n < ret->section_sz; n++) {
-		tmp = strncmp( ret->section[n]->name, ".text", 5);
-		if (0 == tmp) {
-			section = ret->section[n];
-			bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
-			printf("Text Data at %p\n",data);
-			result = 1;
-			break;
-		}
+	tmp = bf_find_section(ret, ".text", 5, &n);
+	
+	if (tmp) {
+		section = ret->section[n];
+		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
+		printf("Text Data at %p\n",data);
+		result = 1;
 	}
 	return result;
 }
@@ -374,15 +410,34 @@ int bf_copy_data_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	if (!ret)
 		return 0;
 
-	for( n=0; n < ret->section_sz; n++) {
-		tmp = strncmp( ret->section[n]->name, ".data", 5);
-		if (0 == tmp) {
-			section = ret->section[n];
-			bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
-			printf("Data at %p\n",data);
-			result = 1;
-			break;
-		}
+	tmp = bf_find_section(ret, ".data", 5, &n);
+	
+	if (tmp) {
+		section = ret->section[n];
+		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
+		printf("Data at %p\n",data);
+		result = 1;
+	}
+	return result;
+}
+
+int bf_copy_rodata_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
+{
+	asection	*section;
+	bfd_size_type	datasize = data_size;
+	int		n, tmp;
+	int 		result = 0;
+
+	if (!ret)
+		return 0;
+
+	tmp = bf_find_section(ret, ".rodata", 7, &n);
+	
+	if (tmp) {
+		section = ret->section[n];
+		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
+		printf("Data at %p\n",data);
+		result = 1;
 	}
 	return result;
 }
