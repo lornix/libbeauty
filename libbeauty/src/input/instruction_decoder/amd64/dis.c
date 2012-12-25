@@ -2260,6 +2260,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+		} else {
+			instruction->srcA.relocated = 0;
 		}
 		dis_instructions->bytes_used += 4;
 		instruction->srcA.value_size = width;

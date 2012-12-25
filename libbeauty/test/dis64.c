@@ -1582,15 +1582,18 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_if_then_else[n].if_else.type) {
 		case AST_TYPE_NODE:
 			color = "red";
+			printf("if_then_else:0x%x TYPE_NODE \n", n);
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
+			printf("if_then_else:0x%x TYPE_CONTAINER \n", n);
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
+			printf("if_then_else:0x%x TYPE 0x%x UNKNOWN \n", n, ast_if_then_else[n].if_else.type);
 			break;
 		}
 	}
@@ -2209,7 +2212,7 @@ int main(int argc, char *argv[])
 	/* FIXME */
 	//goto end_main;
 
-#if 1
+#if 0
 
 	print_dis_instructions(self);
 

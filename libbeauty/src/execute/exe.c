@@ -609,7 +609,7 @@ static int put_value_RTL_instruction(
 		value_data = search_store(memory_data,
 				data_index,
 				instruction->dstA.value_size);
-		printf("EXE2 value_stack=%p\n", value_stack);
+		printf("EXE2 value_data=%p\n", value_data);
 		if (!value_data) {
 			value_data = add_new_store(memory_data,
 				data_index,
