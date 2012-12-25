@@ -739,8 +739,20 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					} else {
 						tmp = 0;
 					}
+				} else if (nodes[start_node].path_size == 1) {
+					path = nodes[start_node].path[0];
+					printf("Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
+					printf("find_node_in_path=%d, index=%d\n", tmp, index);
+					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
+					printf("find_node_in_path next_node = 0x%x\n", next_node);
+					if (!tmp) {
+						tmp = next_node;
+					} else {
+						tmp = 0;
+					}
 				} else {
-					printf("follow path failed2 path_size = 0x%x\n", nodes[start_node].path_size);
+					printf("follow path failed1 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else if (follow_path && subset_method) {
@@ -759,13 +771,13 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 								printf("follow path next = 0x%x\n", tmp);
 								break;
 							} else {
-								printf("follow path failed1\n");
+								printf("follow path failed2/n");
 								exit(1);
 							}
 						}
 					}
 				} else {
-					printf("follow path failed2 path_size = 0x%x\n", nodes[start_node].path_size);
+					printf("follow path failed3 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else {

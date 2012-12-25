@@ -1568,9 +1568,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
-		inst->value3.value_id = self->local_counter;
-		inst->value2.value_id = self->local_counter;
-		self->local_counter++;
+		inst->value3.value_id = 0;
+		inst->value2.value_id = 0;
+		//inst->value3.value_id = self->local_counter;
+		//inst->value2.value_id = self->local_counter;
+		//self->local_counter++;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
