@@ -1333,6 +1333,10 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			continue;
 		}
 #endif
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		if (node == external_entry_points[nodes[node].entry_point - 1].start_node) {
 			name = external_entry_points[nodes[node].entry_point - 1].name;
 		} else {
