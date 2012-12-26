@@ -29,7 +29,8 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 	int32_t rel32 = 0;
 	int64_t rel64 = 0;
 	struct instruction_s *instruction;
-	byte = base_address[offset + dis_instructions->bytes_used++]; 
+	byte = base_address[offset + dis_instructions->bytes_used++];
+	printf("Prefix_0f Byte = 0x%x\n", byte);
 	switch (byte) {
 	case 0x00:												/* GRP 6 Exxx */
 	case 0x01:												/* Group 7 Ev */
@@ -185,6 +186,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
+		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 8;
@@ -223,6 +225,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
+		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = 0;
 		instruction->dstA.indirect_size = 8;
@@ -234,6 +237,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 			instruction->srcA.indirect_size = 8;
 			instruction->srcA.index = REG_TMP1;
 		}
+		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 1;
 		dis_instructions->instruction_number++;
 		result = 1;
@@ -242,6 +246,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
+		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = 0;
 		instruction->dstA.indirect_size = 8;
@@ -253,6 +258,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 			instruction->srcA.indirect_size = 8;
 			instruction->srcA.index = REG_TMP1;
 		}
+		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 2;
 		dis_instructions->instruction_number++;
 		result = 1;

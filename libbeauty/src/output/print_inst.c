@@ -83,6 +83,8 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	int tmp_state = 0;
 	int n, l;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
+	printf("opcode = 0x%x\n", instruction->opcode);
+	printf("opcode = 0x%x\n", instruction->flags);
 	tmp = fprintf(fd, "// 0x%04x:%s%s",
 		instruction_number,
 		opcode_table[instruction->opcode],

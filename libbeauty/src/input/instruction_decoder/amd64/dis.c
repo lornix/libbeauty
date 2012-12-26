@@ -307,7 +307,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM mod 1 number=0x%x\n", number);
+			printf("MODRM0 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -464,7 +464,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM mod 1 number=0x%x\n", number);
+			printf("MODRM1 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -655,7 +655,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM mod 1 number=0x%x\n", number);
+			printf("MODRM2 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -1475,6 +1475,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 1;
 		instruction->dstA.index = REG_AX;
+		instruction->dstA.value_size = 1;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1498,6 +1499,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 4;
 		instruction->dstA.index = REG_AX;
+		instruction->dstA.value_size = 4;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1744,6 +1746,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		relative = getbyte(base_address, offset + dis_instructions->bytes_used);
 		/* extends byte to int64_t */
 		instruction->dstA.index = relative;
+		instruction->dstA.value_size = 4;
 		instruction->dstA.relocated = 0;
 		dis_instructions->bytes_used+=1;
 		instruction->dstA.value_size = 4;
@@ -2234,6 +2237,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 1;
 		instruction->dstA.index = REG_AX;
+		instruction->dstA.value_size = 1;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3013,7 +3017,13 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	printf("disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
 	for (n = 0; n < dis_instructions->instruction_number; n++) {
 		instruction = &dis_instructions->instruction[n];
+		printf("0x%x: flags = 0x%x\n", n, instruction->flags);
+		printf("0x%x: srcA.index = 0x%"PRIx64"\n", n, instruction->srcA.index);
 		printf("0x%x: srcA.relocated = 0x%x\n", n, instruction->srcA.relocated);
+		printf("0x%x: srcA.value_size = 0x%x\n", n, instruction->srcA.value_size);
+		printf("0x%x: dstA.store = 0x%x\n", n, instruction->dstA.store);
+		printf("0x%x: dstA.index = 0x%"PRIx64"\n", n, instruction->dstA.index);
+		printf("0x%x: dstA.value_size = 0x%x\n", n, instruction->dstA.value_size);
 	}
 	if (repz != repz_handled) {
 		result = 0;

@@ -564,6 +564,11 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_entry[0].sub_index = 0;
 	ast_entry[0].node = start_node;
 	ast_entry[0].node_end = 0;
+	if (container_index >= AST_SIZE) { 
+		printf("container_index too large 0\n");
+		ret = 1;
+		goto exit_cfg_to_ast;
+	}
 	ast->ast_container[container_index].start_node = start_node;
 	container_index++;
 	if (container_index >= AST_SIZE) { 
@@ -2116,7 +2121,7 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 			}
-			tmp = print_control_flow_paths(self, paths, &paths_size);
+			//tmp = print_control_flow_paths(self, paths, &paths_size);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
 			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
@@ -2181,6 +2186,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#if 0
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {
@@ -2191,6 +2197,7 @@ int main(int argc, char *argv[])
 			tmp = print_control_flow_loops(self, external_entry_points[l].loops, &(external_entry_points[l].loops_size));
 		}
 	}
+#endif
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 	tmp = output_cfg_dot(self, nodes, &nodes_size);

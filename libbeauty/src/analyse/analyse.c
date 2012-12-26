@@ -871,7 +871,7 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 		offset = paths[l].path_size - 1;
 		if (paths[l].path_size > 0) {
 			while (1) {
-				printf("Path=0x%x, offset=%d, Node=0x%x\n", l, offset, paths[path].path[offset]);
+				//printf("Path=0x%x, offset=%d, Node=0x%x\n", l, offset, paths[path].path[offset]);
 				if (paths[l].type == PATH_TYPE_LOOP) {
 					add_looped_path_to_node(&(nodes[paths[path].path[offset]]), l);
 				} else {
