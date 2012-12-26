@@ -152,9 +152,16 @@ exit_add_new_store:
 static int source_equals_dest(struct operand_s *srcA, struct operand_s *dstA)
 {
 	int tmp, ret;
-	tmp = memcmp(srcA, dstA, sizeof(struct operand_s));
-	ret = 0;
-	if (tmp == 0) ret = 1;
+	/* Exclude value in comparison for XOR */
+	if ((srcA->store == dstA->store) &&
+		(srcA->indirect == dstA->indirect) &&
+		(srcA->indirect_size == dstA->indirect_size) &&
+		(srcA->index == dstA->index) &&
+		(srcA->value_size == dstA->value_size)) {
+		ret = 1;
+	} else {
+		ret = 0;
+	}
 	return ret;
 }
 

@@ -242,7 +242,6 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				dis_instructions->instruction_number++;
 			} else {
 				printf("Got here: base != 5\n");
-#if 0
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 				if (dis_instructions->instruction_number > number) {
 					instruction->opcode = ADD;
@@ -265,7 +264,6 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->dstA.relocated = 0;
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
-#endif
 			}
 
 			result = 1;
