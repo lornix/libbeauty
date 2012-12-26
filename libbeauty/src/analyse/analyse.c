@@ -1484,6 +1484,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		nodes[node_new].prev_node[1] = node_b;
 		nodes[node_new].prev_link_index[0] = 0;
 		nodes[node_new].prev_link_index[1] = 0;
+		nodes[node_new].valid = 1;
 		nodes[node_a].link_next = calloc(1, sizeof(struct node_link_s));
 		nodes[node_a].next_size = 1;
 		nodes[node_a].link_next[0].node = node_new;
