@@ -286,6 +286,7 @@ struct node_link_s {
 #define NODE_TYPE_LOOP_THEN_ELSE 5
 
 struct control_flow_node_s {
+	int valid; /* 0 == invalid/un-used, 1 == valid/used */
 	int entry_point; /* Can use this to find the name on the node. */
 	int inst_start;
 	int inst_end;

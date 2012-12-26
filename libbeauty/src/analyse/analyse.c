@@ -655,8 +655,12 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	struct loop_s *loops;
 
 	for(n = 1; n <= *nodes_size; n++) {
-		type = nodes[n].type;
 		start_node = n;
+		if (!nodes[start_node].valid) {
+			continue;
+		}
+		type = nodes[n].type;
+		//printf("%s: start_node = 0x%x, nodes[start_node].entry_point = 0x%x\n", __FUNCTION__, start_node, nodes[start_node].entry_point);
 		paths_size = self->external_entry_points[nodes[start_node].entry_point - 1].paths_size;
 		paths = self->external_entry_points[nodes[start_node].entry_point - 1].paths;
 		loops_size = self->external_entry_points[nodes[start_node].entry_point - 1].loops_size;
@@ -1075,6 +1079,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			if (inst_end >= inst_start) {
 				nodes[node].inst_start = inst_start;
 				nodes[node].inst_end = inst_end;
+				nodes[node].valid = 1;
 				node++;
 				inst_start = n + 1;
 			}
@@ -1086,6 +1091,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			if (inst_end >= inst_start) {
 				nodes[node].inst_start = inst_start;
 				nodes[node].inst_end = inst_end;
+				nodes[node].valid = 1;
 				node++;
 				inst_start = n;
 			}
@@ -1150,8 +1156,9 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 	printf("print_control_flow_nodes: size = %d\n", *node_size);	
 	for (n = 1; n <= *node_size; n++) {
-		printf("Node:0x%x, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
+		printf("Node:0x%x, valid=%d, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
 			n,
+			nodes[n].valid,
 			nodes[n].type,
 			nodes[n].dominator,
 			nodes[n].if_tail,
@@ -1442,6 +1449,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 			/* Mark the node_b as un-used */
 			nodes[node_b].inst_end = new_inst_start + offset - 1;
 			nodes[node_b].prev_size = 0;
+			nodes[node_b].valid = 0;
 			free (nodes[node_b].prev_node);
 			free (nodes[node_b].prev_link_index);
 			free (nodes[node_b].link_next);
