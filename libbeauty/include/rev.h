@@ -58,6 +58,8 @@ struct rev_eng {
 	uint64_t	reloc_table_code_sz;
 	struct reloc_table	*reloc_table_data;   /* relocation table */
 	uint64_t	reloc_table_data_sz;
+	struct reloc_table	*reloc_table_rodata;   /* relocation table */
+	uint64_t	reloc_table_rodata_sz;
 };
 
 #include <dis.h>
@@ -340,6 +342,8 @@ struct external_entry_point_s {
 struct self_s {
 	size_t data_size;
 	uint8_t *data;
+	size_t rodata_size;
+	uint8_t *rodata;
 	struct inst_log_entry_s *inst_log_entry;
 	disassembler_ftype disassemble_fn;
 	struct external_entry_point_s *external_entry_points;

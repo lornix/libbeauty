@@ -121,6 +121,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	struct instruction_s *instruction;
 	int	tmp;
 	int	result = 0;
+	struct reloc_table *reloc_table_entry;
 	//struct reloc_table *reloc_table_entry;
 	/* Does not always start at zero.
 	 * e.g. 0xff 0x71 0xfd pushl -0x4(%ecx)
@@ -223,6 +224,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.value_size = 8;
 				instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 				instruction->srcA.relocated = 0;
+				tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
+				if (!tmp) {
+					instruction->srcA.relocated = 1;
+				}
 				printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 				/* if the offset is negative,
 				 * replace ADD with SUB */
@@ -284,6 +289,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
+			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
+			if (!tmp) {
+				instruction->srcA.relocated = 1;
+			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
@@ -632,6 +641,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
+			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
+			if (!tmp) {
+				instruction->srcA.relocated = 1;
+			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
@@ -693,6 +706,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
+			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
+			if (!tmp) {
+				instruction->srcA.relocated = 1;
+			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */

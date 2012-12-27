@@ -55,6 +55,8 @@ uint8_t *inst;
 size_t inst_size = 0;
 uint8_t *data;
 size_t data_size = 0;
+uint8_t *rodata;
+size_t rodata_size = 0;
 struct rev_eng *handle;
 struct disassemble_info disasm_info;
 char *dis_flags_table[] = { " ", "f" };
@@ -1865,6 +1867,22 @@ int main(int argc, char *argv[])
 
 	data_size = bf_get_data_size(handle);
 	data = malloc(data_size);
+	bf_copy_data_section(handle, data, data_size);
+	printf("dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
+	for (n = 0; n < data_size; n++) {
+		printf(" 0x%02x", data[n]);
+	}
+	printf("\n");
+
+	rodata_size = bf_get_rodata_size(handle);
+	rodata = malloc(data_size);
+	bf_copy_rodata_section(handle, data, data_size);
+	printf("dis:.rodata Data at %p, size=0x%"PRIx64"\n", rodata, rodata_size);
+	for (n = 0; n < rodata_size; n++) {
+		printf(" 0x%02x", rodata[n]);
+	}
+	printf("\n");
+
 	inst_log_entry = calloc(INST_LOG_ENTRY_SIZE, sizeof(struct inst_log_entry_s));
 	relocations =  calloc(RELOCATION_SIZE, sizeof(struct relocation_s));
 	external_entry_points = calloc(EXTERNAL_ENTRY_POINTS_MAX, sizeof(struct external_entry_point_s));
@@ -1872,6 +1890,8 @@ int main(int argc, char *argv[])
 	printf("sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
 	self->data_size = data_size;
 	self->data = data;
+	self->rodata_size = data_size;
+	self->rodata = data;
 	self->inst_log_entry = inst_log_entry;
 	self->relocations = relocations;
 	self->external_entry_points = external_entry_points;
@@ -1910,6 +1930,13 @@ int main(int argc, char *argv[])
 			handle->reloc_table_data[n].address,
 			handle->reloc_table_data[n].size,
 			handle->reloc_table_data[n].section_index);
+	}
+	bf_get_reloc_table_rodata_section(handle);
+	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
+		printf("reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", section = 0x%"PRIx64"\n",
+			handle->reloc_table_rodata[n].address,
+			handle->reloc_table_rodata[n].size,
+			handle->reloc_table_rodata[n].section_index);
 	}
 	
 	printf("handle=%p\n", handle);
