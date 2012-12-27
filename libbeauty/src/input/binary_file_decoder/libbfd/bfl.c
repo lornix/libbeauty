@@ -302,7 +302,7 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 	uint64_t sym_val;
 
 	tmp = bf_find_section(ret, ".text", 5, &n);
-	printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -311,27 +311,27 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 	 * to an already loaded symbol table.
 	 */
 	relcount = bfd_canonicalize_reloc(ret->bfd, section, relpp, ret->symtab);
-	printf("Relcount=0x%"PRIx64"\n", relcount);
+	//printf("Relcount=0x%"PRIx64"\n", relcount);
 	ret->reloc_table_code = calloc(relcount, sizeof(*ret->reloc_table_code));
 	ret->reloc_table_code_sz = relcount;
-	printf("reloc_size=0x%"PRIx64"\n", sizeof(*ret->reloc_table_code));
-	dump_reloc_set (ret->bfd, section, relpp, relcount);
+	//printf("reloc_size=0x%"PRIx64"\n", sizeof(*ret->reloc_table_code));
+	//dump_reloc_set (ret->bfd, section, relpp, relcount);
 	for (n=0; n < relcount; n++) {
 		rel = relpp[n];
 		//printf("rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_code[n].address = rel->address;
 		ret->reloc_table_code[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
 		ret->reloc_table_code[n].value = rel->addend;
-		printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
-		if (rel->howto == NULL)
-			printf (" howto *unknown*\n");
+		//printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
+		//if (rel->howto == NULL)
+		//	printf (" howto *unknown*\n");
 		//else if (rel->howto->name)
-			printf (" howto->name %-16s\n", rel->howto->name);
+		//	printf (" howto->name %-16s\n", rel->howto->name);
 		//else
-			printf (" howto->type %-16d\n", rel->howto->type);
+		//	printf (" howto->type %-16d\n", rel->howto->type);
 
-		printf("p1 %p\n",&rel->sym_ptr_ptr);
-		printf("p2 %p\n",rel->sym_ptr_ptr);
+		//printf("p1 %p\n",&rel->sym_ptr_ptr);
+		//printf("p2 %p\n",rel->sym_ptr_ptr);
 		if (rel->sym_ptr_ptr == NULL) {
 			continue;
 		}
@@ -343,7 +343,7 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 		ret->reloc_table_code[n].section_name = sym_sec->name;
 		ret->reloc_table_code[n].symbol_name = sym_name;
 		
-		printf ("sym_name = %s, sym_val = 0x%"PRIx64"\n",sym_name, sym_val);
+		//printf ("sym_name = %s, sym_val = 0x%"PRIx64"\n",sym_name, sym_val);
 
 	}
 	free(relpp);
@@ -360,10 +360,11 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 	uint64_t relcount;
 	int n;
 	int tmp;
+	const char *sym_name;
+	uint64_t sym_val;
 
-//	const char *sym_name;
 	tmp = bf_find_section(ret, ".data", 5, &n);
-	printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -397,8 +398,12 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 		}
 		
 		//sym_name = bfd_asymbol_name(*rel->sym_ptr_ptr);
+		sym_name = bfd_asymbol_name(*rel->sym_ptr_ptr);
+		sym_val = bfd_asymbol_value(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_data[n].section_index = sym_sec->index;
+		ret->reloc_table_data[n].section_name = sym_sec->name;
+		ret->reloc_table_data[n].symbol_name = sym_name;
 		
 		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
@@ -417,10 +422,11 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 	uint64_t relcount;
 	int n;
 	int tmp;
-
 	const char *sym_name;
+	uint64_t sym_val;
+
 	tmp = bf_find_section(ret, ".rodata", 7, &n);
-	printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -429,19 +435,19 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 	 * to an already loaded symbol table.
 	 */
 	relcount = bfd_canonicalize_reloc(ret->bfd, section, relpp, ret->symtab);
-	printf("relcount=0x%"PRIx64"\n", relcount);
+	//printf("relcount=0x%"PRIx64"\n", relcount);
 	ret->reloc_table_rodata = calloc(relcount, sizeof(*ret->reloc_table_rodata));
 	ret->reloc_table_rodata_sz = relcount;
 	//printf("reloc_size=%d\n", sizeof(*ret->reloc_table));
-	dump_reloc_set (ret->bfd, section, relpp, relcount);
+	//dump_reloc_set (ret->bfd, section, relpp, relcount);
 	for (n=0; n < relcount; n++) {
 		rel = relpp[n];
-		printf("rel:addr = 0x%"PRIx64"\n", rel->address);
+		//printf("rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_rodata[n].address = rel->address;
 		ret->reloc_table_rodata[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
 		ret->reloc_table_rodata[n].value = rel->addend;
-		printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
-		printf("value 0x%"PRIx64"\n", rel->addend);
+		//printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
+		//printf("value 0x%"PRIx64"\n", rel->addend);
 //		if (rel->howto == NULL)
 //			printf ("howto *unknown*\n");
 //		else if (rel->howto->name)
@@ -456,18 +462,18 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 		}
 		
 		sym_name = bfd_asymbol_name(*rel->sym_ptr_ptr);
+		sym_val = bfd_asymbol_value(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_rodata[n].section_index = sym_sec->index;
+		ret->reloc_table_rodata[n].section_name = sym_sec->name;
 		ret->reloc_table_rodata[n].symbol_name = sym_name;
 		
-		printf (" %i, %s\n",sym_sec->index, sym_name);
+		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
 	}
 	free(relpp);
 	return 1;
 }
-
-
 
 int bf_copy_code_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 {

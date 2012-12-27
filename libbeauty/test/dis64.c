@@ -1858,6 +1858,8 @@ int main(int argc, char *argv[])
 	printf("Setup ok\n");
 	inst_size = bf_get_code_size(handle);
 	inst = malloc(inst_size);
+	/* valgrind does not know about bf_copy_data_section */
+	memset(inst, 0, inst_size);
 	bf_copy_code_section(handle, inst, inst_size);
 	printf("dis:.text Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
 	for (n = 0; n < inst_size; n++) {
@@ -1867,6 +1869,8 @@ int main(int argc, char *argv[])
 
 	data_size = bf_get_data_size(handle);
 	data = malloc(data_size);
+	/* valgrind does not know about bf_copy_data_section */
+	memset(data, 0, data_size);
 	bf_copy_data_section(handle, data, data_size);
 	printf("dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
 	for (n = 0; n < data_size; n++) {
@@ -1875,8 +1879,10 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	rodata_size = bf_get_rodata_size(handle);
-	rodata = malloc(data_size);
-	bf_copy_rodata_section(handle, data, data_size);
+	rodata = malloc(rodata_size);
+	/* valgrind does not know about bf_copy_data_section */
+	memset(rodata, 0, rodata_size);
+	bf_copy_rodata_section(handle, rodata, rodata_size);
 	printf("dis:.rodata Data at %p, size=0x%"PRIx64"\n", rodata, rodata_size);
 	for (n = 0; n < rodata_size; n++) {
 		printf(" 0x%02x", rodata[n]);
@@ -1926,17 +1932,23 @@ int main(int argc, char *argv[])
 
 	bf_get_reloc_table_data_section(handle);
 	for (n = 0; n < handle->reloc_table_data_sz; n++) {
-		printf("reloc_table_data:addr = 0x%"PRIx64", size = 0x%"PRIx64", section = 0x%"PRIx64"\n",
+		printf("reloc_table_data:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_data[n].address,
 			handle->reloc_table_data[n].size,
-			handle->reloc_table_data[n].section_index);
+			handle->reloc_table_data[n].value,
+			handle->reloc_table_data[n].section_index,
+			handle->reloc_table_data[n].section_name,
+			handle->reloc_table_data[n].symbol_name);
 	}
 	bf_get_reloc_table_rodata_section(handle);
 	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
-		printf("reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", section = 0x%"PRIx64"\n",
+		printf("reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_rodata[n].address,
 			handle->reloc_table_rodata[n].size,
-			handle->reloc_table_rodata[n].section_index);
+			handle->reloc_table_rodata[n].value,
+			handle->reloc_table_rodata[n].section_index,
+			handle->reloc_table_rodata[n].section_name,
+			handle->reloc_table_rodata[n].symbol_name);
 	}
 	
 	printf("handle=%p\n", handle);
