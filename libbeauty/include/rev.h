@@ -357,6 +357,11 @@ struct self_s {
 extern int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);
 extern int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit);
 extern int output_label(struct label_s *label, FILE *fd);
+int output_function_body(struct self_s *self, struct process_state_s *process_state,
+			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
+uint32_t output_function_name(FILE *fd,
+		struct external_entry_point_s *external_entry_point);
+uint32_t relocated_data(struct rev_eng *handle, uint64_t offset, uint64_t size);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int print_inst_short(struct self_s *self, struct instruction_s *instruction);

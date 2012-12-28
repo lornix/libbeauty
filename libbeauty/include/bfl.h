@@ -39,5 +39,6 @@ int64_t bf_get_rodata_size(struct rev_eng* ret);
 int bf_copy_rodata_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size);
 int bf_get_reloc_table_code_section(struct rev_eng* ret);
 int bf_get_reloc_table_data_section(struct rev_eng* ret);
+int bf_get_reloc_table_rodata_section(struct rev_eng* ret);
 
 #endif /* __BFL__ */
