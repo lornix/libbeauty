@@ -1109,9 +1109,31 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			/* only does anything if combined with a branch instruction */
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
-			tmp = fprintf(fd, "\t");
-			tmp = fprintf(fd, "/* cmp; */%s", cr);
-			printf("/* cmp; */\n");
+			printf("//\tcmp ");
+			tmp = fprintf(fd, "//\tcmp ");
+			if (1 == instruction->dstA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value3.indirect_value_id;
+			} else {
+				value_id = inst_log1->value3.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = fprintf(fd, " , ");
+			printf("\nstore=%d\n", instruction->srcA.store);
+			if (1 == instruction->srcA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value1.indirect_value_id;
+			} else {
+				value_id = inst_log1->value1.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 
 		case TEST:
@@ -1119,9 +1141,31 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			/* only does anything if combined with a branch instruction */
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
-			tmp = fprintf(fd, "\t");
-			tmp = fprintf(fd, "/* test; */%s", cr);
-			printf("/* test; */\n");
+			printf("//\ttest ");
+			tmp = fprintf(fd, "//\ttest ");
+			if (1 == instruction->dstA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value3.indirect_value_id;
+			} else {
+				value_id = inst_log1->value3.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = fprintf(fd, " , ");
+			printf("\nstore=%d\n", instruction->srcA.store);
+			if (1 == instruction->srcA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value1.indirect_value_id;
+			} else {
+				value_id = inst_log1->value1.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 
 		case IF:
