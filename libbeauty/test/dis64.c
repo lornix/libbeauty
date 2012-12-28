@@ -1297,12 +1297,14 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	return 0;
 }
 
-int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size,
+                         struct label_redirect_s *label_redirect, struct label_s *labels)
 {
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
+	struct process_state_s *process_state;
 	char *filename;
 	FILE *fd;
 	int node;
@@ -1348,17 +1350,20 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
 					node, "lightgray", node, name);
-		tmp = fprintf(fd, "type = 0x%x\\l",
+		tmp = fprintf(fd, "type = 0x%x\\l\n",
 				nodes[node].type);
 		if (nodes[node].if_tail) {
-			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+			tmp = fprintf(fd, "if_tail = 0x%x\\l\n",
 				nodes[node].if_tail);
 		}
+		process_state = &external_entry_points[nodes[node].entry_point - 1].process_state;
 		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
 			inst_log1 =  &inst_log_entry[n];
 			instruction =  &inst_log1->instruction;
-			tmp = write_inst(self, fd, instruction, n, NULL);
-			tmp = fprintf(fd, "\\l");
+			//tmp = write_inst(self, fd, instruction, n, NULL);
+			//tmp = fprintf(fd, "\\l");
+			tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\l\n");
+			//tmp = fprintf(fd, "\\l\n");
 		}
 		tmp = fprintf(fd, "\"]\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
@@ -3056,9 +3061,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-
-
-	tmp = output_cfg_dot(self, nodes, &nodes_size);
+	tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/

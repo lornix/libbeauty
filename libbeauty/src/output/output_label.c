@@ -464,7 +464,7 @@ uint32_t output_function_name(FILE *fd,
 }
 
 int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
-			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels)
+			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr)
 {
 	int tmp, l, n2;
 	int tmp_state;
@@ -493,6 +493,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	//instruction_prev =  &inst_log1_prev->instruction;
 
 	write_inst(self, fd, instruction, inst_number, labels);
+	tmp = fprintf(fd, "%s", cr);
 
 	tmp = fprintf(fd, "// ");
 	if (inst_log1->prev_size > 0) {
@@ -579,7 +580,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = fprintf(fd, "0x%x:", tmp);
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 
 			break;
 		case NEG:
@@ -690,7 +691,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			printf("\t");
-			tmp = fprintf(fd, "\t");
+			tmp = fprintf(fd, "//\t");
 			if (1 == instruction->dstA.indirect) {
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
@@ -701,7 +702,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " -= ");
+			tmp = fprintf(fd, " \\-= ");
 			printf("\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
@@ -713,7 +714,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s", cr);
 			break;
 		case rAND:
 			if (print_inst(self, instruction, inst_number, labels))
@@ -1236,7 +1237,7 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 	printf("output_function_body:start=0x%x, end=0x%x\n", start, end);
 
 	for (n = start; n <= end; n++) {
-		tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels);
+		tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\n");
 	}
 #if 0
 	if (0 < inst_log1->next_size && inst_log1->next[0]) {

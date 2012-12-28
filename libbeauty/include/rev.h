@@ -361,6 +361,8 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
 uint32_t output_function_name(FILE *fd,
 		struct external_entry_point_s *external_entry_point);
+int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
+			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr);
 uint32_t relocated_data(struct rev_eng *handle, uint64_t offset, uint64_t size);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
