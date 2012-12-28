@@ -2243,7 +2243,8 @@ int main(int argc, char *argv[])
 #endif
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
-	tmp = output_cfg_dot(self, nodes, &nodes_size);
+//	Doing this after SSA now.
+//	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
 //	for (l = 21; l < 22; l++) {
@@ -2262,7 +2263,7 @@ int main(int argc, char *argv[])
 	/* FIXME */
 	//goto end_main;
 
-#if 0
+#if 1
 
 	print_dis_instructions(self);
 
@@ -3055,6 +3056,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
+
+
+	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
