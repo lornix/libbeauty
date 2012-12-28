@@ -512,17 +512,17 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			inst_log1->next[l]);
 		}
 	}
-	tmp = fprintf(fd, "\n");
+	tmp = fprintf(fd, "%s", cr);
 	/* Output labels when this is a join point */
 	/* or when the previous instruction was some sort of jump */
 	if ((inst_log1->prev_size) > 1) {
 		printf("label%04"PRIx32":\n", inst_number);
-		tmp = fprintf(fd, "label%04"PRIx32":\n", inst_number);
+		tmp = fprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
 	} else {
 		if ((inst_log1->prev[0] != (inst_number - 1)) &&
 			(inst_log1->prev[0] != 0)) {
 			printf("label%04"PRIx32":\n", inst_number);
-			tmp = fprintf(fd, "label%04"PRIx32":\n", inst_number);
+			tmp = fprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
 		}
 	}
 	printf("\n");
@@ -540,6 +540,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		(4 == inst_log1->value3.value_type) ||
 		(6 == inst_log1->value3.value_type) ||
 		(5 == inst_log1->value3.value_type)) {
+		//tmp = fprintf(fd, "//");
 		switch (instruction->opcode) {
 		case MOV:
 		case SEX:
@@ -621,7 +622,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = fprintf(fd, "0x%x:", tmp);
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 
 			break;
 
@@ -654,7 +655,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = fprintf(fd, "0x%x:", tmp);
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case MUL:
 		case IMUL:
@@ -684,14 +685,14 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case SUB:
 		case SBB:
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			printf("\t");
-			tmp = fprintf(fd, "//\t");
+			tmp = fprintf(fd, "\t");
 			if (1 == instruction->dstA.indirect) {
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
@@ -743,7 +744,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case OR:
 			if (print_inst(self, instruction, inst_number, labels))
@@ -772,7 +773,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case XOR:
 			if (print_inst(self, instruction, inst_number, labels))
@@ -801,7 +802,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case NOT:
 			if (print_inst(self, instruction, inst_number, labels))
@@ -830,7 +831,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case SHL: //TODO: UNSIGNED
 			if (print_inst(self, instruction, inst_number, labels))
@@ -859,7 +860,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case SHR: //TODO: UNSIGNED
 			if (print_inst(self, instruction, inst_number, labels))
@@ -888,7 +889,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case SAL: //TODO: SIGNED
 			if (print_inst(self, instruction, inst_number, labels))
@@ -917,7 +918,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case SAR: //TODO: SIGNED
 			if (print_inst(self, instruction, inst_number, labels))
@@ -946,7 +947,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case JMP:
 			printf("JMP reached XXXX\n");
@@ -959,10 +960,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 //				tmp = fprintf(fd, "JMP goto rel%08"PRIx64";\n",
 //					instruction->srcA.index);
 //			} else {
-				printf("JMP2 goto label%04"PRIx32";\n",
-					inst_log1->next[0]);
-				tmp = fprintf(fd, "JMP2 goto label%04"PRIx32";\n",
-					inst_log1->next[0]);
+				printf("JMP2 goto label%04"PRIx32";/n",
+					inst_log1->next[0], cr);
+				tmp = fprintf(fd, "JMP2 goto label%04"PRIx32";%s",
+					inst_log1->next[0], cr);
 //			}
 			break;
 		case JMPT:
@@ -1004,7 +1005,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = fprintf(fd, "0x%x:", tmp);
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case CALL:
 			/* FIXME: This does nothing at the moment. */
@@ -1071,9 +1072,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 						tmp_state++;
 					}
 #endif
-					tmp = fprintf(fd, ");\n");
+					tmp = fprintf(fd, ");%s", cr);
 				} else {
-					tmp = fprintf(fd, "CALL1()\n");
+					tmp = fprintf(fd, "CALL1()%s", cr);
 				}
 #if 0
 				/* FIXME: JCD test disabled */
@@ -1097,7 +1098,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				tmp = label_redirect[inst_log1->value1.indirect_value_id].redirect;
 				label = &labels[tmp];
 				tmp = output_label(label, fd);
-				tmp = fprintf(fd, ") ()\n");
+				tmp = fprintf(fd, ") ()%s", cr);
 			}
 //			tmp = fprintf(fd, "/* call(); */\n");
 //			printf("/* call(); */\n");
@@ -1109,7 +1110,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			tmp = fprintf(fd, "\t");
-			tmp = fprintf(fd, "/* cmp; */\n");
+			tmp = fprintf(fd, "/* cmp; */%s", cr);
 			printf("/* cmp; */\n");
 			break;
 
@@ -1119,7 +1120,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			tmp = fprintf(fd, "\t");
-			tmp = fprintf(fd, "/* test; */\n");
+			tmp = fprintf(fd, "/* test; */%s", cr);
 			printf("/* test; */\n");
 			break;
 
@@ -1173,8 +1174,8 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 //				tmp = fprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
 //			}
 			tmp = fprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
-			tmp = fprintf(fd, "\n");
-			tmp = fprintf(fd, "\telse goto label%04"PRIx32";\n", inst_log1->next[0]);
+			tmp = fprintf(fd, "%s", cr);
+			tmp = fprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
 
 			break;
 
@@ -1193,7 +1194,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";\n");
+			tmp = fprintf(fd, ";%s", cr);
 			break;
 		default:
 			printf("Unhandled output instruction1 opcode=0x%x\n", instruction->opcode);
@@ -1205,7 +1206,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		}
 		if (0 < inst_log1->next_size && inst_log1->next[0] != (inst_number + 1)) {
 			printf("\tTMP3 goto label%04"PRIx32";\n", inst_log1->next[0]);
-			tmp = fprintf(fd, "\tTMP3 goto label%04"PRIx32";\n", inst_log1->next[0]);
+			tmp = fprintf(fd, "\tTMP3 goto label%04"PRIx32";%s", inst_log1->next[0], cr);
 		}
 	}
 	return 0;
