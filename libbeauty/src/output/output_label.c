@@ -1113,15 +1113,15 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = fprintf(fd, "//\tcmp ");
 			if (1 == instruction->dstA.indirect) {
 				tmp = fprintf(fd, "*");
-				value_id = inst_log1->value3.indirect_value_id;
+				value_id = inst_log1->value2.indirect_value_id;
 			} else {
-				value_id = inst_log1->value3.value_id;
+				value_id = inst_log1->value2.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " , ");
+			tmp = fprintf(fd, " - ");
 			printf("\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
@@ -1145,9 +1145,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = fprintf(fd, "//\ttest ");
 			if (1 == instruction->dstA.indirect) {
 				tmp = fprintf(fd, "*");
-				value_id = inst_log1->value3.indirect_value_id;
+				value_id = inst_log1->value2.indirect_value_id;
 			} else {
-				value_id = inst_log1->value3.value_id;
+				value_id = inst_log1->value2.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
