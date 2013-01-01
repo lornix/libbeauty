@@ -6,6 +6,15 @@
    8:	83 c0 61             	add    $0x61,%eax
    b:	c3                   	retq 
  */
+/* Suggest re-write it to:
+   0000000000000000 <test61>:
+   0:	             	cmp    $0x1,%edi	Node A
+   1:	             	jb     4:		Node A
+   2:	               	mov    0x61,%eax	Node B
+   3:                   jmp    5:		Node B
+   4:	             	mov    0x40,%eax	Node C
+   5:	                retq 			Node D  (Due to join point)
+ */
 
 int test61 ( unsigned value );
 
