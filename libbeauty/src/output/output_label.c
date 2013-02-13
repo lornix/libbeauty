@@ -1282,7 +1282,7 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 	printf("output_function_body:start=0x%x, end=0x%x\n", start, end);
 
 	for (n = start; n <= end; n++) {
-		tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\n");
+		tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\n");
 	}
 #if 0
 	if (0 < inst_log1->next_size && inst_log1->next[0]) {
