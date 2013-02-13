@@ -960,7 +960,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 //				tmp = fprintf(fd, "JMP goto rel%08"PRIx64";\n",
 //					instruction->srcA.index);
 //			} else {
-				printf("JMP2 goto label%04"PRIx32";/n",
+				printf("JMP2 goto label%04"PRIx32";%s",
 					inst_log1->next[0], cr);
 				tmp = fprintf(fd, "JMP2 goto label%04"PRIx32";%s",
 					inst_log1->next[0], cr);
