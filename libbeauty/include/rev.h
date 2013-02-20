@@ -60,6 +60,7 @@ struct rev_eng {
 	uint64_t	reloc_table_data_sz;
 	struct reloc_table	*reloc_table_rodata;   /* relocation table */
 	uint64_t	reloc_table_rodata_sz;
+	int		*section_number_mapping;    /* Mapping bfd sections onto libbeauty sections */
 };
 
 #include <dis.h>
@@ -340,6 +341,7 @@ struct external_entry_point_s {
 };
 
 struct self_s {
+	int *section_number_mapping;
 	size_t data_size;
 	uint8_t *data;
 	size_t rodata_size;

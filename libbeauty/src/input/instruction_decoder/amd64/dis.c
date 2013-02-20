@@ -59,6 +59,18 @@ uint32_t getdword(uint8_t *base_address, uint64_t offset) {
 	return result;
 }
 
+uint32_t print_reloc_table_entry(struct reloc_table *reloc_table_entry) {
+	printf("Reloc Type:0x%x\n", reloc_table_entry->type);
+	printf("Address:0x%"PRIx64"\n", reloc_table_entry->address);
+	printf("Size:0x%"PRIx64"\n", reloc_table_entry->size);
+	printf("Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	printf("External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
+	printf("Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
+	printf("Section name:%s\n", reloc_table_entry->section_name);
+	printf("Symbol name:%s\n", reloc_table_entry->symbol_name);
+	return 0;
+}
+
 uint32_t relocated_code(struct rev_eng *handle, uint8_t *base_address, uint64_t offset, uint64_t size, struct reloc_table **reloc_table_entry) {
 	int n;
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
@@ -227,6 +239,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
+					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+					print_reloc_table_entry(reloc_table_entry);
+					printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 				}
 				printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 				/* if the offset is negative,
@@ -292,6 +307,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
+				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				print_reloc_table_entry(reloc_table_entry);
+				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
@@ -644,6 +662,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
+				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				print_reloc_table_entry(reloc_table_entry);
+				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
@@ -709,6 +730,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
+				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				print_reloc_table_entry(reloc_table_entry);
+				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
 			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,

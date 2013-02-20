@@ -56,6 +56,16 @@ struct operand_s {
 	 * 1 = relocated. (if the immeadiate value is in the relocation table)
 	 */
 	int relocated;
+	/* The section to point to. e.g. .rodata
+	 * 0 = NULL
+	 * 1 = code
+	 * 2 = rodata
+	 * 3 = data
+	 * >3 is malloc sections
+	 */
+	int relocated_area;
+	/* The offset withing the section of point to */
+	int relocated_index;
 	/* 0 = direct, 1 = data_memory, 2 = stack_memory, 3 = in-out port */
 
 	/* For IF instruction, the value "indirect" contains

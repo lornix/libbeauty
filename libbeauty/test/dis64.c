@@ -1813,6 +1813,7 @@ int main(int argc, char *argv[])
 	struct loop_s *loops;
 	int loops_size = 2000;
 	struct ast_s *ast;
+	int *section_number_mapping;
 
 	if (argc != 2) {
 		printf("Syntax error\n");
@@ -1849,6 +1850,21 @@ int main(int argc, char *argv[])
 		printf("section id=0x%02"PRIx32"\n", handle->symtab[l]->section->id);
 	}
 
+	section_number_mapping = calloc(handle->section_sz, sizeof(int));
+	handle->section_number_mapping = section_number_mapping;
+	for (l = 0; l < handle->section_sz; l++) {
+			const char *name = handle->section[l]->name;
+		if (!strncmp(".text", name, 5)) {
+			section_number_mapping[l] = 1;
+		}
+		if (!strncmp(".rodata", name, 7)) {
+			section_number_mapping[l] = 2;
+		}
+		if (!strncmp(".data", name, 5)) {
+			section_number_mapping[l] = 3;
+		}
+	}
+
 	printf("sectiontab_size = %ld\n", handle->section_sz);
 	for (l = 0; l < handle->section_sz; l++) {
 		printf("%d\n", l);
@@ -1857,8 +1873,8 @@ int main(int argc, char *argv[])
 		printf("index=0x%02"PRIx32"\n", handle->section[l]->index);
 		printf("id=0x%02"PRIx32"\n", handle->section[l]->id);
 		printf("sectio=%p\n", handle->section[l]);
+		printf("section_number_mapping=0x%x\n", section_number_mapping[l]);
 	}
-
 
 	printf("Setup ok\n");
 	inst_size = bf_get_code_size(handle);
@@ -1899,6 +1915,7 @@ int main(int argc, char *argv[])
 	external_entry_points = calloc(EXTERNAL_ENTRY_POINTS_MAX, sizeof(struct external_entry_point_s));
 	self = malloc(sizeof *self);
 	printf("sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
+	self->section_number_mapping = section_number_mapping;
 	self->data_size = data_size;
 	self->data = data;
 	self->rodata_size = data_size;

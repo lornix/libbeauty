@@ -57,7 +57,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 	struct inst_log_entry_s *inst_exe_prev;
 	struct inst_log_entry_s *inst_exe;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
-	struct instruction_s *instruction;
+	struct instruction_s *instruction = NULL;
 	int instruction_offset = 0;
 	int octets = 0;
 	//struct memory_s *memory_text;
@@ -260,6 +260,11 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 					}
 				}
 			}
+			if (JMPT == instruction->opcode) {
+				printf("FIXME: JMPT reached..exiting\n");
+				/* FIXME: add the jump table detection here */
+				exit(0);
+			}
 			inst_log_prev = inst_log;
 			inst_log++;
 			if (0 == memory_reg[2].offset_value) {
@@ -279,7 +284,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			printf("Breaking\n");
 			break;
 		}
-		if (JMPT == instruction->opcode) {
+		if (instruction && (JMPT == instruction->opcode)) {
 			printf("Function exited. Temporary action for JMPT\n");
 			break;
 		}
