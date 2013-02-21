@@ -48,6 +48,13 @@
 #include <rev.h>
 #include <assert.h>
 
+/* This function starts and the JMPT instruction and then searches back for the instruction referencing the jump table base */
+int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t *inst_base) {
+
+
+	return 0;
+}
+
 int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
 	uint64_t offset = 0;
 	int result;
@@ -261,7 +268,10 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				}
 			}
 			if (JMPT == instruction->opcode) {
-				printf("FIXME: JMPT reached..exiting\n");
+				uint64_t inst_base;
+				int tmp;
+				tmp = search_for_jump_table_base(self, inst_log, &inst_base);
+				printf("FIXME: JMPT reached..exiting %d\n", tmp);
 				/* FIXME: add the jump table detection here */
 				exit(0);
 			}

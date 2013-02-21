@@ -240,8 +240,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
 					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+					instruction->srcA.relocated_index = reloc_table_entry->value;
 					print_reloc_table_entry(reloc_table_entry);
 					printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+					printf("Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
 				}
 				printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 				/* if the offset is negative,
@@ -308,6 +310,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
 				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -663,6 +666,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
 				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -731,6 +735,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
 				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -904,6 +909,8 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			/* FIXME: what about relocations that use a different howto? */
 			printf("reg_mem=5, mod=0, relocation table entry exists. value=0x%"PRIx64"\n", reloc_table_entry->value);
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 			instruction->srcA.index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
@@ -974,6 +981,8 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
+				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+				instruction->srcA.relocated_index = reloc_table_entry->value;
 			}
 			dis_instructions->bytes_used+=4;
 		}
@@ -1094,6 +1103,8 @@ int dis_Ex_Ix(struct rev_eng *handle, int opcode, uint8_t rex, struct dis_instru
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
 	} else if (2 == size) {
@@ -1103,6 +1114,8 @@ int dis_Ex_Ix(struct rev_eng *handle, int opcode, uint8_t rex, struct dis_instru
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 2, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=2;
 	} else if (1 == size) {
@@ -1112,6 +1125,8 @@ int dis_Ex_Ix(struct rev_eng *handle, int opcode, uint8_t rex, struct dis_instru
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
 	} else {
@@ -1164,6 +1179,8 @@ int dis_Ex(struct rev_eng *handle, int *table, uint8_t rex, struct dis_instructi
 				tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
+					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+					instruction->srcA.relocated_index = reloc_table_entry->value;
 				}
 				dis_instructions->bytes_used+=4;
 			} else if (2 == size) {
@@ -1173,6 +1190,8 @@ int dis_Ex(struct rev_eng *handle, int *table, uint8_t rex, struct dis_instructi
 				tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 2, &reloc_table_entry);
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
+					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+					instruction->srcA.relocated_index = reloc_table_entry->value;
 				}
 				dis_instructions->bytes_used+=2;
 			} else if (1 == size) {
@@ -1182,6 +1201,8 @@ int dis_Ex(struct rev_eng *handle, int *table, uint8_t rex, struct dis_instructi
 				tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
+					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+					instruction->srcA.relocated_index = reloc_table_entry->value;
 				}
 				dis_instructions->bytes_used+=1;
 			} else {
@@ -1308,6 +1329,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 1;
 		instruction->srcA.value_size = 1;
@@ -1332,6 +1355,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->srcA.value_size = 4;
@@ -1448,6 +1473,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->srcA.value_size = 4;
@@ -1507,6 +1534,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
 		instruction->srcA.value_size = 1;
@@ -1531,6 +1560,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 4;
 		instruction->srcA.value_size = 4;
@@ -1711,6 +1742,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		/* FIXME: Length wrong */
 		dis_instructions->bytes_used += 4;
@@ -1816,6 +1849,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 1;
 		instruction->srcA.value_size = 1;
@@ -1854,6 +1889,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += width;
 		instruction->srcA.value_size = width;
@@ -2078,6 +2115,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		} else {
 			instruction->srcA.relocated = 0;
 		}
@@ -2112,6 +2151,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->dstA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->dstA.value_size = 4;
@@ -2269,6 +2310,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
 		instruction->srcA.value_size = 1;
@@ -2316,6 +2359,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 		} else {
 			instruction->srcA.relocated = 0;
 		}
@@ -2707,6 +2752,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		if (!tmp) {
 			printf("CALL RELOCATED 0x%04"PRIx64"\n", reloc_table_entry->value);
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 			/* FIXME: Check it works for all related cases. E.g. jmp and call */
 
 			instruction->srcA.index = reloc_table_entry->external_functions_index;
@@ -2742,6 +2789,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		if (!tmp) {
 			printf("RELOCATED 0x%04"PRIx64"\n", offset + dis_instructions->bytes_used);
 			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
 			/* FIXME: Check it works for all related cases. E.g. jmp and call */
 			instruction->srcA.index = offset + dis_instructions->bytes_used;
 		} else {
