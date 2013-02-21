@@ -50,9 +50,24 @@
 
 /* This function starts and the JMPT instruction and then searches back for the instruction referencing the jump table base */
 int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t *inst_base) {
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct instruction_s *instruction = NULL;
+	uint64_t inst_this = inst_log;
 
-
-	return 0;
+	/* Quick fix for now. Do proper register tracking */
+	inst_this--;
+	instruction = &inst_log_entry[inst_this].instruction;
+	if (ADD == instruction->opcode) {
+		*inst_base = inst_this;
+		return 0;
+	}
+	inst_this--;
+	instruction = &inst_log_entry[inst_this].instruction;
+	if (ADD == instruction->opcode) {
+		*inst_base = inst_this;
+		return 0;
+	}
+	return 1;
 }
 
 int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
@@ -271,7 +286,11 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				uint64_t inst_base;
 				int tmp;
 				tmp = search_for_jump_table_base(self, inst_log, &inst_base);
-				printf("FIXME: JMPT reached..exiting %d\n", tmp);
+				if (tmp) {
+					printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
+					exit(1);
+				}
+				printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
 				/* FIXME: add the jump table detection here */
 				exit(0);
 			}
