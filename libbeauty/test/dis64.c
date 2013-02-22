@@ -1380,8 +1380,13 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			} else {
 				color = "blue";
 			}
-			tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
-				node, nodes[node].link_next[n].node, color);
+			if (nodes[node].next_size > 2) {
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+					node, nodes[node].link_next[n].node, color, n);
+			} else {
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color);
+			}
 		}
 	}
 	tmp = fprintf(fd, "}\n");
