@@ -650,7 +650,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int follow_path = 0;
 	int start_node;
 	struct path_s *paths;
-	int *paths_size;
+	int paths_size;
 	int loops_size;
 	struct loop_s *loops;
 
@@ -1116,8 +1116,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].link_next = calloc(inst_log1->next_size, sizeof(struct node_link_s));
 			nodes[n].next_size = inst_log1->next_size;
 			if (nodes[n].next_size > 2) {
-				printf("build_cfg next_size too big for node 0x%x, inst 0x%x\n", n, nodes[n].inst_end);
-				exit(1);
+				printf("build_cfg next_size too big for node 0x%x, inst 0x%x. Might be a JMPT\n", n, nodes[n].inst_end);
 			}
 
 			for (m = 0; m < inst_log1->next_size; m++) {
@@ -1195,7 +1194,6 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		if (nodes[n].next_size > 2) {
 			/* FIXME: only an error so long as we are not yet supporting jump indexes. */
 			printf("Oversized node\n");
-			exit(1);
 		}
 		for (m = 0; m < nodes[n].member_of_loop_size; m++) {
 			printf("nodes[0x%x].member_of_loop[%d] = 0x%x\n", n, m, nodes[n].member_of_loop[m]);

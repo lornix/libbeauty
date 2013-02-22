@@ -70,6 +70,36 @@ int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t 
 	return 1;
 }
 
+static uint32_t print_reloc_table_entry(struct reloc_table *reloc_table_entry) {
+	printf("Reloc Type:0x%x\n", reloc_table_entry->type);
+	printf("Address:0x%"PRIx64"\n", reloc_table_entry->address);
+	printf("Size:0x%"PRIx64"\n", reloc_table_entry->size);
+	printf("Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	printf("External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
+	printf("Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
+	printf("Section name:%s\n", reloc_table_entry->section_name);
+	printf("Symbol name:%s\n", reloc_table_entry->symbol_name);
+	return 0;
+}
+
+int find_relocation_rodata(struct rev_eng *handle, uint64_t index, int *relocation_area, uint64_t *relocation_index) {
+	int n;
+	int found = 1;
+	struct reloc_table *reloc_table_entry;
+	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
+		if (handle->reloc_table_rodata[n].address == index) {
+			reloc_table_entry = &(handle->reloc_table_rodata[n]);
+			found = 0;
+			print_reloc_table_entry(reloc_table_entry);
+			*relocation_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			*relocation_index = reloc_table_entry->value;
+			break;
+		}
+	}
+	return found;
+}
+
+
 int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
 	uint64_t offset = 0;
 	int result;
@@ -283,16 +313,53 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				}
 			}
 			if (JMPT == instruction->opcode) {
+				/* FIXME: add the jump table detection here */
 				uint64_t inst_base;
 				int tmp;
+				struct inst_log_entry_s *inst_exe_base;
+				struct instruction_s *instruction = NULL;
+				int relocation_area;
+				uint64_t relocation_index;
 				tmp = search_for_jump_table_base(self, inst_log, &inst_base);
 				if (tmp) {
 					printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
 					exit(1);
 				}
+				inst_exe_base = &inst_log_entry[inst_base];
+				instruction = &(inst_exe_base->instruction);
+				printf("Relocated = 0x%x\n", instruction->srcA.relocated);
+				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+				printf("Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
 				printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
-				/* FIXME: add the jump table detection here */
-				exit(0);
+				if (2 == instruction->srcA.relocated_area) {
+					uint64_t index = instruction->srcA.relocated_index;
+					tmp = 0;
+					
+					do {
+						tmp = find_relocation_rodata(handle, index, &relocation_area, &relocation_index);
+						if (!tmp) {
+							if (1 != relocation_area) {
+								printf("JMPT Relocation area not to code\n");
+								exit(1);
+							}
+							for (m = 0; m < list_length; m++ ) {
+								if (0 == entry[m].used) {
+									entry[m].esp_init_value = memory_reg[0].init_value;
+									entry[m].esp_offset_value = memory_reg[0].offset_value;
+									entry[m].ebp_init_value = memory_reg[1].init_value;
+									entry[m].ebp_offset_value = memory_reg[1].offset_value;
+									entry[m].eip_init_value = 0;
+									entry[m].eip_offset_value = relocation_index;
+									entry[m].previous_instuction = inst_log;
+									entry[m].used = 1;
+									printf("JMPT new entry \n");
+									break;
+								}
+							}
+						}
+						index += 8;
+					} while (!tmp);
+				}
 			}
 			inst_log_prev = inst_log;
 			inst_log++;
