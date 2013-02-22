@@ -86,11 +86,12 @@ int find_relocation_rodata(struct rev_eng *handle, uint64_t index, int *relocati
 	int n;
 	int found = 1;
 	struct reloc_table *reloc_table_entry;
+	printf("JMPT rodata_sz = 0x%"PRIx64"\n", handle->reloc_table_rodata_sz);
 	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
 		if (handle->reloc_table_rodata[n].address == index) {
 			reloc_table_entry = &(handle->reloc_table_rodata[n]);
-			found = 0;
 			print_reloc_table_entry(reloc_table_entry);
+			found = 0;
 			*relocation_area = handle->section_number_mapping[reloc_table_entry->section_index];
 			*relocation_index = reloc_table_entry->value;
 			break;
@@ -356,6 +357,8 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 									break;
 								}
 							}
+						} else {
+							printf("JMPT index, 0x%"PRIx64", not found in rodata relocation table\n", index);
 						}
 						index += 8;
 					} while (!tmp);
