@@ -1440,6 +1440,29 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	case 0x23:												/* AND Gv,Ev */
 		break;
 	case 0x24:												/* AND AL,Ib */
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = rAND;
+		instruction->flags = 1;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 1;
+		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
+		instruction->srcA.relocated = 0;
+		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
+		if (!tmp) {
+			instruction->srcA.relocated = 1;
+			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
+			instruction->srcA.relocated_index = reloc_table_entry->value;
+		}
+		dis_instructions->bytes_used+=1;
+		instruction->srcA.value_size = 1;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 1;
+		instruction->dstA.index = REG_AX;
+		instruction->dstA.value_size = 1;
+		dis_instructions->instruction_number++;
+		result = 1;
 		break;
 	case 0x25:												/* AND eAX,Iv */
 		break;
