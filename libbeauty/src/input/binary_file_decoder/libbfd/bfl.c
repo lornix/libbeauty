@@ -143,7 +143,8 @@ int bf_find_section(struct rev_eng* ret, char *name, int name_len, int *section_
 	*section_number = 0;
 
 	for (n = 0; n < ret->section_sz; n++) {
-		if (!strncmp(ret->section[n]->name, name, name_len)) {
+		/* The + 1 is there to ensure both strings have zero terminators */
+		if (!strncmp(ret->section[n]->name, name, name_len + 1)) {
 			printf("bf_find_section %s\n", ret->section[n]->name);
 			found = 1;
 			*section_number = n;
