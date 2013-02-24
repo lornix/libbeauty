@@ -1650,7 +1650,12 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 8;
-		instruction->srcA.index = reg_table[base_address[offset + 0] & 0x7].offset;
+		tmp = 0;
+		if ((rex & 0x3) == 1) {
+			tmp = 0x8;
+		}
+		//printf("PUSH rex=0x%x, offset = 0x%"PRIx64", dis = 0x%x, base_address[offset + dis - 1] = 0x%x\n", rex, offset, dis_instructions->bytes_used, base_address[offset + dis_instructions->bytes_used - 1]);
+		instruction->srcA.index = reg_table[(base_address[offset + dis_instructions->bytes_used - 1] & 0x7) | tmp].offset;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 8;
 		instruction->dstA.store = STORE_REG;
@@ -1678,7 +1683,11 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 8;
-		instruction->dstA.index = reg_table[base_address[offset + 0] & 0x7].offset;
+		tmp = 0;
+		if ((rex & 0x3) == 1) {
+			tmp = 0x8;
+		}
+		instruction->dstA.index = reg_table[(base_address[offset + dis_instructions->bytes_used - 1] & 0x7) | tmp].offset;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = 4;
 		instruction->srcA.store = STORE_REG;
