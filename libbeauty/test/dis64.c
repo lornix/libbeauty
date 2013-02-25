@@ -1367,25 +1367,34 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		}
 		tmp = fprintf(fd, "\"];\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
-			if (1 == nodes[node].link_next[n].is_loop_edge) {
-				color = "gold";
-			} else if (0 == n) {
-				if (nodes[node].next_size > 1) {
-					color = "green";
+			char *label;
+			if (nodes[node].next_size < 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
 				} else {
 					color = "blue";
 				}
-			} else if (1 == n) {
-				color = "red";
-			} else {
-				color = "blue";
-			}
-			if (nodes[node].next_size > 2) {
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
-					node, nodes[node].link_next[n].node, color, n);
-			} else {
 				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color);
+			} else if (nodes[node].next_size == 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
+				} else if (0 == n) {
+					color = "red";
+				} else {
+					color = "green";
+				}
+				if (0 == n) {
+					label = "false";
+				} else {
+					label = "true";
+				}
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color, label);
+			} else {
+				/* next_size > 2 */
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+					node, nodes[node].link_next[n].node, color, n);
 			}
 		}
 	}
