@@ -703,7 +703,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " \\-= ");
+			tmp = fprintf(fd, " -= ");
 			printf("\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
