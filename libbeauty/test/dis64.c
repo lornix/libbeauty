@@ -67,6 +67,7 @@ struct self_s *self = NULL;
 int debug_dis64 = 1;
 int debug_input_bfd = 1;
 int debug_input_dis = 1;
+int debug_exe = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
 	va_list ap;
@@ -75,20 +76,28 @@ void debug_print(int module, int level, const char *format, ...) {
 	case DEBUG_MAIN:
 		if (level >= debug_dis64) {
 			fprintf(stderr, "DEBUG_MAIN,0x%x:", level);
+			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_BFD:
 		if (level >= debug_input_bfd) {
 			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x:", level);
+			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_DIS:
 		if (level >= debug_input_dis) {
 			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x:", level);
+			vfprintf(stderr, format, ap);
+		}
+		break;
+	case DEBUG_EXE:
+		if (level >= debug_exe) {
+			fprintf(stderr, "DEBUG_EXE,0x%x:", level);
+			vfprintf(stderr, format, ap);
 		}
 		break;
 	}
-	vfprintf(stderr, format, ap);
 	va_end(ap);
 }
 
@@ -3136,7 +3145,7 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, ".c fd=%p\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out to file\n");
 	tmp = fprintf(fd, "#include <stdint.h>\n\n");
-	debug_print(DEBUG_MAIN, 1, "\nPRINTING MEMORY_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "PRINTING MEMORY_DATA\n");
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		struct process_state_s *process_state;
 		if (external_entry_points[l].valid) {
@@ -3289,12 +3298,12 @@ int main(int argc, char *argv[])
 	for (n = 0; n < inst_size; n++) {
 		debug_print(DEBUG_MAIN, 1, "0x%04x: %d\n", n, memory_used[n]);
 	}
-	debug_print(DEBUG_MAIN, 1, "\nPRINTING MEMORY_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "PRINTING MEMORY_DATA\n");
 	for (n = 0; n < 4; n++) {
 		print_mem(memory_data, n);
 		debug_print(DEBUG_MAIN, 1, "\n");
 	}
-	debug_print(DEBUG_MAIN, 1, "\nPRINTING STACK_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "PRINTING STACK_DATA\n");
 	for (n = 0; n < 10; n++) {
 		print_mem(memory_stack, n);
 		debug_print(DEBUG_MAIN, 1, "\n");

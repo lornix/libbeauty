@@ -71,14 +71,14 @@ int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t 
 }
 
 static uint32_t print_reloc_table_entry(struct reloc_table *reloc_table_entry) {
-	printf("Reloc Type:0x%x\n", reloc_table_entry->type);
-	printf("Address:0x%"PRIx64"\n", reloc_table_entry->address);
-	printf("Size:0x%"PRIx64"\n", reloc_table_entry->size);
-	printf("Value:0x%"PRIx64"\n", reloc_table_entry->value);
-	printf("External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
-	printf("Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
-	printf("Section name:%s\n", reloc_table_entry->section_name);
-	printf("Symbol name:%s\n", reloc_table_entry->symbol_name);
+	debug_print(DEBUG_EXE, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
+	debug_print(DEBUG_EXE, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
+	debug_print(DEBUG_EXE, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
+	debug_print(DEBUG_EXE, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	debug_print(DEBUG_EXE, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
+	debug_print(DEBUG_EXE, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
+	debug_print(DEBUG_EXE, 1, "Section name:%s\n", reloc_table_entry->section_name);
+	debug_print(DEBUG_EXE, 1, "Symbol name:%s\n", reloc_table_entry->symbol_name);
 	return 0;
 }
 
@@ -86,7 +86,7 @@ int find_relocation_rodata(struct rev_eng *handle, uint64_t index, int *relocati
 	int n;
 	int found = 1;
 	struct reloc_table *reloc_table_entry;
-	printf("JMPT rodata_sz = 0x%"PRIx64"\n", handle->reloc_table_rodata_sz);
+	debug_print(DEBUG_EXE, 1, "JMPT rodata_sz = 0x%"PRIx64"\n", handle->reloc_table_rodata_sz);
 	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
 		if (handle->reloc_table_rodata[n].address == index) {
 			reloc_table_entry = &(handle->reloc_table_rodata[n]);
@@ -129,49 +129,49 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 	//memory_data = process_state->memory_data;
 	memory_used = process_state->memory_used;
 
-	printf("process_block entry\n");
-	printf("inst_log=%"PRId64"\n", inst_log);
-	printf("dis:Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
+	debug_print(DEBUG_EXE, 1, "process_block entry\n");
+	debug_print(DEBUG_EXE, 1, "inst_log=%"PRId64"\n", inst_log);
+	debug_print(DEBUG_EXE, 1, "dis:Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
 	for (offset = 0; ;) {
 	//for (offset = 0; offset < inst_size;
 			//offset += dis_instructions.bytes_used) {
 		/* Update EIP */
 		offset = memory_reg[2].offset_value;
 		if (offset >= eip_offset_limit) {
-			printf("Over ran offset=0x%"PRIx64" >= eip_offset_limit=0x%"PRIx64" \n",
+			debug_print(DEBUG_EXE, 1, "Over ran offset=0x%"PRIx64" >= eip_offset_limit=0x%"PRIx64" \n",
 				offset, eip_offset_limit);
 			return 1;
 		}
 		dis_instructions.instruction_number = 0;
 		dis_instructions.bytes_used = 0;
-		printf("eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
+		debug_print(DEBUG_EXE, 1, "eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
 			memory_reg[2].offset_value, offset);
 		/* the calling program must define this function. This is a callback. */
 		result = disassemble(handle, &dis_instructions, inst, offset);
-		printf("bytes used = %d\n", dis_instructions.bytes_used);
+		debug_print(DEBUG_EXE, 1, "bytes used = %d\n", dis_instructions.bytes_used);
 		/* Memory not used yet */
 		if (0 == memory_used[offset]) {
-			printf("Memory not used yet\n");
+			debug_print(DEBUG_EXE, 1, "Memory not used yet\n");
 			for (n = 0; n < dis_instructions.bytes_used; n++) {
 				memory_used[offset + n] = -n;
-				printf(" 0x%02x", inst[offset + n]);
+				debug_print(DEBUG_EXE, 1, " 0x%02x", inst[offset + n]);
 			}
-			printf("\n");
+			debug_print(DEBUG_EXE, 1, "\n");
 			memory_used[offset] = inst_log;
 		} else {
 			int inst_this = memory_used[offset];
 			if (inst_this < 0) {
 				/* FIXME: What to do in this case? */
 				/* problem caused by rep movs instruction */
-				printf("process_block:line110:FIXME:Not a valid instuction %d at eip offset 0x%"PRIx64"\n", inst_this, offset);
+				debug_print(DEBUG_EXE, 1, "process_block:line110:FIXME:Not a valid instuction %d at eip offset 0x%"PRIx64"\n", inst_this, offset);
 			}
 			/* If value == maxint, then it is the destination of a jump */
 			/* But I need to separate the instruction flows */
 			/* A jump/branch inst should create a new instruction tree */
-			printf("Memory already used\n");
+			debug_print(DEBUG_EXE, 1, "Memory already used\n");
 			inst_exe_prev = &inst_log_entry[inst_log_prev];
 			inst_exe = &inst_log_entry[inst_this];
-			printf("inst_exe_prev=%p, inst_exe=%p\n",
+			debug_print(DEBUG_EXE, 1, "inst_exe_prev=%p, inst_exe=%p\n",
 				inst_exe_prev, inst_exe);
 			inst_exe->prev_size++;
 			if (inst_exe->prev_size == 1) {
@@ -181,7 +181,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			}
 			inst_exe->prev[inst_exe->prev_size - 1] = inst_log_prev;
 			if (inst_exe_prev->next_size > 0) {
-				printf("JCD8a: next_size = 0x%x\n", inst_exe_prev->next_size);
+				debug_print(DEBUG_EXE, 1, "JCD8a: next_size = 0x%x\n", inst_exe_prev->next_size);
 			}
 			if (inst_exe_prev->next_size == 0) {
 				inst_exe_prev->next_size++;
@@ -198,7 +198,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				if (!found) {
 					inst_exe_prev->next_size++;
 					if (inst_exe_prev->next_size > 2) {
-						printf("process_block: next_size = %d, inst = 0x%x\n", inst_exe_prev->next_size, inst_this);
+						debug_print(DEBUG_EXE, 1, "process_block: next_size = %d, inst = 0x%x\n", inst_exe_prev->next_size, inst_this);
 					}
 					inst_exe_prev->next = realloc(inst_exe_prev->next, sizeof(inst_exe_prev->next) * inst_exe_prev->next_size);
 					inst_exe_prev->next[inst_exe_prev->next_size - 1] = inst_this;
@@ -206,40 +206,40 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			}
 			break;
 		}	
-		//printf("disassemble_fn\n");
+		//debug_print(DEBUG_EXE, 1, "disassemble_fn\n");
 		//disassemble_fn = disassembler (handle->bfd);
-		//printf("disassemble_fn done\n");
-		printf("disassemble att  : ");
+		//debug_print(DEBUG_EXE, 1, "disassemble_fn done\n");
+		debug_print(DEBUG_EXE, 1, "disassemble att  : ");
 	        disasm_info.disassembler_options = "att";
 		octets = (*disassemble_fn) (offset, &disasm_info);
-		printf("  octets=%d\n", octets);
-		printf("disassemble intel: ");
+		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
+		debug_print(DEBUG_EXE, 1, "disassemble intel: ");
 	        disasm_info.disassembler_options = "intel";
 		octets = (*disassemble_fn) (offset, &disasm_info);
-		printf("  octets=%d\n", octets);
+		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
 		if (dis_instructions.bytes_used != octets) {
-			printf("Unhandled instruction. Length mismatch. Got %d, expected %d, Exiting\n", dis_instructions.bytes_used, octets);
+			debug_print(DEBUG_EXE, 1, "Unhandled instruction. Length mismatch. Got %d, expected %d, Exiting\n", dis_instructions.bytes_used, octets);
 			return 1;
 		}
 		/* Update EIP */
 		memory_reg[2].offset_value += octets;
 
-		printf("Number of RTL dis_instructions=%d\n",
+		debug_print(DEBUG_EXE, 1, "Number of RTL dis_instructions=%d\n",
 			dis_instructions.instruction_number);
 		if (result == 0) {
-			printf("Unhandled instruction. Exiting\n");
+			debug_print(DEBUG_EXE, 1, "Unhandled instruction. Exiting\n");
 			return 1;
 		}
 		if (dis_instructions.instruction_number == 0) {
-			printf("NOP instruction. Get next inst\n");
+			debug_print(DEBUG_EXE, 1, "NOP instruction. Get next inst\n");
 			continue;
 		}
 		for (n = 0; n < dis_instructions.instruction_number; n++) {
 			instruction = &dis_instructions.instruction[n];
-			printf( "Printing inst1111:0x%x, 0x%x, 0x%"PRIx64"\n",instruction_offset, n, inst_log);
+			debug_print(DEBUG_EXE, 1,  "Printing inst1111:0x%x, 0x%x, 0x%"PRIx64"\n",instruction_offset, n, inst_log);
 			err = print_inst(self, instruction, instruction_offset + n + 1, NULL);
 			if (err) {
-				printf("print_inst failed\n");
+				debug_print(DEBUG_EXE, 1, "print_inst failed\n");
 				return err;
 			}
 			inst_exe_prev = &inst_log_entry[inst_log_prev];
@@ -247,7 +247,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			memcpy(&(inst_exe->instruction), instruction, sizeof(struct instruction_s));
 			err = execute_instruction(self, process_state, inst_exe);
 			if (err) {
-				printf("execute_intruction failed err=%d\n", err);
+				debug_print(DEBUG_EXE, 1, "execute_intruction failed err=%d\n", err);
 				return err;
 			}
 			inst_exe->prev_size++;
@@ -259,10 +259,10 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			inst_exe->prev[inst_exe->prev_size - 1] = inst_log_prev;
 			inst_exe_prev->next_size++;
 			if (inst_exe_prev->next_size > 2) {
-				printf("process_block:line203: next_size = %d, inst = 0x%"PRIx64"\n", inst_exe_prev->next_size, inst_log);
+				debug_print(DEBUG_EXE, 1, "process_block:line203: next_size = %d, inst = 0x%"PRIx64"\n", inst_exe_prev->next_size, inst_log);
 			}
 			if (inst_exe_prev->next_size > 1) {
-				printf("JCD8b: next_size = 0x%x\n", inst_exe_prev->next_size);
+				debug_print(DEBUG_EXE, 1, "JCD8b: next_size = 0x%x\n", inst_exe_prev->next_size);
 			}
 			if (inst_exe_prev->next_size == 1) {
 				inst_exe_prev->next = malloc(sizeof(inst_exe_prev->next));
@@ -274,13 +274,13 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			inst_exe_prev->next[inst_exe_prev->next_size - 1] = inst_log;
 
 			if (IF == instruction->opcode) {
-				printf("IF FOUND\n");
-				//printf("Breaking at IF\n");
-				printf("IF: this EIP = 0x%"PRIx64"\n",
+				debug_print(DEBUG_EXE, 1, "IF FOUND\n");
+				//debug_print(DEBUG_EXE, 1, "Breaking at IF\n");
+				debug_print(DEBUG_EXE, 1, "IF: this EIP = 0x%"PRIx64"\n",
 					memory_reg[2].offset_value);
-				printf("IF: jump dst abs EIP = 0x%"PRIx64"\n",
+				debug_print(DEBUG_EXE, 1, "IF: jump dst abs EIP = 0x%"PRIx64"\n",
 					inst_exe->value3.offset_value);
-				printf("IF: inst_log = %"PRId64"\n",
+				debug_print(DEBUG_EXE, 1, "IF: inst_log = %"PRId64"\n",
 					inst_log);
 				for (m = 0; m < list_length; m++ ) {
 					if (0 == entry[m].used) {
@@ -292,7 +292,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 						entry[m].eip_offset_value = memory_reg[2].offset_value;
 						entry[m].previous_instuction = inst_log;
 						entry[m].used = 1;
-						printf("JCD:8 used 1\n");
+						debug_print(DEBUG_EXE, 1, "JCD:8 used 1\n");
 						
 						break;
 					}
@@ -308,7 +308,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 						entry[m].eip_offset_value = inst_exe->value3.offset_value;
 						entry[m].previous_instuction = inst_log;
 						entry[m].used = 1;
-						printf("JCD:8 used 2\n");
+						debug_print(DEBUG_EXE, 1, "JCD:8 used 2\n");
 						break;
 					}
 				}
@@ -323,15 +323,15 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 				uint64_t relocation_index;
 				tmp = search_for_jump_table_base(self, inst_log, &inst_base);
 				if (tmp) {
-					printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
+					debug_print(DEBUG_EXE, 1, "FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
 					exit(1);
 				}
 				inst_exe_base = &inst_log_entry[inst_base];
 				instruction = &(inst_exe_base->instruction);
-				printf("Relocated = 0x%x\n", instruction->srcA.relocated);
-				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
-				printf("Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
-				printf("FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
+				debug_print(DEBUG_EXE, 1, "Relocated = 0x%x\n", instruction->srcA.relocated);
+				debug_print(DEBUG_EXE, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+				debug_print(DEBUG_EXE, 1, "Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
+				debug_print(DEBUG_EXE, 1, "FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
 				if (2 == instruction->srcA.relocated_area) {
 					uint64_t index = instruction->srcA.relocated_index;
 					tmp = 0;
@@ -340,7 +340,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 						tmp = find_relocation_rodata(handle, index, &relocation_area, &relocation_index);
 						if (!tmp) {
 							if (1 != relocation_area) {
-								printf("JMPT Relocation area not to code\n");
+								debug_print(DEBUG_EXE, 1, "JMPT Relocation area not to code\n");
 								exit(1);
 							}
 							for (m = 0; m < list_length; m++ ) {
@@ -353,12 +353,12 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 									entry[m].eip_offset_value = relocation_index;
 									entry[m].previous_instuction = inst_log;
 									entry[m].used = 1;
-									printf("JMPT new entry \n");
+									debug_print(DEBUG_EXE, 1, "JMPT new entry \n");
 									break;
 								}
 							}
 						} else {
-							printf("JMPT index, 0x%"PRIx64", not found in rodata relocation table\n", index);
+							debug_print(DEBUG_EXE, 1, "JMPT index, 0x%"PRIx64", not found in rodata relocation table\n", index);
 						}
 						index += 8;
 					} while (!tmp);
@@ -367,34 +367,34 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 			inst_log_prev = inst_log;
 			inst_log++;
 			if (0 == memory_reg[2].offset_value) {
-				printf("Function exited\n");
+				debug_print(DEBUG_EXE, 1, "Function exited\n");
 				if (inst_exe_prev->instruction.opcode == NOP) {
 					inst_exe_prev->instruction.opcode = RET;
 				}
 				break;
 			}
 			if (JMPT == instruction->opcode) {
-				printf("Function exited. Temporary action for JMPT\n");
+				debug_print(DEBUG_EXE, 1, "Function exited. Temporary action for JMPT\n");
 				break;
 			}
 		}
 		instruction_offset += dis_instructions.instruction_number;
 		if (0 == memory_reg[2].offset_value) {
-			printf("Breaking\n");
+			debug_print(DEBUG_EXE, 1, "Breaking\n");
 			break;
 		}
 		if (instruction && (JMPT == instruction->opcode)) {
-			printf("Function exited. Temporary action for JMPT\n");
+			debug_print(DEBUG_EXE, 1, "Function exited. Temporary action for JMPT\n");
 			break;
 		}
 #if 0
 		if (IF == instruction->opcode) {
-			printf("Breaking at IF\n");
-			printf("IF: this EIP = 0x%"PRIx64"\n",
+			debug_print(DEBUG_EXE, 1, "Breaking at IF\n");
+			debug_print(DEBUG_EXE, 1, "IF: this EIP = 0x%"PRIx64"\n",
 				memory_reg[2].offset_value);
-			printf("IF: jump dst abs EIP = 0x%"PRIx64"\n",
+			debug_print(DEBUG_EXE, 1, "IF: jump dst abs EIP = 0x%"PRIx64"\n",
 				inst_exe->value3.offset_value);
-			printf("IF: inst_log = %"PRId64"\n",
+			debug_print(DEBUG_EXE, 1, "IF: inst_log = %"PRId64"\n",
 				inst_log);
 			for (n = 0; n < list_length; n++ ) {
 				if (0 == entry[n].used) {
