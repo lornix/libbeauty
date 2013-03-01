@@ -41,7 +41,7 @@
 static void insert_section(struct bfd *b, asection *sect, void *obj)
 {
 	struct rev_eng *r = obj;
-        printf("Section entered\n");
+        debug_print(DEBUG_INPUT_BFD, 1, "Section entered\n");
 	r->section[r->section_sz++] = sect;
 }
 
@@ -52,7 +52,7 @@ static void print_sections(struct rev_eng* ret)
 	asection          *section;
 	int n;
 
-	printf("print_sections: 0x%"PRIx64" sections\n", ret->section_sz);
+	printf("bfd:print_sections: 0x%"PRIx64" sections\n", ret->section_sz);
 	for (n = 0; n < ret->section_sz; n++) {
 		comma = "";
 		section = ret->section[n];
@@ -60,12 +60,12 @@ static void print_sections(struct rev_eng* ret)
 		bfd_get_section_name (ret->bfd, section),
 			(unsigned long) bfd_section_size (ret->bfd, section) / opb);
 		bfd_printf_vma (ret->bfd, bfd_get_section_vma (ret->bfd, section));
-		printf ("  ");
+		printf("  ");
 		bfd_printf_vma (ret->bfd, section->lma);
-		printf ("  %08lx  2**%u", (unsigned long) section->filepos,
+		printf("  %08lx  2**%u", (unsigned long) section->filepos,
 		bfd_get_section_alignment (ret->bfd, section));
-		printf ("\n                ");
-		printf ("  ");
+		printf("\n                ");
+		printf("  ");
 
 #define PF(x, y) \
 	if (section->flags & x) { printf ("%s%s", comma, y); comma = ", "; }
@@ -128,9 +128,9 @@ static void print_code_section(struct rev_eng* ret)
   data = malloc(datasize);
   bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
   for(n=0;n<datasize;n++) {
-    printf("0x%x ",data[n]);
+    debug_print(DEBUG_INPUT_BFD, 1, "0x%x ",data[n]);
   }
-  printf("\n");
+  debug_print(DEBUG_INPUT_BFD, 1, "\n");
   free(data);
   data = NULL;
 }
@@ -145,7 +145,7 @@ int bf_find_section(struct rev_eng* ret, char *name, int name_len, int *section_
 	for (n = 0; n < ret->section_sz; n++) {
 		/* The + 1 is there to ensure both strings have zero terminators */
 		if (!strncmp(ret->section[n]->name, name, name_len + 1)) {
-			printf("bf_find_section %s\n", ret->section[n]->name);
+			debug_print(DEBUG_INPUT_BFD, 1, "bf_find_section %s\n", ret->section[n]->name);
 			found = 1;
 			*section_number = n;
 			break;
@@ -269,7 +269,7 @@ dump_reloc_set (bfd *abfd, asection *sec, arelent **relpp, long relcount)
       else
 	printf (" %-16d  ", q->howto->type);
       if (sym_name)
-	printf("sym_name: %s\n", sym_name);
+	debug_print(DEBUG_INPUT_BFD, 1, "sym_name: %s\n", sym_name);
 //	objdump_print_symname (abfd, NULL, *q->sym_ptr_ptr);
       else
 	{
@@ -303,7 +303,7 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 	uint64_t sym_val;
 
 	tmp = bf_find_section(ret, ".text", 5, &n);
-	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//debug_print(DEBUG_INPUT_BFD, 1, "%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -312,18 +312,18 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 	 * to an already loaded symbol table.
 	 */
 	relcount = bfd_canonicalize_reloc(ret->bfd, section, relpp, ret->symtab);
-	//printf("Relcount=0x%"PRIx64"\n", relcount);
+	//debug_print(DEBUG_INPUT_BFD, 1, "Relcount=0x%"PRIx64"\n", relcount);
 	ret->reloc_table_code = calloc(relcount, sizeof(*ret->reloc_table_code));
 	ret->reloc_table_code_sz = relcount;
-	//printf("reloc_size=0x%"PRIx64"\n", sizeof(*ret->reloc_table_code));
+	//debug_print(DEBUG_INPUT_BFD, 1, "reloc_size=0x%"PRIx64"\n", sizeof(*ret->reloc_table_code));
 	//dump_reloc_set (ret->bfd, section, relpp, relcount);
 	for (n=0; n < relcount; n++) {
 		rel = relpp[n];
-		//printf("rel:addr = 0x%"PRIx64"\n", rel->address);
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_code[n].address = rel->address;
 		ret->reloc_table_code[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
 		ret->reloc_table_code[n].value = rel->addend;
-		//printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
 		//if (rel->howto == NULL)
 		//	printf (" howto *unknown*\n");
 		//else if (rel->howto->name)
@@ -331,8 +331,8 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 		//else
 		//	printf (" howto->type %-16d\n", rel->howto->type);
 
-		//printf("p1 %p\n",&rel->sym_ptr_ptr);
-		//printf("p2 %p\n",rel->sym_ptr_ptr);
+		//debug_print(DEBUG_INPUT_BFD, 1, "p1 %p\n",&rel->sym_ptr_ptr);
+		//debug_print(DEBUG_INPUT_BFD, 1, "p2 %p\n",rel->sym_ptr_ptr);
 		if (rel->sym_ptr_ptr == NULL) {
 			continue;
 		}
@@ -365,7 +365,7 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 	uint64_t sym_val;
 
 	tmp = bf_find_section(ret, ".data", 5, &n);
-	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//debug_print(DEBUG_INPUT_BFD, 1, "%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -374,17 +374,17 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 	 * to an already loaded symbol table.
 	 */
 	relcount = bfd_canonicalize_reloc(ret->bfd, section, relpp, ret->symtab);
-	//printf("relcount=0x%"PRIx64"\n", relcount);
+	//debug_print(DEBUG_INPUT_BFD, 1, "relcount=0x%"PRIx64"\n", relcount);
 	ret->reloc_table_data = calloc(relcount, sizeof(*ret->reloc_table_data));
 	ret->reloc_table_data_sz = relcount;
-	//printf("reloc_size=%d\n", sizeof(*ret->reloc_table));
+	//debug_print(DEBUG_INPUT_BFD, 1, "reloc_size=%d\n", sizeof(*ret->reloc_table));
 	//dump_reloc_set (ret->bfd, section, relpp, relcount);
 	for (n=0; n < relcount; n++) {
 		rel = relpp[n];
-		//printf("rel:addr = 0x%"PRIx64"\n", rel->address);
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_data[n].address = rel->address;
 		ret->reloc_table_data[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
-		//printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
 		//if (rel->howto == NULL)
 		//	printf (" *unknown*\n");
 		//else if (rel->howto->name)
@@ -392,8 +392,8 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 		//else
 		//	printf (" %-16d\n", rel->howto->type);
 
-		//printf("p1 %p\n",&rel->sym_ptr_ptr);
-		//printf("p2 %p\n",rel->sym_ptr_ptr);
+		//debug_print(DEBUG_INPUT_BFD, 1, "p1 %p\n",&rel->sym_ptr_ptr);
+		//debug_print(DEBUG_INPUT_BFD, 1, "p2 %p\n",rel->sym_ptr_ptr);
 		if (rel->sym_ptr_ptr == NULL) {
 			continue;
 		}
@@ -427,7 +427,7 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 	uint64_t sym_val;
 
 	tmp = bf_find_section(ret, ".rodata", 7, &n);
-	//printf("%s: section = 0x%x\n", __FUNCTION__, n);
+	//debug_print(DEBUG_INPUT_BFD, 1, "%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
@@ -436,19 +436,19 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 	 * to an already loaded symbol table.
 	 */
 	relcount = bfd_canonicalize_reloc(ret->bfd, section, relpp, ret->symtab);
-	//printf("relcount=0x%"PRIx64"\n", relcount);
+	//debug_print(DEBUG_INPUT_BFD, 1, "relcount=0x%"PRIx64"\n", relcount);
 	ret->reloc_table_rodata = calloc(relcount, sizeof(*ret->reloc_table_rodata));
 	ret->reloc_table_rodata_sz = relcount;
-	//printf("reloc_size=%d\n", sizeof(*ret->reloc_table));
+	//debug_print(DEBUG_INPUT_BFD, 1, "reloc_size=%d\n", sizeof(*ret->reloc_table));
 	//dump_reloc_set (ret->bfd, section, relpp, relcount);
 	for (n=0; n < relcount; n++) {
 		rel = relpp[n];
-		//printf("rel:addr = 0x%"PRIx64"\n", rel->address);
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_rodata[n].address = rel->address;
 		ret->reloc_table_rodata[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
 		ret->reloc_table_rodata[n].value = rel->addend;
-		//printf("rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
-		//printf("value 0x%"PRIx64"\n", rel->addend);
+		//debug_print(DEBUG_INPUT_BFD, 1, "rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
+		//debug_print(DEBUG_INPUT_BFD, 1, "value 0x%"PRIx64"\n", rel->addend);
 //		if (rel->howto == NULL)
 //			printf ("howto *unknown*\n");
 //		else if (rel->howto->name)
@@ -456,8 +456,8 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 //		else
 //			printf ("howto %-16d\n", rel->howto->type);
 
-//		printf("p1 %p\n",&rel->sym_ptr_ptr);
-//		printf("p2 %p\n",rel->sym_ptr_ptr);
+//		debug_print(DEBUG_INPUT_BFD, 1, "p1 %p\n",&rel->sym_ptr_ptr);
+//		debug_print(DEBUG_INPUT_BFD, 1, "p2 %p\n",rel->sym_ptr_ptr);
 		if (rel->sym_ptr_ptr == NULL) {
 			continue;
 		}
@@ -491,7 +491,7 @@ int bf_copy_code_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	if (tmp) {
 		section = ret->section[n];
 		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
-		printf("Text Data at %p\n",data);
+		debug_print(DEBUG_INPUT_BFD, 1, "Text Data at %p\n",data);
 		result = 1;
 	}
 	return result;
@@ -512,7 +512,7 @@ int bf_copy_data_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	if (tmp) {
 		section = ret->section[n];
 		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
-		printf("Data at %p\n",data);
+		debug_print(DEBUG_INPUT_BFD, 1, "Data at %p\n",data);
 		result = 1;
 	}
 	return result;
@@ -533,7 +533,7 @@ int bf_copy_rodata_section(struct rev_eng* ret, uint8_t *data, uint64_t data_siz
 	if (tmp) {
 		section = ret->section[n];
 		bfd_get_section_contents(ret->bfd, section, data, 0, datasize);
-		printf("ROData at %p\n",data);
+		debug_print(DEBUG_INPUT_BFD, 1, "ROData at %p\n",data);
 		result = 1;
 	}
 	return result;
@@ -553,7 +553,7 @@ int bf_get_arch_mach(struct rev_eng *handle, uint32_t *arch, uint64_t *mach)
 	}
 	
 	b = handle->bfd;
-	printf("format:%"PRIu32", %"PRIu64"\n",bfd_get_arch(b), bfd_get_mach(b));
+	debug_print(DEBUG_INPUT_BFD, 1, "format:%"PRIu32", %"PRIu64"\n",bfd_get_arch(b), bfd_get_mach(b));
 	*arch = bfd_get_arch(b);
 	*mach = bfd_get_mach(b);
 	return 0;
@@ -571,22 +571,22 @@ struct rev_eng *bf_test_open_file(const char *fn)
 	int64_t number_of_symbols;
 	//symbol_info sym_info;
 
-        printf("Open entered\n");
+        debug_print(DEBUG_INPUT_BFD, 1, "Open entered\n");
 	/* Open the file with libbfd */
 	b = bfd_openr(fn, NULL);
 	if ( b == NULL ) {
-		printf("Error opening %s:\n%s",
+		debug_print(DEBUG_INPUT_BFD, 1, "Error opening %s:\n%s",
 				fn, bfd_err());
 		return NULL;
 	}
 	result = bfd_check_format_matches (b, bfd_object, &matching);
-	printf("check format result=%d, file format=%s\n",result, b->xvec->name);
-	printf("format:%"PRIu32", %"PRIu64"\n",bfd_get_arch(b), bfd_get_mach(b));
-	printf("arch:%"PRIu32", mach64:%"PRIu32", mach32:%"PRIu32"\n",bfd_arch_i386, bfd_mach_x86_64, bfd_mach_i386_i386);
+	debug_print(DEBUG_INPUT_BFD, 1, "check format result=%d, file format=%s\n",result, b->xvec->name);
+	debug_print(DEBUG_INPUT_BFD, 1, "format:%"PRIu32", %"PRIu64"\n",bfd_get_arch(b), bfd_get_mach(b));
+	debug_print(DEBUG_INPUT_BFD, 1, "arch:%"PRIu32", mach64:%"PRIu32", mach32:%"PRIu32"\n",bfd_arch_i386, bfd_mach_x86_64, bfd_mach_i386_i386);
 
 	if (bfd_get_error () == bfd_error_file_ambiguously_recognized)
 	{
-		printf("Couldn't determine format of %s:%s\n",
+		debug_print(DEBUG_INPUT_BFD, 1, "Couldn't determine format of %s:%s\n",
 				fn, bfd_err());
 		bfd_close(b);
 		return NULL;
@@ -615,7 +615,7 @@ struct rev_eng *bf_test_open_file(const char *fn)
 	 * archive file or whatever else...
 	 */
 	if ( !bfd_check_format(b, bfd_object) ) {
-		printf("Couldn't determine format of %s:%s\n",
+		debug_print(DEBUG_INPUT_BFD, 1, "Couldn't determine format of %s:%s\n",
 				fn, bfd_err());
 		bfd_close(b);
 		return NULL;
@@ -624,7 +624,7 @@ struct rev_eng *bf_test_open_file(const char *fn)
 	/* Create our structure */
 	ret = calloc(1, sizeof(*ret));
 	if ( ret == NULL ) {
-		printf("Couldn't calloc struct rev_eng\n");
+		debug_print(DEBUG_INPUT_BFD, 1, "Couldn't calloc struct rev_eng\n");
 		bfd_close(b);
 		return NULL;
         }
@@ -633,13 +633,13 @@ struct rev_eng *bf_test_open_file(const char *fn)
 
 	tmp = bfd_count_sections(ret->bfd);
 	if ( tmp <= 0 ) {
-          printf("Couldn't count sections\n");
+          debug_print(DEBUG_INPUT_BFD, 1, "Couldn't count sections\n");
           bfd_close(b);
           return NULL;
         }
 	ret->section = calloc(tmp, sizeof(*ret->section));
 	if ( ret->section == NULL ) {
-          printf("Couldn't calloc struct ret->section\n");
+          debug_print(DEBUG_INPUT_BFD, 1, "Couldn't calloc struct ret->section\n");
           bfd_close(b);
           return NULL;
         }
@@ -649,24 +649,24 @@ struct rev_eng *bf_test_open_file(const char *fn)
 	print_code_section(ret);
 */
 	storage_needed  = bfd_get_symtab_upper_bound(ret->bfd);
-	printf("symtab_upper_bound = %"PRId64"\n", storage_needed);
+	debug_print(DEBUG_INPUT_BFD, 1, "symtab_upper_bound = %"PRId64"\n", storage_needed);
 	ret->symtab = calloc(1, storage_needed);
-	printf("symtab = %p\n", ret->symtab);
+	debug_print(DEBUG_INPUT_BFD, 1, "symtab = %p\n", ret->symtab);
 	number_of_symbols = bfd_canonicalize_symtab(ret->bfd, ret->symtab);
 	ret->symtab_sz = number_of_symbols;
-	printf("symtab_canon = %"PRId64"\n", number_of_symbols);
+	debug_print(DEBUG_INPUT_BFD, 1, "symtab_canon = %"PRId64"\n", number_of_symbols);
 #if 0
 	for (l = 0; l < number_of_symbols; l++) {
-		printf("%"PRId64"\n", l);
-		printf("type:0x%02x\n", ret->symtab[l]->flags);
-		printf("name:%s\n", ret->symtab[l]->name);
-		printf("value=0x%02"PRIx64"\n", ret->symtab[l]->value);
-		//printf("value2=0x%02x\n",
+		debug_print(DEBUG_INPUT_BFD, 1, "%"PRId64"\n", l);
+		debug_print(DEBUG_INPUT_BFD, 1, "type:0x%02x\n", ret->symtab[l]->flags);
+		debug_print(DEBUG_INPUT_BFD, 1, "name:%s\n", ret->symtab[l]->name);
+		debug_print(DEBUG_INPUT_BFD, 1, "value=0x%02"PRIx64"\n", ret->symtab[l]->value);
+		//debug_print(DEBUG_INPUT_BFD, 1, "value2=0x%02x\n",
 		//	bfd_asymbol_flavour(ret->symtab[l]));
-		//printf("value3=0x%02x\n",
+		//debug_print(DEBUG_INPUT_BFD, 1, "value3=0x%02x\n",
 		//	bfd_asymbol_base(ret->symtab[l]));
 #if 0
-		printf("%d:0x%02x:%s=%lld\n",
+		debug_print(DEBUG_INPUT_BFD, 1, "%d:0x%02x:%s=%lld\n",
 			n, sym_info.type, sym_info.name, sym_info.value);
 #endif
 		/* Print the "other" value for a symbol.  For common symbols,
@@ -683,7 +683,7 @@ struct rev_eng *bf_test_open_file(const char *fn)
 
 	}
 #endif
-        printf("Setup ok\n");
+        debug_print(DEBUG_INPUT_BFD, 1, "Setup ok\n");
 
 	return ret;
 }
