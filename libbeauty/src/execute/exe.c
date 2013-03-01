@@ -191,7 +191,7 @@ static int get_value_RTL_instruction(
 
 	if (info_id == 0) info = "srcA";
 	if (info_id == 1) info = "dstA";
-	printf ("get_value_RTL_instruction:%p, %p, %i\n", source, destination, info_id);
+	debug_print(DEBUG_EXE, 1, "get_value_RTL_instruction:%p, %p, %i\n", source, destination, info_id);
 	switch (source->indirect) {
 	case IND_DIRECT:
 		/* Not indirect */

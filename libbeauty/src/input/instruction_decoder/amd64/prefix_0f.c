@@ -30,7 +30,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 	int64_t rel64 = 0;
 	struct instruction_s *instruction;
 	byte = base_address[offset + dis_instructions->bytes_used++];
-	printf("Prefix_0f Byte = 0x%x\n", byte);
+	debug_print(DEBUG_INPUT_DIS, 1, "Prefix_0f Byte = 0x%x\n", byte);
 	switch (byte) {
 	case 0x00:												/* GRP 6 Exxx */
 	case 0x01:												/* Group 7 Ev */
@@ -101,10 +101,10 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		instruction->srcA.index = (byte & 0xf) ^ 0x01; /* CONDITION to skip mov instruction */
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 4;
-		printf("JCD7: Before: %d\n", dis_instructions->instruction_number);
+		debug_print(DEBUG_INPUT_DIS, 1, "JCD7: Before: %d\n", dis_instructions->instruction_number);
 		dis_instructions->instruction_number++;
 		result = dis_Gx_Ex(handle, MOV, rex, dis_instructions, base_address, offset, &reg, size);
-		printf("JCD7: After: %d\n", dis_instructions->instruction_number);
+		debug_print(DEBUG_INPUT_DIS, 1, "JCD7: After: %d\n", dis_instructions->instruction_number);
 		break;
 	/* JMP */
 	case 0x80:												/* JO */

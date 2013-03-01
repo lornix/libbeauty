@@ -33,7 +33,7 @@
 uint32_t getbyte(uint8_t *base_address, uint64_t offset) {
 	uint32_t result;
 	result=base_address[offset];
-	printf(" 0x%x\n",result);
+	debug_print(DEBUG_INPUT_DIS, 1, " 0x%x\n",result);
 	return result;
 }
 
@@ -60,14 +60,14 @@ uint32_t getdword(uint8_t *base_address, uint64_t offset) {
 }
 
 uint32_t print_reloc_table_entry(struct reloc_table *reloc_table_entry) {
-	printf("Reloc Type:0x%x\n", reloc_table_entry->type);
-	printf("Address:0x%"PRIx64"\n", reloc_table_entry->address);
-	printf("Size:0x%"PRIx64"\n", reloc_table_entry->size);
-	printf("Value:0x%"PRIx64"\n", reloc_table_entry->value);
-	printf("External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
-	printf("Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
-	printf("Section name:%s\n", reloc_table_entry->section_name);
-	printf("Symbol name:%s\n", reloc_table_entry->symbol_name);
+	debug_print(DEBUG_INPUT_DIS, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
+	debug_print(DEBUG_INPUT_DIS, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
+	debug_print(DEBUG_INPUT_DIS, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
+	debug_print(DEBUG_INPUT_DIS, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	debug_print(DEBUG_INPUT_DIS, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
+	debug_print(DEBUG_INPUT_DIS, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
+	debug_print(DEBUG_INPUT_DIS, 1, "Section name:%s\n", reloc_table_entry->section_name);
+	debug_print(DEBUG_INPUT_DIS, 1, "Symbol name:%s\n", reloc_table_entry->symbol_name);
 	return 0;
 }
 
@@ -96,7 +96,7 @@ void split_ModRM(uint8_t byte, uint8_t rex, uint8_t *reg,  uint8_t *reg_mem, uin
 	if ((rex & 0x3) == 1) {
 		*reg_mem = *reg_mem | 0x8;
 	}
-	printf("byte=%02x, reg=%02x, reg_mem=%02x, mod=%02x\n",
+	debug_print(DEBUG_INPUT_DIS, 1, "byte=%02x, reg=%02x, reg_mem=%02x, mod=%02x\n",
 		byte,
 		*reg,
 		*reg_mem,
@@ -117,7 +117,7 @@ void split_SIB(uint8_t byte, uint8_t rex, uint8_t *mul,  uint8_t *index, uint8_t
 
 	// do the *2 etc. later
 	//  *mul = 1 << *mul; // convert bits to *1, *2, *4, *8
-	printf("byte=%02x, mul=%02x, index=%02x, base=%02x\n",
+	debug_print(DEBUG_INPUT_DIS, 1, "byte=%02x, mul=%02x, index=%02x, base=%02x\n",
 		byte,
 		*mul,
 		*index,
@@ -148,7 +148,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 0:
 		/* Special case uses SIB, when using ESP or R12 */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB0\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Doing SIB0\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
@@ -163,7 +163,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
-				printf("Got here1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -195,7 +195,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				/* Handle base==5 */
 				/* from Volume2A Table 2-3 Note 1 */
 				/* Here mod == 0 */
-				printf("Got here: base == 5\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here: base == 5\n");
 #if 0
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
 				if (dis_instructions->instruction_number > number) {
@@ -232,7 +232,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.indirect = IND_DIRECT;
 				instruction->srcA.indirect_size = 8;
 				/* mod 1 */
-				printf("Got here4 size = 1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 				instruction->srcA.value_size = 8;
 				instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 				instruction->srcA.relocated = 0;
@@ -242,10 +242,10 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 					instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 					instruction->srcA.relocated_index = reloc_table_entry->value;
 					print_reloc_table_entry(reloc_table_entry);
-					printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
-					printf("Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
+					debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+					debug_print(DEBUG_INPUT_DIS, 1, "Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
 				}
-				printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 				/* if the offset is negative,
 				 * replace ADD with SUB */
 				if ((instruction->opcode == ADD) &&
@@ -263,7 +263,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
 			} else {
-				printf("Got here: base != 5\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here: base != 5\n");
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 				if (dis_instructions->instruction_number > number) {
 					instruction->opcode = ADD;
@@ -278,7 +278,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
-				printf("Got here2\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -302,7 +302,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
 			/* mod 1 */
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
@@ -312,9 +312,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
-				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -335,7 +335,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM0 mod 1 number=0x%x\n", number);
+			debug_print(DEBUG_INPUT_DIS, 1, "MODRM0 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -351,7 +351,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
 			instruction->srcA.value_size = 8;
-			printf("Got here3 size = %d\n", instruction->srcA.value_size);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
 			instruction->dstA.indirect_size = 8;
@@ -366,7 +366,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 1:
 		/* Special case uses SIB */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Doing SIB1\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
@@ -381,7 +381,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
-				printf("Got here1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -447,7 +447,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
-				printf("Got here2\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -468,11 +468,11 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
 			/* mod 1 */
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -492,7 +492,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM1 mod 1 number=0x%x\n", number);
+			debug_print(DEBUG_INPUT_DIS, 1, "MODRM1 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -508,7 +508,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
 			instruction->srcA.value_size = 8;
-			printf("Got here3 size = %d\n", instruction->srcA.value_size);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
 			instruction->dstA.indirect_size = 8;
@@ -528,11 +528,11 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
 			/* mod 1 */
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -556,7 +556,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 	case 2:
 		/* Special case uses SIB */
 		if ((4 == reg_mem) || (rex & 0x02) || (0xc == reg_mem)) {
-			printf("Doing SIB2\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Doing SIB2\n");
 			split_SIB(getbyte(base_address, offset + dis_instructions->bytes_used), rex, &mul, &index, &base);
 			dis_instructions->bytes_used++;
 			/* FIXME: index == 4 not explicitly handled */
@@ -571,7 +571,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
-				printf("Got here1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -637,7 +637,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
-				printf("Got here2\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -658,7 +658,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
 			/* mod 1 */
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
@@ -668,9 +668,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
-				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -691,7 +691,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			result = 1;
 		} else {
 			/* Not SIB */
-			printf("MODRM2 mod 1 number=0x%x\n", number);
+			debug_print(DEBUG_INPUT_DIS, 1, "MODRM2 mod 1 number=0x%x\n", number);
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
 				instruction->opcode = ADD;
@@ -707,7 +707,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
 			instruction->srcA.value_size = 8;
-			printf("Got here3 size = %d\n", instruction->srcA.value_size);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
 			instruction->dstA.indirect_size = 8;
@@ -727,7 +727,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.indirect = IND_DIRECT;
 			instruction->srcA.indirect_size = 8;
 			/* mod 1 */
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
@@ -737,9 +737,9 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 				instruction->srcA.relocated_index = reloc_table_entry->value;
 				print_reloc_table_entry(reloc_table_entry);
-				printf("Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
+				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -762,7 +762,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 		break;
 	case 3:  // Special case Reg to Reg transfer
 		/* Fill in half of instruction */
-		printf("mod 3\n");
+		debug_print(DEBUG_INPUT_DIS, 1, "mod 3\n");
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = NOP;
 		instruction->flags = 0;
@@ -800,7 +800,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
-				printf("Got here1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
 				instruction->dstA.indirect_size = 8;
@@ -880,7 +880,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 			instruction->srcA.index = reg_table[base].offset;
 			instruction->srcA.relocated = 0;
 			instruction->srcA.value_size = reg_table[base].size;
-			printf("Got here2\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
 			instruction->dstA.indirect_size = 8;
@@ -907,7 +907,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			/* FIXME: what about relocations that use a different howto? */
-			printf("reg_mem=5, mod=0, relocation table entry exists. value=0x%"PRIx64"\n", reloc_table_entry->value);
+			debug_print(DEBUG_INPUT_DIS, 1, "reg_mem=5, mod=0, relocation table entry exists. value=0x%"PRIx64"\n", reloc_table_entry->value);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 			instruction->srcA.relocated_index = reloc_table_entry->value;
@@ -938,7 +938,7 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 		instruction->srcA.relocated = 0;
 		//instruction->srcA.value_size = reg_table[reg_mem].size;
 		instruction->srcA.value_size = 8;
-		printf("Got here3 size = %d\n", instruction->srcA.value_size);
+		debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 8;
@@ -960,11 +960,11 @@ int rmb(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uin
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 8;
 		if (mod == 1) {
-			printf("Got here4 size = 1\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
 			instruction->srcA.value_size = 8;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
-			printf("Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
+			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
 			/* if the offset is negative,
 			 * replace ADD with SUB */
 			if ((instruction->opcode == ADD) &&
@@ -1060,7 +1060,7 @@ int dis_Gx_Ex(struct rev_eng *handle, int opcode, uint8_t rex, struct dis_instru
 	instruction->dstA.relocated = 0;
 	instruction->dstA.value_size = size;
 	if (!half) {
-		printf("!half\n");
+		debug_print(DEBUG_INPUT_DIS, 1, "!half\n");
 		instruction->srcA.indirect = IND_MEM;
 		instruction->srcA.indirect_size = 8;
 		instruction->srcA.store = STORE_REG;
@@ -1130,7 +1130,7 @@ int dis_Ex_Ix(struct rev_eng *handle, int opcode, uint8_t rex, struct dis_instru
 		}
 		dis_instructions->bytes_used+=1;
 	} else {
-		printf("FIXME:JCD1\n");
+		debug_print(DEBUG_INPUT_DIS, 1, "FIXME:JCD1\n");
 		return 0;
 	}
 	instruction->srcA.value_size = size;
@@ -1206,7 +1206,7 @@ int dis_Ex(struct rev_eng *handle, int *table, uint8_t rex, struct dis_instructi
 				}
 				dis_instructions->bytes_used+=1;
 			} else {
-				printf("FIXME:JCD1\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "FIXME:JCD1\n");
 				return 0;
 			}
 		} else {
@@ -1254,27 +1254,27 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 	struct instruction_s *instruction;
 	int n;
 
-	printf("inst[0]=0x%x\n",base_address[offset + 0]);
-	printf("disassemble_amd64:start inst_number = 0x%x\n", dis_instructions->instruction_number);
+	debug_print(DEBUG_INPUT_DIS, 1, "inst[0]=0x%x\n",base_address[offset + 0]);
+	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:start inst_number = 0x%x\n", dis_instructions->instruction_number);
 	dis_instructions->instruction[dis_instructions->instruction_number].opcode = NOP; /* Un-supported OPCODE */
 	dis_instructions->instruction[dis_instructions->instruction_number].flags = 0; /* No flags effected */
 	
 	byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 	dis_instructions->bytes_used++;
-	printf("BYTE=%02x\n", byte);
+	debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	if (byte == 0xf2) {
 		/* REPNZ */
 		repnz = 1;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
-		printf("BYTE=%02x\n", byte);
+		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	}
 	if (byte == 0xf3) {
 		/* REPNZ */
 		repz = 1;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
-		printf("BYTE=%02x\n", byte);
+		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	}
 	if (byte == 0x66) {
 		/* Detect Operand length prefix. */
@@ -1282,14 +1282,14 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		width = 2;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
-		printf("BYTE=%02x\n", byte);
+		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	}
 	if (byte == 0x2e) {
 		/* Detect Operand CS prefix. */
 		/* FIXME: Only skips for now */
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
-		printf("BYTE=%02x\n", byte);
+		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	}
 
 	if ((byte & 0xf0 ) == 0x40) {
@@ -1297,7 +1297,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		rex = byte & 0xf;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
-		printf("BYTE=%02x\n", byte);
+		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
 	}
 
 	if (rex & 0x8) {
@@ -1654,7 +1654,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		if ((rex & 0x3) == 1) {
 			tmp = 0x8;
 		}
-		//printf("PUSH rex=0x%x, offset = 0x%"PRIx64", dis = 0x%x, base_address[offset + dis - 1] = 0x%x\n", rex, offset, dis_instructions->bytes_used, base_address[offset + dis_instructions->bytes_used - 1]);
+		//debug_print(DEBUG_INPUT_DIS, 1, "PUSH rex=0x%x, offset = 0x%"PRIx64", dis = 0x%x, base_address[offset + dis - 1] = 0x%x\n", rex, offset, dis_instructions->bytes_used, base_address[offset + dis_instructions->bytes_used - 1]);
 		instruction->srcA.index = reg_table[(byte & 0x7) | tmp].offset;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 8;
@@ -2026,8 +2026,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = width;
 		if (!half) {
-			printf("!half number=%d\n", dis_instructions->instruction_number);
-			printf("inst[0].srcA.index = %"PRIx64"\n",
+			debug_print(DEBUG_INPUT_DIS, 1, "!half number=%d\n", dis_instructions->instruction_number);
+			debug_print(DEBUG_INPUT_DIS, 1, "inst[0].srcA.index = %"PRIx64"\n",
 				dis_instructions->instruction[0].srcA.index);
 			instruction->srcA.indirect = IND_MEM;
 			instruction->srcA.indirect_size = 8;
@@ -2782,7 +2782,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->srcA.index = rel64;
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
-			printf("CALL RELOCATED 0x%04"PRIx64"\n", reloc_table_entry->value);
+			debug_print(DEBUG_INPUT_DIS, 1, "CALL RELOCATED 0x%04"PRIx64"\n", reloc_table_entry->value);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 			instruction->srcA.relocated_index = reloc_table_entry->value;
@@ -2790,7 +2790,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 
 			instruction->srcA.index = reloc_table_entry->external_functions_index;
 		} else {
-			printf("CALL override \n");
+			debug_print(DEBUG_INPUT_DIS, 1, "CALL override \n");
 			instruction->srcA.index += offset + dis_instructions->bytes_used + 4;
 			instruction->srcA.relocated = 2;
 		}
@@ -2819,7 +2819,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		instruction->srcA.index = rel64;
 		tmp = relocated_code(handle, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
-			printf("RELOCATED 0x%04"PRIx64"\n", offset + dis_instructions->bytes_used);
+			debug_print(DEBUG_INPUT_DIS, 1, "RELOCATED 0x%04"PRIx64"\n", offset + dis_instructions->bytes_used);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = handle->section_number_mapping[reloc_table_entry->section_index];
 			instruction->srcA.relocated_index = reloc_table_entry->value;
@@ -2957,8 +2957,8 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 
 		}
 		tmp = rmb(handle, dis_instructions, base_address, offset, width, rex, &reg, &half);
-		printf("Unfinished section 0xff\n");
-		printf("half=0x%x, reg=0x%x\n",half, reg);
+		debug_print(DEBUG_INPUT_DIS, 1, "Unfinished section 0xff\n");
+		debug_print(DEBUG_INPUT_DIS, 1, "half=0x%x, reg=0x%x\n",half, reg);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -3037,7 +3037,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 			result = 1;
 			break;
 		case 4:
-			printf("JMP Inst: 0xFF\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "JMP Inst: 0xFF\n");
 			/* For now, get the EXE to assume the function has ended. */
 			/* Do this by setting EIP = 0 */
 			/* 0xff 0xe0  JMPT rax */
@@ -3045,7 +3045,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 			/* What to do with: JMP rm. E.g. ff 24 c5 00 00 00 00 jmpq   *0x0(,%rax,8)   */
 			/* FIXME: store and indirect not being initialised correctly */
 			if (half) {
-				printf("JMP HALF\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "JMP HALF\n");
 				instruction->opcode = JMPT;
 				instruction->flags = 0;
 				/* srcA does in rmb() */
@@ -3063,7 +3063,7 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 				instruction->dstA.value_size = 8;
 				dis_instructions->instruction_number++;
 			} else {
-				printf("JMP NOT HALF\n");
+				debug_print(DEBUG_INPUT_DIS, 1, "JMP NOT HALF\n");
 				instruction->opcode = JMPT; /* JMP rm. E.g. ff 24 c5 00 00 00 00 jmpq   *0x0(,%rax,8)   */
 				instruction->flags = 0;
 //				instruction->srcA.store = STORE_REG;
@@ -3134,16 +3134,16 @@ int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_ins
 		break;
 	}
 
-	printf("disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
+	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
 	for (n = 0; n < dis_instructions->instruction_number; n++) {
 		instruction = &dis_instructions->instruction[n];
-		printf("0x%x: flags = 0x%x\n", n, instruction->flags);
-		printf("0x%x: srcA.index = 0x%"PRIx64"\n", n, instruction->srcA.index);
-		printf("0x%x: srcA.relocated = 0x%x\n", n, instruction->srcA.relocated);
-		printf("0x%x: srcA.value_size = 0x%x\n", n, instruction->srcA.value_size);
-		printf("0x%x: dstA.store = 0x%x\n", n, instruction->dstA.store);
-		printf("0x%x: dstA.index = 0x%"PRIx64"\n", n, instruction->dstA.index);
-		printf("0x%x: dstA.value_size = 0x%x\n", n, instruction->dstA.value_size);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: flags = 0x%x\n", n, instruction->flags);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.index = 0x%"PRIx64"\n", n, instruction->srcA.index);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.relocated = 0x%x\n", n, instruction->srcA.relocated);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.value_size = 0x%x\n", n, instruction->srcA.value_size);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.store = 0x%x\n", n, instruction->dstA.store);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.index = 0x%"PRIx64"\n", n, instruction->dstA.index);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.value_size = 0x%x\n", n, instruction->dstA.value_size);
 	}
 	if (repz != repz_handled) {
 		result = 0;
