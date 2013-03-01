@@ -38,6 +38,7 @@
 #define DEBUG_INPUT_DIS 3
 #define DEBUG_OUTPUT 4
 #define DEBUG_EXE 5
+#define DEBUG_ANALYSE 6
 
 void debug_print(int module, int level, const char *format, ...);
 

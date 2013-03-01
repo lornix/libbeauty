@@ -41,17 +41,17 @@ int tidy_inst_log(struct self_s *self)
 		inst_log1 =  &inst_log_entry[n];
 		if (inst_log1->next_size > 1) {
 			if (inst_log1->next_size > 2) {
-				printf("next: over:before inst 0x%x\n", n);
+				debug_print(DEBUG_ANALYSE, 1, "next: over:before inst 0x%x\n", n);
 				for (m = 0; m < inst_log1->next_size; m++) {
-					printf("next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
+					debug_print(DEBUG_ANALYSE, 1, "next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
 				}
 			}
 			for (m = 0; m < (inst_log1->next_size - 1); m++) {
 				for (l = m + 1; l < inst_log1->next_size; l++) {
-					printf("next: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
+					debug_print(DEBUG_ANALYSE, 1, "next: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
 					if (inst_log1->next[m] == inst_log1->next[l]) {
 						inst_log1->next[m] = 0;
-						printf("next: post: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
+						debug_print(DEBUG_ANALYSE, 1, "next: post: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->next[m],inst_log1->next[l]);
 					}
 				}
 			}
@@ -65,16 +65,16 @@ int tidy_inst_log(struct self_s *self)
 				}
 			}
 			if (inst_log1->next_size > 2) {
-				printf("next: over:after inst 0x%x\n", n);
+				debug_print(DEBUG_ANALYSE, 1, "next: over:after inst 0x%x\n", n);
 				for (m = 0; m < inst_log1->next_size; m++) {
-					printf("next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
+					debug_print(DEBUG_ANALYSE, 1, "next: 0x%x: next[0x%x] = 0x%x\n", n, m, inst_log1->next[m]);
 				}
 			}
 		}
 		if (inst_log1->prev_size > 1) {
 			for (m = 0; m < (inst_log1->prev_size - 1); m++) {
 				for (l = m + 1; l < inst_log1->prev_size; l++) {
-					printf("prev: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->prev[m],inst_log1->prev[l]);
+					debug_print(DEBUG_ANALYSE, 1, "prev: 0x%x: m=0x%x, l=0x%x\n", n, inst_log1->prev[m],inst_log1->prev[l]);
 					if (inst_log1->prev[m] == inst_log1->prev[l]) {
 						inst_log1->prev[m] = 0;
 					}
@@ -136,33 +136,33 @@ int path_loop_check(struct path_s *paths, int path, int step, int node, int limi
 
 	int n = 0;
 
-	printf("path_loop_check: path = 0x%x, step = 0x%x, node = 0x%x, loop_head = 0x%x\n", path, step, node, paths[path].loop_head);
+	debug_print(DEBUG_ANALYSE, 1, "path_loop_check: path = 0x%x, step = 0x%x, node = 0x%x, loop_head = 0x%x\n", path, step, node, paths[path].loop_head);
 
 	while (n < limit) {
 		n++;
 		step--;
 		if (step < 0) {
-			//printf("step < 0: 0x%x, 0x%x\n", paths[path].path_prev, paths[path].path_prev_index);
+			//debug_print(DEBUG_ANALYSE, 1, "step < 0: 0x%x, 0x%x\n", paths[path].path_prev, paths[path].path_prev_index);
 			if (paths[path].path_prev != path) {
 				tmp = paths[path].path_prev;
 				step = paths[path].path_prev_index;
 				path = tmp;
 			} else {
-			// printf("No loop\n");
+			// debug_print(DEBUG_ANALYSE, 1, "No loop\n");
 				return 0;
 			}
 		}
-		//printf("loop_check: path=0x%x, step=0x%x, path_step=0x%x, node=0x%x\n",
+		//debug_print(DEBUG_ANALYSE, 1, "loop_check: path=0x%x, step=0x%x, path_step=0x%x, node=0x%x\n",
 		//	path, step, paths[path].path[step], node);
 		if (paths[path].path[step] ==  node) {
-			// printf("Loop found\n");
+			// debug_print(DEBUG_ANALYSE, 1, "Loop found\n");
 			paths[path1].type = PATH_TYPE_LOOP;
 			return 1;
 		}
 	};
 	if (n >= limit) {
 		/* The maximum lenght of a path is the number of nodes */
-		printf("loop check limit reached\n");
+		debug_print(DEBUG_ANALYSE, 1, "loop check limit reached\n");
 		return 2;
 	}
 	return 0;
@@ -177,12 +177,12 @@ int merge_path_into_loop(struct path_s *paths, struct loop_s *loop, int path)
 	int n;
 	int *list = loop->list;
 
-	printf("trying to merge path %d into loop\n", path);
+	debug_print(DEBUG_ANALYSE, 1, "trying to merge path %d into loop\n", path);
 
 	loop->head = paths[path].loop_head;
 	step = paths[path].path_size - 1; /* convert size to index */
 	if (paths[path].path[step] != loop->head) {
-		printf("merge_path failed path 0x%x != head 0x%x\n", paths[path].path[step], loop->head);
+		debug_print(DEBUG_ANALYSE, 1, "merge_path failed path 0x%x != head 0x%x\n", paths[path].path[step], loop->head);
 		exit(1);
 	}
 	while (1) {
@@ -194,7 +194,7 @@ int merge_path_into_loop(struct path_s *paths, struct loop_s *loop, int path)
 				step = paths[path].path_prev_index;
 				path = tmp;
 			} else {
-				printf("No loop\n");
+				debug_print(DEBUG_ANALYSE, 1, "No loop\n");
 				return 0;
 			}
 		}
@@ -206,18 +206,18 @@ int merge_path_into_loop(struct path_s *paths, struct loop_s *loop, int path)
 			}
 		}
 		if (!found) {
-			printf("Merge: adding 0x%x\n",  paths[path].path[step]);
+			debug_print(DEBUG_ANALYSE, 1, "Merge: adding 0x%x\n",  paths[path].path[step]);
 			tmp = paths[path].path[step];
 			list[loop->size] = tmp;
 			loop->size++;
 		}
 
 		if (paths[path].path[step] == loop->head) {
-			printf("Start of merge Loop found\n");
+			debug_print(DEBUG_ANALYSE, 1, "Start of merge Loop found\n");
 			break;
 		}
 	}
-	printf("merged head = 0x%x, size = 0x%x\n", loop->head, loop->size);
+	debug_print(DEBUG_ANALYSE, 1, "merged head = 0x%x, size = 0x%x\n", loop->head, loop->size);
 	return 0;
 }
 
@@ -242,7 +242,7 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 			for(m = 0; m < *loop_size; m++) {
 				if (loops[m].head == paths[n].loop_head) {
 					found = m;
-					printf("flow_loops found = %d\n", found);
+					debug_print(DEBUG_ANALYSE, 1, "flow_loops found = %d\n", found);
 					break;
 				}
 			}
@@ -250,17 +250,17 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 				for(m = 0; m < *loop_size; m++) {
 					if (loops[m].head == 0) {
 						found = m;
-						printf("flow_loops2 found = %d\n", found);
+						debug_print(DEBUG_ANALYSE, 1, "flow_loops2 found = %d\n", found);
 						break;
 					}
 				}
 			}
 			if (found == -1) {
-				printf("build_control_flow_loops problem\n");
+				debug_print(DEBUG_ANALYSE, 1, "build_control_flow_loops problem\n");
 				exit(1);
 			}
 			if (found >= *loop_size) {
-				printf("build_control_flow_loops problem2\n");
+				debug_print(DEBUG_ANALYSE, 1, "build_control_flow_loops problem2\n");
 				exit(1);
 			}
 			loop = &loops[found];
@@ -274,17 +274,17 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 			for(m = 0; m < *loop_size; m++) {
 				if (loops[m].head == paths[n].loop_head) {
 					found = m;
-					printf("flow_loops2 found = %d\n", found);
+					debug_print(DEBUG_ANALYSE, 1, "flow_loops2 found = %d\n", found);
 					break;
 				}
 			}
 			if (found == -1) {
-				printf("loop nesting failed\n");
+				debug_print(DEBUG_ANALYSE, 1, "loop nesting failed\n");
 				return 1;
 			}
 			tmp = paths[n].path_prev;
 			if (paths[tmp].loop_head != 0) {
-				printf("flow_loops2 path %d nesting %d in %d:%d\n", n, m, tmp, paths[tmp].loop_head);
+				debug_print(DEBUG_ANALYSE, 1, "flow_loops2 path %d nesting %d in %d:%d\n", n, m, tmp, paths[tmp].loop_head);
 				loops[m].nest = paths[tmp].loop_head;
 			}
 		}
@@ -292,7 +292,7 @@ int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *pat
 #if 0
 	for(m = 0; m < *loop_size; m++) {
 		if (loops[m].size) {
-			printf("flow_loops2 loop:%d head=%d nest=%d size=%d\n", m, loops[m].head, loops[m].nest, loops[m].size);
+			debug_print(DEBUG_ANALYSE, 1, "flow_loops2 loop:%d head=%d nest=%d size=%d\n", m, loops[m].head, loops[m].nest, loops[m].size);
 		}
 	}
 #endif
@@ -312,10 +312,10 @@ int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow
 		if (loops[m].size > 0) {
 			for (n = 0; n < loops[m].size; n++) {
 				node = loops[m].list[n];
-				printf("multi_exit: node=0x%x\n", node);
+				debug_print(DEBUG_ANALYSE, 1, "multi_exit: node=0x%x\n", node);
 				for (l = 0; l < nodes[node].next_size; l++) {
 					if (nodes[node].link_next[l].is_loop_exit) {
-						printf("multi_exit: exit found\n");
+						debug_print(DEBUG_ANALYSE, 1, "multi_exit: exit found\n");
 						multi_exit++;
 					}
 				}
@@ -356,12 +356,12 @@ int print_control_flow_loops(struct self_s *self, struct loop_s *loops, int *loo
 {
 	int n, m;
 
-	printf("Printing loops size = %d\n", *loops_size);
+	debug_print(DEBUG_ANALYSE, 1, "Printing loops size = %d\n", *loops_size);
 	for (m = 0; m < *loops_size; m++) {
 		if (loops[m].size > 0) {
-			printf("Loop %d: loop_head=%d, nest=%d, multi_exit=%d\n", m, loops[m].head, loops[m].nest, loops[m].multi_exit);
+			debug_print(DEBUG_ANALYSE, 1, "Loop %d: loop_head=%d, nest=%d, multi_exit=%d\n", m, loops[m].head, loops[m].nest, loops[m].multi_exit);
 			for (n = 0; n < loops[m].size; n++) {
-				printf("Loop %d=0x%x\n", m, loops[m].list[n]);
+				debug_print(DEBUG_ANALYSE, 1, "Loop %d=0x%x\n", m, loops[m].list[n]);
 			}
 		}
 	}
@@ -479,7 +479,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 					continue;
 				}
 				prev_link_index = nodes[node_b].prev_link_index[m];
-				//printf("dom: prev_node = 0x%x, prev_link_index = 0x%x\n", prev_node, prev_link_index);
+				//debug_print(DEBUG_ANALYSE, 1, "dom: prev_node = 0x%x, prev_link_index = 0x%x\n", prev_node, prev_link_index);
 				if (!(nodes[prev_node].link_next[prev_link_index].is_loop_edge)) {
 					tmp = prev_node;
 					break;
@@ -490,7 +490,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 				break;
 			}
 			tmp = is_subset(nodes[n].path_size, nodes[n].path, nodes[node_b].path_size, nodes[node_b].path);
-			//printf("node_dominance: %d = 0x%x, 0x%x\n", tmp, n, node_b);
+			//debug_print(DEBUG_ANALYSE, 1, "node_dominance: %d = 0x%x, 0x%x\n", tmp, n, node_b);
 			if (tmp) {
 				nodes[n].dominator = node_b;
 				break;
@@ -540,7 +540,7 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 			continue;
 		}
 		nodes[n].type = type;
-		printf("node_type: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
+		debug_print(DEBUG_ANALYSE, 1, "node_type: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
 	}
 	return 0;
 }
@@ -581,12 +581,12 @@ int find_node_in_path(struct self_s *self, struct path_s *paths, int paths_size,
 		}
 	}
 	if (found) {
-		printf("found node_in_path base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
+		debug_print(DEBUG_ANALYSE, 1, "found node_in_path base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
 			base_path, node, path, step, position);
 		*index = position;
 		return 0;
 	} else {
-		printf("not found node_in_path\n");
+		debug_print(DEBUG_ANALYSE, 1, "not found node_in_path\n");
 		return 1;
 	}
 }
@@ -626,12 +626,12 @@ int find_node_at_index_in_path(struct self_s *self, struct path_s *paths, int pa
 		}
 	}
 	if (found) {
-		printf("found node_at_index base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
+		debug_print(DEBUG_ANALYSE, 1, "found node_at_index base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
 			base_path, node, path, step, position);
 		*node = paths[path].path[step];
 		return 0;
 	} else {
-		printf("not found node_at_index\n");
+		debug_print(DEBUG_ANALYSE, 1, "not found node_at_index\n");
 		return 1;
 	}
 	return 0;
@@ -660,7 +660,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			continue;
 		}
 		type = nodes[n].type;
-		//printf("%s: start_node = 0x%x, nodes[start_node].entry_point = 0x%x\n", __FUNCTION__, start_node, nodes[start_node].entry_point);
+		//debug_print(DEBUG_ANALYSE, 1, "%s: start_node = 0x%x, nodes[start_node].entry_point = 0x%x\n", __FUNCTION__, start_node, nodes[start_node].entry_point);
 		paths_size = self->external_entry_points[nodes[start_node].entry_point - 1].paths_size;
 		paths = self->external_entry_points[nodes[start_node].entry_point - 1].paths;
 		loops_size = self->external_entry_points[nodes[start_node].entry_point - 1].loops_size;
@@ -669,7 +669,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 		if (2 != nodes[n].next_size) {
 			continue;
 		}
-		printf("if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
+		debug_print(DEBUG_ANALYSE, 1, "if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
 		switch (nodes[n].type) {
 		case NODE_TYPE_IF_THEN_ELSE:
 			/* A normal IF statement */
@@ -714,11 +714,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 			break;
 		default:
-			printf("if_tail node type 0x%x unknown\n", nodes[n].type);
+			debug_print(DEBUG_ANALYSE, 1, "if_tail node type 0x%x unknown\n", nodes[n].type);
 			exit(1);
 		}
 
-		printf("if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x, follow_path = 0x%x\n",
+		debug_print(DEBUG_ANALYSE, 1, "if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x, follow_path = 0x%x\n",
 			subset_method, branch_follow_exit, follow_path);
 		node_b = n;
 		while ((node_b != 0) ) {
@@ -733,11 +733,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 
 				if (nodes[start_node].path_size >= 2) {
 					path = nodes[start_node].path[0];
-					printf("Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					debug_print(DEBUG_ANALYSE, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
 					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
-					printf("find_node_in_path=%d, index=%d\n", tmp, index);
+					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
 					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
-					printf("find_node_in_path next_node = 0x%x\n", next_node);
+					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path next_node = 0x%x\n", next_node);
 					if (!tmp) {
 						tmp = next_node;
 					} else {
@@ -745,53 +745,53 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					}
 				} else if (nodes[start_node].path_size == 1) {
 					path = nodes[start_node].path[0];
-					printf("Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					debug_print(DEBUG_ANALYSE, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
 					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
-					printf("find_node_in_path=%d, index=%d\n", tmp, index);
+					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
 					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
-					printf("find_node_in_path next_node = 0x%x\n", next_node);
+					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path next_node = 0x%x\n", next_node);
 					if (!tmp) {
 						tmp = next_node;
 					} else {
 						tmp = 0;
 					}
 				} else {
-					printf("follow path failed1 path_size = 0x%x\n", nodes[start_node].path_size);
+					debug_print(DEBUG_ANALYSE, 1, "follow path failed1 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else if (follow_path && subset_method) {
 				int path;
 
-				printf("follow if...then...else in loop. looped_path_size = 0x%x\n",
+				debug_print(DEBUG_ANALYSE, 1, "follow if...then...else in loop. looped_path_size = 0x%x\n",
 					nodes[start_node].looped_path_size);
 				if (nodes[start_node].looped_path_size >= 2) {
 					path = nodes[start_node].looped_path[0];
 					for (m = 0; m < paths[path].path_size; m++) {
-						printf("node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
+						debug_print(DEBUG_ANALYSE, 1, "node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
 							node_b, path, m);
 						if (paths[path].path[m] == node_b) {
 							if ((m + 1) < paths[path].path_size) {
 								tmp = paths[path].path[m + 1];
-								printf("follow path next = 0x%x\n", tmp);
+								debug_print(DEBUG_ANALYSE, 1, "follow path next = 0x%x\n", tmp);
 								break;
 							} else {
-								printf("follow path failed2/n");
+								debug_print(DEBUG_ANALYSE, 1, "follow path failed2/n");
 								exit(1);
 							}
 						}
 					}
 				} else {
-					printf("follow path failed3 path_size = 0x%x\n", nodes[start_node].path_size);
+					debug_print(DEBUG_ANALYSE, 1, "follow path failed3 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else {
 				if (nodes[node_b].next_size == 0) {
-					printf("if_tail: end of function()\n");
+					debug_print(DEBUG_ANALYSE, 1, "if_tail: end of function()\n");
 					break;
 				} else if (nodes[node_b].next_size == 1) {
 					link = &(nodes[node_b].link_next[0]);
 					if (link->is_loop_edge) {
-						printf("if_tail: not following loop edge\n");
+						debug_print(DEBUG_ANALYSE, 1, "if_tail: not following loop edge\n");
 						break;
 					}
 				} else if (nodes[node_b].next_size == 2) {
@@ -813,25 +813,25 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					} else if (nodes[node_b].link_next[1].is_normal == 1) {
 						link = &(nodes[node_b].link_next[1]);
 					}
-					if (link) printf("link node = 0x%x\n", link->node);
-					if (link_exit) printf("link_exit node = 0x%x\n", link_exit->node);
+					if (link) debug_print(DEBUG_ANALYSE, 1, "link node = 0x%x\n", link->node);
+					if (link_exit) debug_print(DEBUG_ANALYSE, 1, "link_exit node = 0x%x\n", link_exit->node);
 					if (branch_follow_exit) {
 						link = link_exit;
 					}
 					if (!link) {
-						printf("node_if_tail: empty link\n");
+						debug_print(DEBUG_ANALYSE, 1, "node_if_tail: empty link\n");
 						break;
 					}
 					/* Do not follow loop edges */
 					if (link->is_loop_edge) {
 						break;
 					}
-					printf("node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
+					debug_print(DEBUG_ANALYSE, 1, "node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
 						node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 					tmp = link->node;
 				}
 			}
-			printf("next node=0x%x\n", tmp);
+			debug_print(DEBUG_ANALYSE, 1, "next node=0x%x\n", tmp);
 
 			node_b = tmp;
 			if (0 == node_b) {
@@ -842,11 +842,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			} else {
 				tmp = is_subset(nodes[start_node].looped_path_size, nodes[start_node].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
 			}
-			printf("node_if_tail: %d = 0x%x, 0x%x\n", tmp, start_node, node_b);
+			debug_print(DEBUG_ANALYSE, 1, "node_if_tail: %d = 0x%x, 0x%x\n", tmp, start_node, node_b);
 			count++;
 			if (count > 1000) {
-				printf("node_if_tail: failed, too many if_tails\n");
-				printf("Start node: 0x%x is_norm = %d, is_loop_edge = %d is_loop_exit = %d is_loop_entry = %d\n",
+				debug_print(DEBUG_ANALYSE, 1, "node_if_tail: failed, too many if_tails\n");
+				debug_print(DEBUG_ANALYSE, 1, "Start node: 0x%x is_norm = %d, is_loop_edge = %d is_loop_exit = %d is_loop_entry = %d\n",
 					n, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 				exit(1);
 			}
@@ -855,9 +855,9 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				break;
 			}
 		}
-		printf("if_tail:function end\n");
+		debug_print(DEBUG_ANALYSE, 1, "if_tail:function end\n");
 	}
-	printf("if_tail:end\n");
+	debug_print(DEBUG_ANALYSE, 1, "if_tail:end\n");
 	return 0;
 }
 
@@ -869,13 +869,13 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 	int path;
 	int offset;
 
-	printf("paths_size = %d\n", *paths_size);
+	debug_print(DEBUG_ANALYSE, 1, "paths_size = %d\n", *paths_size);
 	for (l = 0; l < *paths_size; l++) {
 		path = l;
 		offset = paths[l].path_size - 1;
 		if (paths[l].path_size > 0) {
 			while (1) {
-				//printf("Path=0x%x, offset=%d, Node=0x%x\n", l, offset, paths[path].path[offset]);
+				//debug_print(DEBUG_ANALYSE, 1, "Path=0x%x, offset=%d, Node=0x%x\n", l, offset, paths[path].path[offset]);
 				if (paths[l].type == PATH_TYPE_LOOP) {
 					add_looped_path_to_node(&(nodes[paths[path].path[offset]]), l);
 				} else {
@@ -931,7 +931,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			paths[path].path[step] = node;
 			paths[path].path_prev = node_mid_start[n].path_prev;
 			paths[path].path_prev_index = node_mid_start[n].path_prev_index;
-			printf("JCD1: path 0x%x:0x%x, 0x%x\n", path, step, node_mid_start[n].node);
+			debug_print(DEBUG_ANALYSE, 1, "JCD1: path 0x%x:0x%x, 0x%x\n", path, step, node_mid_start[n].node);
 			node_mid_start[n].node = 0;
 			step++;
 			loop = 0;
@@ -939,7 +939,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 				loop = path_loop_check(paths, path, step - 1, node, *nodes_size);
 
 				if (loop) {
-					printf("JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
+					debug_print(DEBUG_ANALYSE, 1, "JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
 					paths[path].loop_head = node;
 					nodes[node].type = NODE_TYPE_LOOP;
 					nodes[node].loop_head = 1;
@@ -947,14 +947,14 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 					if (step >= 2) {
 						int node1 = paths[path].path[step - 2];
 						int node2 = paths[path].path[step - 1];
-						printf("JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
+						debug_print(DEBUG_ANALYSE, 1, "JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
 						for (n = 0; n < nodes[node1].next_size; n++) {
 							if (nodes[node1].link_next[n].node == node2) {
 								nodes[node1].link_next[n].is_loop_edge = 1;
 							}
 						}
 					} else {
-						printf("JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
+						debug_print(DEBUG_ANALYSE, 1, "JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
 							node, step, path);
 						paths[path].loop_head = node;
 						nodes[node].type = NODE_TYPE_LOOP;
@@ -977,13 +977,13 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						break;
 					}
 				} else if (nodes[node].next_size == 1) {
-					printf("JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					debug_print(DEBUG_ANALYSE, 1, "JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
 					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
 				} else if (nodes[node].next_size > 1) {
 					tmp = node_mid_start_add(&nodes[node], node_mid_start, path, step - 1);
-					printf("JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					debug_print(DEBUG_ANALYSE, 1, "JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
 					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
@@ -991,9 +991,9 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			} while ((nodes[node].next_size > 0) && (loop == 0));
 			paths[path].path_size = step;
 			path++;
-			printf("end path = 0x%x\n", path);
+			debug_print(DEBUG_ANALYSE, 1, "end path = 0x%x\n", path);
 			if (path >= *paths_size) {
-				printf("TOO MANY PATHS, %d\n", path);
+				debug_print(DEBUG_ANALYSE, 1, "TOO MANY PATHS, %d\n", path);
 				return 1;
 			}
 		}
@@ -1039,15 +1039,15 @@ int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *no
 int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *paths_size)
 {
 	int n, m;
-	printf("print control flow paths size=0x%x\n", *paths_size);
+	debug_print(DEBUG_ANALYSE, 1, "print control flow paths size=0x%x\n", *paths_size);
 	for (m = 0; m < *paths_size; m++) {
 		if (paths[m].used) {
-			printf("Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
+			debug_print(DEBUG_ANALYSE, 1, "Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
 			for (n = 0; n < paths[m].path_size; n++) {
-				printf("Path 0x%x=0x%x\n", m, paths[m].path[n]);
+				debug_print(DEBUG_ANALYSE, 1, "Path 0x%x=0x%x\n", m, paths[m].path[n]);
 			}
 //		} else {
-			//printf("Un-used Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
+			//debug_print(DEBUG_ANALYSE, 1, "Un-used Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
 		}
 
 	}
@@ -1066,7 +1066,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int l;
 	int tmp;
 
-	printf("build_control_flow_nodes:\n");	
+	debug_print(DEBUG_ANALYSE, 1, "build_control_flow_nodes:\n");	
 	for (n = 1; n <= inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		/* Test for end of node */
@@ -1116,7 +1116,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].link_next = calloc(inst_log1->next_size, sizeof(struct node_link_s));
 			nodes[n].next_size = inst_log1->next_size;
 			if (nodes[n].next_size > 2) {
-				printf("build_cfg next_size too big for node 0x%x, inst 0x%x. Might be a JMPT\n", n, nodes[n].inst_end);
+				debug_print(DEBUG_ANALYSE, 1, "build_cfg next_size too big for node 0x%x, inst 0x%x. Might be a JMPT\n", n, nodes[n].inst_end);
 			}
 
 			for (m = 0; m < inst_log1->next_size; m++) {
@@ -1135,7 +1135,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			for (l = 0; l < nodes[tmp].prev_size; l++) {
 				if (nodes[tmp].prev_node[l] == n) {
 					nodes[tmp].prev_link_index[l] = m;
-					printf("prev_link_index: 0x%x, 0x%x 0x%x\n",
+					debug_print(DEBUG_ANALYSE, 1, "prev_link_index: 0x%x, 0x%x 0x%x\n",
 						tmp, m, l);
 				}
 			}
@@ -1153,9 +1153,9 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int prev_node;
 	int prev_link_index;
 
-	printf("print_control_flow_nodes: size = %d\n", *node_size);	
+	debug_print(DEBUG_ANALYSE, 1, "print_control_flow_nodes: size = %d\n", *node_size);	
 	for (n = 1; n <= *node_size; n++) {
-		printf("Node:0x%x, valid=%d, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
+		debug_print(DEBUG_ANALYSE, 1, "Node:0x%x, valid=%d, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
 			n,
 			nodes[n].valid,
 			nodes[n].type,
@@ -1172,19 +1172,19 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			prev_link_index = nodes[n].prev_link_index[m];
 			/* make a special case for when prev_node == 0 */
 			if (prev_node) {
-				printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x norm=%d edge=%d exit=%d entry=%d\n",
+				debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x norm=%d edge=%d exit=%d entry=%d\n",
 					n, m, prev_node, prev_link_index,
 					nodes[prev_node].link_next[prev_link_index].is_normal,
 					nodes[prev_node].link_next[prev_link_index].is_loop_edge,
 					nodes[prev_node].link_next[prev_link_index].is_loop_exit,
 					nodes[prev_node].link_next[prev_link_index].is_loop_entry);
 			} else {
-				printf("nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x\n",
+				debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].prev_node[%d] = 0x%x, prev_link_index=0x%x\n",
 					n, m, prev_node, prev_link_index);
 			}
 		}
 		for (m = 0; m < nodes[n].next_size; m++) {
-			printf("nodes[0x%x].link_next[%d].node = 0x%x, next norm=%d edge=%d exit=%d entry=%d\n",
+			debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].link_next[%d].node = 0x%x, next norm=%d edge=%d exit=%d entry=%d\n",
 				n, m, nodes[n].link_next[m].node,
 				nodes[n].link_next[m].is_normal,
 				nodes[n].link_next[m].is_loop_edge,
@@ -1193,18 +1193,18 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		}
 		if (nodes[n].next_size > 2) {
 			/* FIXME: only an error so long as we are not yet supporting jump indexes. */
-			printf("Oversized node\n");
+			debug_print(DEBUG_ANALYSE, 1, "Oversized node\n");
 		}
 		for (m = 0; m < nodes[n].member_of_loop_size; m++) {
-			printf("nodes[0x%x].member_of_loop[%d] = 0x%x\n", n, m, nodes[n].member_of_loop[m]);
+			debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].member_of_loop[%d] = 0x%x\n", n, m, nodes[n].member_of_loop[m]);
 		}
-		printf("nodes[0x%x].path_size = 0x%x\n", n, nodes[n].path_size);
-		printf("nodes[0x%x].looped_size = 0x%x\n", n, nodes[n].looped_path_size);
+		debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].path_size = 0x%x\n", n, nodes[n].path_size);
+		debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].looped_size = 0x%x\n", n, nodes[n].looped_path_size);
 //		for (m = 0; m < nodes[n].path_size; m++) {
-//			printf("nodes[0x%x].path[%d] = 0x%x\n", n, m, nodes[n].path[m]);
+//			debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].path[%d] = 0x%x\n", n, m, nodes[n].path[m]);
 //		}
 //		for (m = 0; m < nodes[n].looped_path_size; m++) {
-//			printf("nodes[0x%x].looped_path[%d] = 0x%x\n", n, m, nodes[n].looped_path[m]);
+//			debug_print(DEBUG_ANALYSE, 1, "nodes[0x%x].looped_path[%d] = 0x%x\n", n, m, nodes[n].looped_path[m]);
 //		}
 
 	}
@@ -1308,28 +1308,28 @@ int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size
 
 	for (n = 0; n < *paths_size; n++) {
 		if ((paths[n].used == 1) && (!paths[n].loop_head)) {
-			//printf("multi_ret2: 0x%x: path_end = 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
+			//debug_print(DEBUG_ANALYSE, 1, "multi_ret2: 0x%x: path_end = 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
 			if (!first_node) {
 				first_node = paths[n].path[paths[n].path_size - 1];
 			} else {
 				if (paths[n].path[paths[n].path_size - 1] != first_node) {
-					//printf("multi_ret: 0x%x: path_size = 0x%x, multi_ret_size = 0x%x\n",
+					//debug_print(DEBUG_ANALYSE, 1, "multi_ret: 0x%x: path_size = 0x%x, multi_ret_size = 0x%x\n",
 					//	n, paths[n].path_size, size);
-					//printf("multi_ret: 0x%x: 0x%x 0x%x\n", n, first_node, paths[n].path[paths[n].path_size - 1]);
+					//debug_print(DEBUG_ANALYSE, 1, "multi_ret: 0x%x: 0x%x 0x%x\n", n, first_node, paths[n].path[paths[n].path_size - 1]);
 					found = 0;
 					for (m = 0; m < size; m++) {
-						//printf("multi_ret3: 0x%x: path_end = 0x%x multi_ret = 0x%x\n", m, paths[n].path[paths[n].path_size - 1], ret_list[m]);
+						//debug_print(DEBUG_ANALYSE, 1, "multi_ret3: 0x%x: path_end = 0x%x multi_ret = 0x%x\n", m, paths[n].path[paths[n].path_size - 1], ret_list[m]);
 						if (paths[n].path[paths[n].path_size - 1] == ret_list[m]) {
 							found = 1;
 							break;
 						}
 					}
 					if (found) {
-						//printf("found\n");
+						//debug_print(DEBUG_ANALYSE, 1, "found\n");
 						continue;
 					}	
-					//printf("multi_ret2: 0x%x: path_size = 0x%x\n", n, paths[n].path_size);
-					//printf("multi_ret2: 0x%x: 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
+					//debug_print(DEBUG_ANALYSE, 1, "multi_ret2: 0x%x: path_size = 0x%x\n", n, paths[n].path_size);
+					//debug_print(DEBUG_ANALYSE, 1, "multi_ret2: 0x%x: 0x%x\n", n, paths[n].path[paths[n].path_size - 1]);
 					if (size == 0) {
 						ret_list = malloc(sizeof(int));
 					} else {
@@ -1378,13 +1378,13 @@ int compare_inst(struct self_s *self, int inst_a, int inst_b) {
 				(instruction_a->dstA.value_size == instruction_b->dstA.value_size)) {
 				ret = 1;
 			} else {
-				printf("compare_inst: failed at dstA\n");
+				debug_print(DEBUG_ANALYSE, 1, "compare_inst: failed at dstA\n");
 			}
 		} else {
-			printf("compare_inst: failed at srcA\n");
+			debug_print(DEBUG_ANALYSE, 1, "compare_inst: failed at srcA\n");
 		}
 	} else {
-		printf("compare_inst: failed at opcode/flags\n");
+		debug_print(DEBUG_ANALYSE, 1, "compare_inst: failed at opcode/flags\n");
 	}
 	return ret;
 }
@@ -1400,7 +1400,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 	int node_b_size;
 	int tmp;
 
-	printf("merge_nodes:  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
+	debug_print(DEBUG_ANALYSE, 1, "merge_nodes:  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
 	node_a_size = nodes[node_a].inst_end - nodes[node_a].inst_start;
 	node_b_size = nodes[node_b].inst_end - nodes[node_b].inst_start;
 	if (node_a_size > node_b_size) {
@@ -1409,21 +1409,21 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		node_a = node_b;
 		node_b = tmp;
 	}
-	printf("merge_nodes: last a is inst 0x%x\n", nodes[node_a].inst_end);
-	printf("merge_nodes: last b is inst 0x%x\n", nodes[node_b].inst_end);
+	debug_print(DEBUG_ANALYSE, 1, "merge_nodes: last a is inst 0x%x\n", nodes[node_a].inst_end);
+	debug_print(DEBUG_ANALYSE, 1, "merge_nodes: last b is inst 0x%x\n", nodes[node_b].inst_end);
 	inst_a = nodes[node_a].inst_end;
 	inst_b = nodes[node_b].inst_end;
 	offset = inst_b - inst_a;
 	for (n = inst_a; n >= nodes[node_a].inst_start; n--) {
 		if (!compare_inst(self, n, n + offset)) {
-			printf("Merge0 compare failed at 0x%x\n", n);
+			debug_print(DEBUG_ANALYSE, 1, "Merge0 compare failed at 0x%x\n", n);
 			break;
 		}
 	}
 	new_inst_start = n + 1;
-	printf("Merge inst_a 0x%x, n 0x%x, new_inst_start 0x%x, inst_start 0x%x\n", inst_a, n, new_inst_start, nodes[node_a].inst_start);
+	debug_print(DEBUG_ANALYSE, 1, "Merge inst_a 0x%x, n 0x%x, new_inst_start 0x%x, inst_start 0x%x\n", inst_a, n, new_inst_start, nodes[node_a].inst_start);
 	if (n == inst_a) {
-		printf("Merge1 no match found\n");
+		debug_print(DEBUG_ANALYSE, 1, "Merge1 no match found\n");
 		ret = 0;
 	} else if (new_inst_start == nodes[node_a].inst_start) {
 		if (node_a_size == node_b_size) {
@@ -1431,9 +1431,9 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 			int size_node_b = nodes[node_b].prev_size;
 			// node_a identical to node_b
 			ret = 1;
-			printf("Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
-			printf("Merge2  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
-			printf("Merge2  node_a prev size = 0x%x, size_node_b prev = 0x%x\n", size, size_node_b);
+			debug_print(DEBUG_ANALYSE, 1, "Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+			debug_print(DEBUG_ANALYSE, 1, "Merge2  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
+			debug_print(DEBUG_ANALYSE, 1, "Merge2  node_a prev size = 0x%x, size_node_b prev = 0x%x\n", size, size_node_b);
 			nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + size_node_b) * sizeof(int));
 			nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + size_node_b) * sizeof(int));
 			for (m = 0; m < size_node_b; m++) {
@@ -1455,7 +1455,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 			int size = nodes[node_a].prev_size;
 			// Whole of node a contained in node b
 			ret = 1;
-			printf("Merge3  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+			debug_print(DEBUG_ANALYSE, 1, "Merge3  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 			nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + 1) * sizeof(int));
 			nodes[node_a].prev_link_index = realloc(nodes[node_a].prev_link_index, (size + 1) * sizeof(int));
 			nodes[node_a].prev_node[size] = node_b;
@@ -1468,7 +1468,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		}
 	} else {
 		ret = 1;
-		printf("Merge4 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
+		debug_print(DEBUG_ANALYSE, 1, "Merge4 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 		// FIXME: Now create a new node, and merge node_a and node_b into it.
 		//	This will create a single ret node for the function. 
 		nodes[node_new].inst_start = new_inst_start;
@@ -1499,13 +1499,13 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 int get_value_from_index(struct operand_s *operand, uint64_t *index)
 {
 	if (operand->indirect) {
-		printf(" %s%s[%s0x%"PRIx64"],",
+		debug_print(DEBUG_ANALYSE, 1, " %s%s[%s0x%"PRIx64"],",
 			size_table[operand->value_size],
 			indirect_table[operand->indirect],
 			store_table[operand->store],
 			operand->index);
 	} else {
-		printf(" %s%s0x%"PRIx64",",
+		debug_print(DEBUG_ANALYSE, 1, " %s%s0x%"PRIx64",",
 		size_table[operand->value_size],
 		store_table[operand->store],
 		operand->index);
@@ -1521,7 +1521,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 	//int tmp;
 
 	/* FIXME: May handle by using first switch as switch (indirect) */
-	printf("value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
 				store,
 				indirect,
 				index,
@@ -1568,15 +1568,15 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 				label->type = 2;
 				label->lab_pointer = 0;
 				label->value = indirect_offset_value;
-				printf("PARAM_STACK^\n");
+				debug_print(DEBUG_ANALYSE, 1, "PARAM_STACK^\n");
 			} else if (0 == indirect) {
 				label->scope = 2;
 				label->type = 1;
 				label->lab_pointer = 0;
 				label->value = index;
-				printf("PARAM_REG^\n");
+				debug_print(DEBUG_ANALYSE, 1, "PARAM_REG^\n");
 			} else {
-				printf("JCD: UNKNOWN PARAMS\n");
+				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN PARAMS\n");
 			}
 			break;
 		case 2:
@@ -1592,7 +1592,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 				label->lab_pointer = 0;
 				label->value = value_id;
 			} else {
-				printf("JCD: UNKNOWN LOCAL\n");
+				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN LOCAL\n");
 			}
 			break;
 		case 3: /* Data */
@@ -1614,13 +1614,13 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 			label->type = value_scope;
 			label->lab_pointer = 0;
 			label->value = 0;
-			printf("unknown value scope: %04"PRIx64";\n", (value_scope));
+			debug_print(DEBUG_ANALYSE, 1, "unknown value scope: %04"PRIx64";\n", (value_scope));
 			return 1;
 			break;
 		}
 		break;
 	default:
-		printf("Unhandled store1\n");
+		debug_print(DEBUG_ANALYSE, 1, "Unhandled store1\n");
 		return 1;
 		break;
 	}
@@ -1637,7 +1637,7 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 	label_offset = label_redirect[value_id].redirect;
 	label = &labels[label_offset];
 	label->size_bits = value->length * 8;
-	printf("Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64"\n",
 		value_id,
 		label->scope,
 		label->type,
@@ -1655,11 +1655,11 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 	found = 0;
 	switch (label->scope) {
 	case 2:
-		printf("PARAM\n");
+		debug_print(DEBUG_ANALYSE, 1, "PARAM\n");
 		for(n = 0; n < entry_point->params_size; n++) {
-			printf("looping 0x%x\n", n);
+			debug_print(DEBUG_ANALYSE, 1, "looping 0x%x\n", n);
 			if (entry_point->params[n] == label_offset) {
-				printf("Duplicate\n");
+				debug_print(DEBUG_ANALYSE, 1, "Duplicate\n");
 				found = 1;
 				break;
 			}
@@ -1672,11 +1672,11 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 		entry_point->params[entry_point->params_size - 1] = label_offset;
 		break;
 	case 1:
-		printf("LOCAL\n");
+		debug_print(DEBUG_ANALYSE, 1, "LOCAL\n");
 		for(n = 0; n < entry_point->locals_size; n++) {
-			printf("looping 0x%x\n", n);
+			debug_print(DEBUG_ANALYSE, 1, "looping 0x%x\n", n);
 			if (entry_point->locals[n] == label_offset) {
-				printf("Duplicate\n");
+				debug_print(DEBUG_ANALYSE, 1, "Duplicate\n");
 				found = 1;
 				break;
 			}
@@ -1689,17 +1689,17 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 		entry_point->locals[entry_point->locals_size - 1] = label_offset;
 		break;
 	case 3:
-		printf("HEX VALUE\n");
+		debug_print(DEBUG_ANALYSE, 1, "HEX VALUE\n");
 		break;
 	default:
-		printf("VALUE unhandled 0x%"PRIx64"\n", label->scope);
+		debug_print(DEBUG_ANALYSE, 1, "VALUE unhandled 0x%"PRIx64"\n", label->scope);
 		break;
 	}
-	printf("params_size = 0x%x, locals_size = 0x%x\n",
+	debug_print(DEBUG_ANALYSE, 1, "params_size = 0x%x, locals_size = 0x%x\n",
 		entry_point->params_size,
 		entry_point->locals_size);
 
-	printf("value: 0x%"PRIx64", 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "value: 0x%"PRIx64", 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64"\n",
 		value->start_address,
 		value->length,
 		value->init_value,
@@ -1724,22 +1724,22 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 	//struct label_s *label;
 
 	if (!start || !end) {
-		printf("scan_for_labels_in_function:Invalid start or end\n");
+		debug_print(DEBUG_ANALYSE, 1, "scan_for_labels_in_function:Invalid start or end\n");
 		return 1;
 	}
-	printf("scan_for_labels:start=0x%x, end=0x%x\n", start, end);
+	debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:start=0x%x, end=0x%x\n", start, end);
 
 	for (n = start; n <= end; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		if (!inst_log1) {
-			printf("scan_for_labels:Invalid inst_log1[0x%x]\n", n);
+			debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:Invalid inst_log1[0x%x]\n", n);
 			return 1;
 		}
 
 		instruction =  &inst_log1->instruction;
 
 		/* Test to see if we have an instruction to output */
-		printf("Inst 0x%04x: %d: value_type = %d, %d, %d\n", n,
+		debug_print(DEBUG_ANALYSE, 1, "Inst 0x%04x: %d: value_type = %d, %d, %d\n", n,
 			instruction->opcode,
 			inst_log1->value1.value_type,
 			inst_log1->value2.value_type,
@@ -1751,17 +1751,17 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			(4 == inst_log1->value3.value_type) ||
 			(6 == inst_log1->value3.value_type) ||
 			(5 == inst_log1->value3.value_type)) {
-			printf("Instruction Opcode = 0x%x\n", instruction->opcode);
+			debug_print(DEBUG_ANALYSE, 1, "Instruction Opcode = 0x%x\n", instruction->opcode);
 			switch (instruction->opcode) {
 			case MOV:
 			case SEX:
-				printf("SEX or MOV\n");
+				debug_print(DEBUG_ANALYSE, 1, "SEX or MOV\n");
 				if (inst_log1->value1.value_type == 6) {
-					printf("ERROR1 %d\n", instruction->opcode);
+					debug_print(DEBUG_ANALYSE, 1, "ERROR1 %d\n", instruction->opcode);
 					//break;
 				}
 				if (inst_log1->value1.value_type == 5) {
-					printf("ERROR2\n");
+					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
 					//break;
 				}
 				if (1 == instruction->dstA.indirect) {
@@ -1797,14 +1797,14 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
-				printf("value3\n");
+				debug_print(DEBUG_ANALYSE, 1, "value3\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
 					value_id = inst_log1->value1.indirect_value_id;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				printf("value1\n");
+				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				break;
 			case JMP:
@@ -1831,19 +1831,19 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				} else {
 					value_id = inst_log1->value2.value_id;
 				}
-				printf("JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
+				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
 				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
 					value_id = inst_log1->value1.indirect_value_id;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				printf("JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
+				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				break;
 
 			case IF:
-				printf("IF: This might give signed or unsigned info to labels\n");
+				debug_print(DEBUG_ANALYSE, 1, "IF: This might give signed or unsigned info to labels\n");
 				break;
 
 			case NOP:
@@ -1857,7 +1857,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				break;
 			default:
-				printf("Unhandled scan instruction1\n");
+				debug_print(DEBUG_ANALYSE, 1, "Unhandled scan instruction1\n");
 				if (print_inst(self, instruction, n, labels))
 					return 1;
 				return 1;
@@ -1888,12 +1888,12 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 		search_back_seen[n] = 0;
 	}
 
-	printf("search_back_local_stack: 0x%"PRIx64", 0x%"PRIx64"\n", indirect_init_value, indirect_offset_value);
+	debug_print(DEBUG_ANALYSE, 1, "search_back_local_stack: 0x%"PRIx64", 0x%"PRIx64"\n", indirect_init_value, indirect_offset_value);
 	if (0 < mid_start_size) {
-		printf("search_back:prev_size=0x%"PRIx64"\n", mid_start_size);
+		debug_print(DEBUG_ANALYSE, 1, "search_back:prev_size=0x%"PRIx64"\n", mid_start_size);
 	}
 	if (0 == mid_start_size) {
-		printf("search_back ended\n");
+		debug_print(DEBUG_ANALYSE, 1, "search_back ended\n");
 		return 1;
 	}
 
@@ -1904,12 +1904,12 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 				inst_num = mid_start[n].mid_start;
 				mid_start[n].valid = 0;
 				found = 1;
-				printf("mid_start removed 0x%"PRIx64" at 0x%x, size=0x%"PRIx64"\n", mid_start[n].mid_start, n, mid_start_size);
+				debug_print(DEBUG_ANALYSE, 1, "mid_start removed 0x%"PRIx64" at 0x%x, size=0x%"PRIx64"\n", mid_start[n].mid_start, n, mid_start_size);
 				break;
 			}
 		}
 		if (!found) {
-			printf("mid_start not found, exiting\n");
+			debug_print(DEBUG_ANALYSE, 1, "mid_start not found, exiting\n");
 			goto search_back_exit_free;
 		}
 		if (search_back_seen[inst_num]) {
@@ -1919,7 +1919,7 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 		inst_log1 =  &inst_log_entry[inst_num];
 		instruction =  &inst_log1->instruction;
 		//value_id = inst_log1->value3.value_id;
-		printf("inst_num:0x%"PRIx64"\n", inst_num);
+		debug_print(DEBUG_ANALYSE, 1, "inst_num:0x%"PRIx64"\n", inst_num);
 		/* STACK */
 		if ((reg_stack == 2) &&
 			(instruction->dstA.store == STORE_REG) &&
@@ -1948,7 +1948,7 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 			if (tmp == 1) {
 				*inst_list = malloc(sizeof(*inst_list));
 				(*inst_list)[0] = inst_num;
-				printf("JCD2: inst_list[0] = 0x%"PRIx64"\n", inst_num);
+				debug_print(DEBUG_ANALYSE, 1, "JCD2: inst_list[0] = 0x%"PRIx64"\n", inst_num);
 			} else {
 				*inst_list = realloc(*inst_list, tmp * sizeof(*inst_list));
 				(*inst_list)[tmp - 1] = inst_num;
@@ -1964,7 +1964,7 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 						mid_start[n].mid_start = inst_log1->prev[prev_index];
 						prev_index++;
 						mid_start[n].valid = 1;
-						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
+						debug_print(DEBUG_ANALYSE, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
 						found = 1;
 					}
 					if (prev_index >= inst_log1->prev_size) {
@@ -1978,21 +1978,21 @@ int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, st
 					for(n = mid_start_size; n < mid_next; n++) {
 						mid_start[n].mid_start = inst_log1->prev[prev_index];
 						prev_index++;
-						printf("mid_start realloc added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
+						debug_print(DEBUG_ANALYSE, 1, "mid_start realloc added 0x%"PRIx64" at 0x%x\n", mid_start[n].mid_start, n);
 						mid_start[n].valid = 1;
 					}
 					mid_start_size = mid_next;
 				}
 
 				if (!found) {
-					printf("not found\n");
+					debug_print(DEBUG_ANALYSE, 1, "not found\n");
 					goto search_back_exit_free;
 				}
 			}
 		}
 	/* FIXME: There must be deterministic exit point */
 	} while (1);
-	printf("end of loop, exiting\n");
+	debug_print(DEBUG_ANALYSE, 1, "end of loop, exiting\n");
 
 search_back_exit_free:
 	free(mid_start);

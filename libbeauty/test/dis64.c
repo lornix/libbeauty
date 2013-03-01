@@ -68,6 +68,7 @@ int debug_dis64 = 1;
 int debug_input_bfd = 1;
 int debug_input_dis = 1;
 int debug_exe = 1;
+int debug_analyse = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
 	va_list ap;
@@ -94,6 +95,12 @@ void debug_print(int module, int level, const char *format, ...) {
 	case DEBUG_EXE:
 		if (level >= debug_exe) {
 			fprintf(stderr, "DEBUG_EXE,0x%x:", level);
+			vfprintf(stderr, format, ap);
+		}
+		break;
+	case DEBUG_ANALYSE:
+		if (level >= debug_analyse) {
+			fprintf(stderr, "DEBUG_ANALYSE,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
