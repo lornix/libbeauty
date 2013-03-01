@@ -64,11 +64,12 @@ char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
-int debug_dis64 = 1;
-int debug_input_bfd = 1;
-int debug_input_dis = 1;
-int debug_exe = 1;
-int debug_analyse = 1;
+/* debug: 0 = no debug output. >= 1 is more debug output */
+int debug_dis64 = 0;
+int debug_input_bfd = 0;
+int debug_input_dis = 0;
+int debug_exe = 0;
+int debug_analyse = 0;
 char disassemble_string[1024];
 
 void debug_print(int module, int level, const char *format, ...) {
@@ -76,31 +77,31 @@ void debug_print(int module, int level, const char *format, ...) {
 	va_start(ap, format);
 	switch (module) {
 	case DEBUG_MAIN:
-		if (level >= debug_dis64) {
+		if (level <= debug_dis64) {
 			fprintf(stderr, "DEBUG_MAIN,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_BFD:
-		if (level >= debug_input_bfd) {
+		if (level <= debug_input_bfd) {
 			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_DIS:
-		if (level >= debug_input_dis) {
+		if (level <= debug_input_dis) {
 			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_EXE:
-		if (level >= debug_exe) {
+		if (level <= debug_exe) {
 			fprintf(stderr, "DEBUG_EXE,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE:
-		if (level >= debug_analyse) {
+		if (level <= debug_analyse) {
 			fprintf(stderr, "DEBUG_ANALYSE,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
