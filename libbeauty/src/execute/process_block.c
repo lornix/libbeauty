@@ -211,11 +211,15 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 		//debug_print(DEBUG_EXE, 1, "disassemble_fn done\n");
 		debug_print(DEBUG_EXE, 1, "disassemble att  : ");
 	        disasm_info.disassembler_options = "att";
+		disassemble_callback_start(self);
 		octets = (*disassemble_fn) (offset, &disasm_info);
+		disassemble_callback_end(self);
 		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
 		debug_print(DEBUG_EXE, 1, "disassemble intel: ");
 	        disasm_info.disassembler_options = "intel";
+		disassemble_callback_start(self);
 		octets = (*disassemble_fn) (offset, &disasm_info);
+		disassemble_callback_end(self);
 		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
 		if (dis_instructions.bytes_used != octets) {
 			debug_print(DEBUG_EXE, 1, "Unhandled instruction. Length mismatch. Got %d, expected %d, Exiting\n", dis_instructions.bytes_used, octets);

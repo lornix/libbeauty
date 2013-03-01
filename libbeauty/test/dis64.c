@@ -69,6 +69,7 @@ int debug_input_bfd = 1;
 int debug_input_dis = 1;
 int debug_exe = 1;
 int debug_analyse = 1;
+char disassemble_string[1024];
 
 void debug_print(int module, int level, const char *format, ...) {
 	va_list ap;
@@ -108,6 +109,33 @@ void debug_print(int module, int level, const char *format, ...) {
 	va_end(ap);
 }
 
+void disassemble_callback_start(struct self_s *self) {
+	disassemble_string[0] = 0;
+}
+
+void disassemble_callback_end(struct self_s *self) {
+	debug_print(DEBUG_INPUT_DIS, 1, "%s\n", disassemble_string);
+}
+
+int disassemble_print_callback(FILE *stream, const char *format, ...) {
+	va_list ap;
+	char *str1;
+	va_start(ap, format);
+	if (!strncmp(format, "%s", 2)) {
+		str1 = va_arg(ap, char *);
+		strcat(disassemble_string, str1);
+	} else if (!strncmp(format, "0x%s", 4)) {
+		str1 = va_arg(ap, char *);
+		strcat(disassemble_string, "0x");
+		strcat(disassemble_string, str1);
+	} else {
+		strcat(disassemble_string, format);
+	}
+	va_end(ap);
+	return 0;
+}
+
+
 #define AST_SIZE 300
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
@@ -128,7 +156,9 @@ int memory_used[MEMORY_USED_SIZE];
 int memory_relocation[MEMORY_USED_SIZE];
 
 int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
-	return disassemble_amd64(handle, dis_instructions, base_address, offset);
+	int tmp;
+	tmp = disassemble_amd64(handle, dis_instructions, base_address, offset);
+	return tmp;
 }
 
 
@@ -2037,7 +2067,7 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
 	
 	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
-	init_disassemble_info(&disasm_info, stdout, (fprintf_ftype) fprintf);
+	init_disassemble_info(&disasm_info, stdout, (fprintf_ftype) disassemble_print_callback);
 	disasm_info.flavour = bfd_get_flavour(handle->bfd);
 	disasm_info.arch = bfd_get_arch(handle->bfd);
 	disasm_info.mach = bfd_get_mach(handle->bfd);

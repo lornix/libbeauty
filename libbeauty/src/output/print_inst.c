@@ -260,8 +260,8 @@ int print_inst(struct self_s *self, struct instruction_s *instruction, int instr
 	int ret;
 	int tmp;
 
-	ret = write_inst(self, stdout, instruction, instruction_number, labels);
-	tmp = fprintf(stdout, "\n");
+	ret = write_inst(self, stderr, instruction, instruction_number, labels);
+	tmp = fprintf(stderr, "\n");
 	return ret;
 }
 
