@@ -2098,7 +2098,7 @@ int main(int argc, char *argv[])
 			entry_point[0].previous_instuction = 0;
 
 			print_mem(memory_reg, 1);
-			printf ("LOGS: inst_log = 0x%"PRIx64"\n", inst_log);
+			debug_print(DEBUG_MAIN, 1, "LOGS: inst_log = 0x%"PRIx64"\n", inst_log);
 			do {
 				not_finished = 0;
 				for (n = 0; n < self->entry_point_list_length; n++ ) {
