@@ -83,8 +83,8 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	int tmp_state = 0;
 	int n, l;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
-	printf("opcode = 0x%x\n", instruction->opcode);
-	printf("opcode = 0x%x\n", instruction->flags);
+	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->opcode);
+	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->flags);
 	tmp = fprintf(fd, "// 0x%04x:%s%s",
 		instruction_number,
 		opcode_table[instruction->opcode],
@@ -140,7 +140,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 		break;
 	case JMPT:
 		if (instruction->srcA.indirect) {
-			printf("JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
+			debug_print(DEBUG_OUTPUT, 1, "JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
 			if (instruction->srcA.indirect > 4) {
 				instruction->srcA.indirect = 0;
 			}
@@ -153,7 +153,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 			if (instruction->srcA.store < 0) {
 				instruction->srcA.store = 0;
 			}
-			printf("JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
+			debug_print(DEBUG_OUTPUT, 1, "JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
 			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]%s,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
@@ -206,7 +206,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 			for (n = 0; n < external_entry_points[l].params_size; n++) {
 				struct label_s *label;
 				label = &labels[external_entry_points[l].params[n]];
-				printf("reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[n], label->value);
+				debug_print(DEBUG_OUTPUT, 1, "reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[n], label->value);
 				if ((label->scope == 2) &&
 					(label->type == 1)) {
 					if (tmp_state > 0) {
@@ -266,7 +266,7 @@ int print_inst(struct self_s *self, struct instruction_s *instruction, int instr
 }
 
 int print_inst_short(struct self_s *self, struct instruction_s *instruction) {
-	printf("Execute Instruction %d:%s%s\n",
+	debug_print(DEBUG_OUTPUT, 1, "Execute Instruction %d:%s%s\n",
 		instruction->opcode,
 		opcode_table[instruction->opcode],
 		dis_flags_table[instruction->flags]);
