@@ -33,6 +33,14 @@
 #include <dis-asm.h>
 #include <opcodes.h>
 
+#define DEBUG_MAIN 1
+#define DEBUG_INPUT_BFD 2
+#define DEBUG_INPUT_DIS 3
+#define DEBUG_OUTPUT 4
+#define DEBUG_EXE 5
+
+void debug_print(int module, int level, const char *format, ...);
+
 struct reloc_table {
 	int		type;
 	uint64_t	address;

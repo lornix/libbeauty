@@ -38,6 +38,7 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,6 +63,34 @@ struct disassemble_info disasm_info;
 char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
+
+int debug_dis64 = 1;
+int debug_input_bfd = 1;
+int debug_input_dis = 1;
+
+void debug_print(int module, int level, const char *format, ...) {
+	va_list ap;
+	va_start(ap, format);
+	switch (module) {
+	case DEBUG_MAIN:
+		if (level >= debug_dis64) {
+			fprintf(stderr, "DEBUG_MAIN,0x%x:", level);
+		}
+		break;
+	case DEBUG_INPUT_BFD:
+		if (level >= debug_input_bfd) {
+			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x:", level);
+		}
+		break;
+	case DEBUG_INPUT_DIS:
+		if (level >= debug_input_dis) {
+			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x:", level);
+		}
+		break;
+	}
+	vfprintf(stderr, format, ap);
+	va_end(ap);
+}
 
 #define AST_SIZE 300
 /* Params order:
@@ -94,52 +123,52 @@ int print_dis_instructions(struct self_s *self)
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 
-	printf("print_dis_instructions:\n");
+	debug_print(DEBUG_MAIN, 1, "print_dis_instructions:\n");
 	for (n = 1; n <= inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		if (print_inst(self, instruction, n, NULL))
 			return 1;
-		printf("start_address:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "start_address:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.start_address,
 			inst_log1->value2.start_address,
 			inst_log1->value3.start_address);
-		printf("init:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "init:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.init_value,
 			inst_log1->value2.init_value,
 			inst_log1->value3.init_value);
-		printf("offset:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "offset:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.offset_value,
 			inst_log1->value2.offset_value,
 			inst_log1->value3.offset_value);
-		printf("indirect init:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "indirect init:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.indirect_init_value,
 			inst_log1->value2.indirect_init_value,
 			inst_log1->value3.indirect_init_value);
-		printf("indirect offset:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "indirect offset:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.indirect_offset_value,
 			inst_log1->value2.indirect_offset_value,
 			inst_log1->value3.indirect_offset_value);
-		printf("indirect value_id:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "indirect value_id:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
 			inst_log1->value1.indirect_value_id,
 			inst_log1->value2.indirect_value_id,
 			inst_log1->value3.indirect_value_id);
-		printf("value_type:0x%x, 0x%x -> 0x%x\n",
+		debug_print(DEBUG_MAIN, 1, "value_type:0x%x, 0x%x -> 0x%x\n",
 			inst_log1->value1.value_type,
 			inst_log1->value2.value_type,
 			inst_log1->value3.value_type);
-		printf("value_scope:0x%x, 0x%x -> 0x%x\n",
+		debug_print(DEBUG_MAIN, 1, "value_scope:0x%x, 0x%x -> 0x%x\n",
 			inst_log1->value1.value_scope,
 			inst_log1->value2.value_scope,
 			inst_log1->value3.value_scope);
-		printf("value_id:0x%"PRIx64", 0x%"PRIx64" -> 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value_id:0x%"PRIx64", 0x%"PRIx64" -> 0x%"PRIx64"\n",
 			inst_log1->value1.value_id,
 			inst_log1->value2.value_id,
 			inst_log1->value3.value_id);
 		if (inst_log1->prev_size > 0) {
 			int n;
 			for (n = 0; n < inst_log1->prev_size; n++) {
-				printf("inst_prev:%d:0x%04x\n",
+				debug_print(DEBUG_MAIN, 1, "inst_prev:%d:0x%04x\n",
 					n,
 					inst_log1->prev[n]);
 			}
@@ -147,7 +176,7 @@ int print_dis_instructions(struct self_s *self)
 		if (inst_log1->next_size > 0) {
 			int n;
 			for (n = 0; n < inst_log1->next_size; n++) {
-				printf("inst_next:%d:0x%04x\n",
+				debug_print(DEBUG_MAIN, 1, "inst_next:%d:0x%04x\n",
 					n,
 					inst_log1->next[n]);
 			}
@@ -348,31 +377,31 @@ int stack_init(struct memory_s *memory_stack)
 }
 
 int print_mem(struct memory_s *memory, int location) {
-	printf("start_address:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "start_address:0x%"PRIx64"\n",
 		memory[location].start_address);
-	printf("length:0x%x\n",
+	debug_print(DEBUG_MAIN, 1, "length:0x%x\n",
 		memory[location].length);
-	printf("init_value_type:0x%x\n",
+	debug_print(DEBUG_MAIN, 1, "init_value_type:0x%x\n",
 		memory[location].init_value_type);
-	printf("init:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "init:0x%"PRIx64"\n",
 		memory[location].init_value);
-	printf("offset:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "offset:0x%"PRIx64"\n",
 		memory[location].offset_value);
-	printf("indirect_init:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "indirect_init:0x%"PRIx64"\n",
 		memory[location].indirect_init_value);
-	printf("indirect_offset:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "indirect_offset:0x%"PRIx64"\n",
 		memory[location].indirect_offset_value);
-	printf("value_type:0x%x\n",
+	debug_print(DEBUG_MAIN, 1, "value_type:0x%x\n",
 		memory[location].value_type);
-	printf("ref_memory:0x%"PRIx32"\n",
+	debug_print(DEBUG_MAIN, 1, "ref_memory:0x%"PRIx32"\n",
 		memory[location].ref_memory);
-	printf("ref_log:0x%"PRIx32"\n",
+	debug_print(DEBUG_MAIN, 1, "ref_log:0x%"PRIx32"\n",
 		memory[location].ref_log);
-	printf("value_scope:0x%x\n",
+	debug_print(DEBUG_MAIN, 1, "value_scope:0x%x\n",
 		memory[location].value_scope);
-	printf("value_id:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "value_id:0x%"PRIx64"\n",
 		memory[location].value_id);
-	printf("valid:0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "valid:0x%"PRIx64"\n",
 		memory[location].valid);
 	return 0;
 }
@@ -388,9 +417,9 @@ int external_entry_points_init(struct external_entry_point_s *external_entry_poi
 	//int *memory_used;
 
 	/* Print the symtab */
-	printf("symtab_sz = %lu\n", handle->symtab_sz);
+	debug_print(DEBUG_MAIN, 1, "symtab_sz = %lu\n", handle->symtab_sz);
 	if (handle->symtab_sz >= 100) {
-		printf("symtab too big!!! EXITING\n");
+		debug_print(DEBUG_MAIN, 1, "symtab too big!!! EXITING\n");
 		return 1;
 	}
 	n = 0;
@@ -399,7 +428,7 @@ int external_entry_points_init(struct external_entry_point_s *external_entry_poi
 		/* FIXME: value == 0 for the first function in the .o file. */
 		/*        We need to be able to handle more than
 		          one function per .o file. */
-		printf("section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
 			handle->symtab[l]->section->id,
 			handle->symtab[l]->section->index,
 			handle->symtab[l]->flags,
@@ -477,19 +506,19 @@ int print_ast_container(struct ast_container_s *ast_container)
 {
 	int n;
 	if (ast_container->length) {
-		printf("ast_container->length = 0x%x\n", ast_container->length);
+		debug_print(DEBUG_MAIN, 1, "ast_container->length = 0x%x\n", ast_container->length);
 	}
-	printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+	debug_print(DEBUG_MAIN, 1, "parent = 0x%x, 0x%"PRIx64", 0x%x\n",
 		ast_container->parent.type, ast_container->parent.index, ast_container->parent.offset);
 	if (ast_container->object) {
 		for (n = 0; n < ast_container->length; n++) {
-			printf("0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
+			debug_print(DEBUG_MAIN, 1, "0x%d:type = 0x%x, index = 0x%"PRIx64"\n",
 				n,
 				ast_container->object[n].type,
 				ast_container->object[n].index);
 		}
 	} else if (ast_container->length > 0) {
-		printf("print_ast_container invalid\n");
+		debug_print(DEBUG_MAIN, 1, "print_ast_container invalid\n");
 	}
 	return 0;
 }
@@ -567,14 +596,14 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 	ast_entry[0].node = start_node;
 	ast_entry[0].node_end = 0;
 	if (container_index >= AST_SIZE) { 
-		printf("container_index too large 0\n");
+		debug_print(DEBUG_MAIN, 1, "container_index too large 0\n");
 		ret = 1;
 		goto exit_cfg_to_ast;
 	}
 	ast->ast_container[container_index].start_node = start_node;
 	container_index++;
 	if (container_index >= AST_SIZE) { 
-		printf("container_index too large 0\n");
+		debug_print(DEBUG_MAIN, 1, "container_index too large 0\n");
 		ret = 1;
 		goto exit_cfg_to_ast;
 	}
@@ -591,12 +620,12 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		if (!found) {
 			break;
 		}
-		printf("BEFORE ast_entry entry = 0x%x\n", entry);
-		printf("ast_type = 0x%x\n", ast_entry[entry].type);
-		printf("ast_index = 0x%x\n", ast_entry[entry].index);
-		printf("ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
-		printf("ast_node = 0x%x\n", ast_entry[entry].node);
-		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
+		debug_print(DEBUG_MAIN, 1, "BEFORE ast_entry entry = 0x%x\n", entry);
+		debug_print(DEBUG_MAIN, 1, "ast_type = 0x%x\n", ast_entry[entry].type);
+		debug_print(DEBUG_MAIN, 1, "ast_index = 0x%x\n", ast_entry[entry].index);
+		debug_print(DEBUG_MAIN, 1, "ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
+		debug_print(DEBUG_MAIN, 1, "ast_node = 0x%x\n", ast_entry[entry].node);
+		debug_print(DEBUG_MAIN, 1, "ast_node_end = 0x%x\n", ast_entry[entry].node_end);
 
 		node = ast_entry[entry].node;
 		node_end = ast_entry[entry].node_end;
@@ -612,13 +641,13 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		} else {
 			type = AST_TYPE_NODE;
 		};
-		printf("new_node_end = 0x%x\n", node_end);
-		printf("AST: Type = 0x%x\n", type);
+		debug_print(DEBUG_MAIN, 1, "new_node_end = 0x%x\n", node_end);
+		debug_print(DEBUG_MAIN, 1, "AST: Type = 0x%x\n", type);
 		switch (type) {
 		case AST_TYPE_IF_THEN_ELSE:
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
-				printf("failed type != 2\n");
+				debug_print(DEBUG_MAIN, 1, "failed type != 2\n");
 				exit(1);
 			}
 			length = ast_container[index].length;
@@ -642,7 +671,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			} else if (nodes[node].link_next[0].is_loop_edge) {
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
-				printf("Creating if_then container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating if_then container 0x%x\n", container_index);
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_CONTAINER;
 				ast_if_then_else[if_then_else_index].if_then.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -654,7 +683,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 1\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 1\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
@@ -667,7 +696,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			} else if (nodes[node].link_next[1].is_loop_edge) {
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
-				printf("Creating if_else container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating if_else container 0x%x\n", container_index);
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_CONTAINER;
 				ast_if_then_else[if_then_else_index].if_else.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -679,7 +708,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 2\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 2\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
@@ -694,7 +723,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 			if_then_else_index++;
 			if (if_then_else_index >= AST_SIZE) {
-				printf("if_then_else_index too large\n");
+				debug_print(DEBUG_MAIN, 1, "if_then_else_index too large\n");
 				ret = 1;
 				goto exit_cfg_to_ast;
 			}
@@ -702,7 +731,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		case AST_TYPE_IF_THEN_GOTO:
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
-				printf("AST_TYPE_IF_THEN_GOTO:failed type != 2\n");
+				debug_print(DEBUG_MAIN, 1, "AST_TYPE_IF_THEN_GOTO:failed type != 2\n");
 				exit(1);
 			}
 			length = ast_container[index].length;
@@ -730,7 +759,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				link_goto = 1;
 				link_norm = 0;
 			} else {
-				printf("FAILED: No is_exit entry in IF_THEN_GOTO\n");
+				debug_print(DEBUG_MAIN, 1, "FAILED: No is_exit entry in IF_THEN_GOTO\n");
 				exit(1);
 			}
 			/* Only handle the is_exit path.
@@ -741,7 +770,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			} else if (nodes[node].link_next[link_goto].node == nodes[node].if_tail) {
 				ast_if_then_goto[if_then_goto_index].if_then_goto.type = AST_TYPE_EMPTY;
 			} else {
-				printf("Creating if_then container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating if_then container 0x%x\n", container_index);
 				ast_if_then_goto[if_then_goto_index].if_then_goto.type = AST_TYPE_CONTAINER;
 				ast_if_then_goto[if_then_goto_index].if_then_goto.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -753,7 +782,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 3\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 3\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
@@ -764,7 +793,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			if (ast_entry[entry].sub_type == 1) {
 				if (!is_member_of_loop(nodes, node, ast_entry[entry].node)) {
 					int exit_index = ast_entry[entry].index;
-					printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+					debug_print(DEBUG_MAIN, 1, "parent = 0x%x, 0x%"PRIx64", 0x%x\n",
 						ast_container[ast_entry[entry].index].parent.type,
 						ast_container[ast_entry[entry].index].parent.index,
 						ast_container[ast_entry[entry].index].parent.offset);
@@ -781,7 +810,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 			if_then_goto_index++;
 			if (if_then_goto_index >= AST_SIZE) {
-				printf("if_then_goto_index too large\n");
+				debug_print(DEBUG_MAIN, 1, "if_then_goto_index too large\n");
 				ret = 1;
 				goto exit_cfg_to_ast;
 			}
@@ -789,7 +818,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		case AST_TYPE_NODE:
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
-				printf("AST_TYPE_NODE failed type != 2\n");
+				debug_print(DEBUG_MAIN, 1, "AST_TYPE_NODE failed type != 2\n");
 				exit(1);
 			}
 			length = ast_container[index].length;
@@ -816,10 +845,10 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 		case AST_TYPE_LOOP:
 			/* node_end will == loop_head node. */
 			/* This is valid no matter how many loop edges there are */
-			printf("AST_TYPE_LOOP type = 0x%x, node = 0x%x\n", type, node);
+			debug_print(DEBUG_MAIN, 1, "AST_TYPE_LOOP type = 0x%x, node = 0x%x\n", type, node);
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
-				printf("failed type != 2\n");
+				debug_print(DEBUG_MAIN, 1, "failed type != 2\n");
 				exit(1);
 			}
 			ast_loop[loop_index].first_node.type = AST_TYPE_NODE;
@@ -842,7 +871,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_loop[loop_index].body.index = 0;
 
 			if (nodes[node].link_next[0].is_normal) {
-				printf("Creating loop container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating loop container 0x%x\n", container_index);
 				ast_loop[loop_index].body.type = AST_TYPE_CONTAINER;
 				ast_loop[loop_index].body.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -854,13 +883,13 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 4\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 4\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
 			}
 			if (nodes[node].link_next[1].is_normal) {
-				printf("Creating loop container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating loop container 0x%x\n", container_index);
 				ast_loop[loop_index].body.type = AST_TYPE_CONTAINER;
 				ast_loop[loop_index].body.index = container_index;
 				/* FIXME: Only add this if the container first node != if_tail */
@@ -873,7 +902,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = node;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 5 node = 0x%x, if_tail = 0x%x\n", node, nodes[node].if_tail);
+					debug_print(DEBUG_MAIN, 1, "container_index too large 5 node = 0x%x, if_tail = 0x%x\n", node, nodes[node].if_tail);
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
@@ -883,7 +912,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 			loop_index++;
 			if (loop_index >= AST_SIZE) { 
-				printf("loop_index too large\n");
+				debug_print(DEBUG_MAIN, 1, "loop_index too large\n");
 				ret = 1;
 				goto exit_cfg_to_ast;
 			}
@@ -894,30 +923,30 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			 */
 			index = ast_entry[entry].index;
 			if (ast_entry[entry].type != AST_TYPE_CONTAINER) {
-				printf("failed type != 2\n");
+				debug_print(DEBUG_MAIN, 1, "failed type != 2\n");
 				exit(1);
 			}
 			length = ast_container[index].length;
 			if (0 == length) {
 				ast_container[index].object = malloc(sizeof(struct ast_type_index_s));
 				ast_container[index].length = 1;
-				printf("Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
+				debug_print(DEBUG_MAIN, 1, "Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
 			} else {
 				tmp = length + 1;
 				ast_container[index].object = realloc(ast_container[index].object, tmp * sizeof(struct ast_type_index_s));
 				ast_container[index].length = tmp;
-				printf("Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
+				debug_print(DEBUG_MAIN, 1, "Add object 0x%x to container 0x%x\n", ast_container[index].length - 1, index);
 			}
 			/* Create two containers. The loop_container, and inside the loop_container, the if_then_else */
 			ast_container[index].object[length].type = AST_TYPE_CONTAINER;
 			ast_container[index].object[length].index = container_index;
-			printf("ast_container[0x%x].object[0x%x] set to AST_TYPE_CONTAINER and index = 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "ast_container[0x%x].object[0x%x] set to AST_TYPE_CONTAINER and index = 0x%x\n",
 				index, length, container_index);
-			printf("JCD: container_index 0x%x, index 0x%x, length 0x%x  container_length 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "JCD: container_index 0x%x, index 0x%x, length 0x%x  container_length 0x%x\n",
 				container_index, index, length, ast_container[index].length);
 			ast_container[index + 1].object = malloc(sizeof(struct ast_type_index_s));
 			ast_container[index + 1].length = 1;
-			printf("Add object 0x%x to container 0x%x\n", ast_container[index + 1].length - 1, index + 1);
+			debug_print(DEBUG_MAIN, 1, "Add object 0x%x to container 0x%x\n", ast_container[index + 1].length - 1, index + 1);
 			ast_container[index + 1].object[0].type = AST_TYPE_IF_THEN_ELSE;
 			ast_container[index + 1].sub_type = 1;
 			ast_container[index + 1].object[0].index = if_then_else_index;
@@ -926,13 +955,13 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			ast_container[index + 1].parent.type = AST_TYPE_CONTAINER;
 			ast_container[index + 1].parent.index = index;
 			ast_container[index + 1].parent.offset = length; /* Point to the parent that points to us */
-			printf("ast_container[0x%x].object[0x%x] set to AST_TYPE_IF_THEN_ELSE and index = 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "ast_container[0x%x].object[0x%x] set to AST_TYPE_IF_THEN_ELSE and index = 0x%x\n",
 				index + 1, 0, if_then_else_index);
-			printf("ast_container[0x%x].parent set to AST_TYPE_CONTAINER, 0x%x, 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "ast_container[0x%x].parent set to AST_TYPE_CONTAINER, 0x%x, 0x%x\n",
 				index + 1, index, ast_container[index].length);
 			container_index++;
 			if (container_index >= AST_SIZE) { 
-				printf("container_index too large 2\n");
+				debug_print(DEBUG_MAIN, 1, "container_index too large 2\n");
 				ret = 1;
 				goto exit_cfg_to_ast;
 			}
@@ -949,7 +978,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			} else if (nodes[node].link_next[0].is_loop_edge) {
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_EMPTY;
 			} else {
-				printf("Creating loop_then container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating loop_then container 0x%x\n", container_index);
 				ast_if_then_else[if_then_else_index].if_then.type = AST_TYPE_CONTAINER;
 				ast_if_then_else[if_then_else_index].if_then.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -961,7 +990,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 3\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 3\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
@@ -974,7 +1003,7 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 			} else if (nodes[node].link_next[1].is_loop_edge) {
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_EMPTY;
 			} else {
-				printf("Creating loop_else container 0x%x\n", container_index);
+				debug_print(DEBUG_MAIN, 1, "Creating loop_else container 0x%x\n", container_index);
 				ast_if_then_else[if_then_else_index].if_else.type = AST_TYPE_CONTAINER;
 				ast_if_then_else[if_then_else_index].if_else.index = container_index;
 				tmp = find_empty_ast_entry(ast_entry, &tmp_entry);
@@ -986,17 +1015,17 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 				ast_entry[tmp_entry].node_end = nodes[node].if_tail;
 				container_index++;
 				if (container_index >= AST_SIZE) { 
-					printf("container_index too large 2\n");
+					debug_print(DEBUG_MAIN, 1, "container_index too large 2\n");
 					ret = 1;
 					goto exit_cfg_to_ast;
 				}
 			}
 			if (!is_member_of_loop(nodes, node, nodes[node].if_tail)) {
 //			if (nodes[node].if_tail == ast_entry[entry].node_end) {
-				printf("JCD: loop_container_node NOT 0x%x, 0x%x\n", node, nodes[node].if_tail);
+				debug_print(DEBUG_MAIN, 1, "JCD: loop_container_node NOT 0x%x, 0x%x\n", node, nodes[node].if_tail);
 				ast_entry[entry].type = AST_TYPE_EMPTY;
 			} else {
-				printf("JCD: loop_container_node = 0x%x\n", nodes[node].if_tail);
+				debug_print(DEBUG_MAIN, 1, "JCD: loop_container_node = 0x%x\n", nodes[node].if_tail);
 				ast_entry[entry].type = AST_TYPE_CONTAINER;
 				ast_entry[entry].sub_type = 1; /* for LOOP container */
 				ast_entry[entry].index = index + 1;
@@ -1010,33 +1039,33 @@ int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node
 
 			if_then_else_index++;
 			if (if_then_else_index >= AST_SIZE) {
-				printf("if_then_else_index too large\n");
+				debug_print(DEBUG_MAIN, 1, "if_then_else_index too large\n");
 				ret = 1;
 				goto exit_cfg_to_ast;
 			}
 #if 0
 			loop_container_index++;
 			if (loop_container_index >= AST_SIZE) {
-				printf("loop_container_index too large\n");
+				debug_print(DEBUG_MAIN, 1, "loop_container_index too large\n");
 				exit(1);
 			}
 #endif
 			break;
 		case AST_TYPE_LOOP_CONTAINER:
-			printf("UNHANDLED LOOP_CONTAINER = 0x%x\n", type);
+			debug_print(DEBUG_MAIN, 1, "UNHANDLED LOOP_CONTAINER = 0x%x\n", type);
 			break;
 		default:
-			printf("UNHANDLED type = 0x%x\n", type);
+			debug_print(DEBUG_MAIN, 1, "UNHANDLED type = 0x%x\n", type);
 			ast_entry[entry].type = AST_TYPE_EMPTY;
 			break;
 		}
 
-		printf("AFTER ast_entry entry = 0x%x\n", entry);
-		printf("ast_type = 0x%x\n", ast_entry[entry].type);
-		printf("ast_index = 0x%x\n", ast_entry[entry].index);
-		printf("ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
-		printf("ast_node = 0x%x\n", ast_entry[entry].node);
-		printf("ast_node_end = 0x%x\n", ast_entry[entry].node_end);
+		debug_print(DEBUG_MAIN, 1, "AFTER ast_entry entry = 0x%x\n", entry);
+		debug_print(DEBUG_MAIN, 1, "ast_type = 0x%x\n", ast_entry[entry].type);
+		debug_print(DEBUG_MAIN, 1, "ast_index = 0x%x\n", ast_entry[entry].index);
+		debug_print(DEBUG_MAIN, 1, "ast_sub_index = 0x%x\n", ast_entry[entry].sub_index);
+		debug_print(DEBUG_MAIN, 1, "ast_node = 0x%x\n", ast_entry[entry].node);
+		debug_print(DEBUG_MAIN, 1, "ast_node_end = 0x%x\n", ast_entry[entry].node_end);
 
 	} while(1);
 exit_cfg_to_ast:
@@ -1090,9 +1119,9 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	int m;
 	int tmp;
 
-	printf("AST OUTPUT\n");
+	debug_print(DEBUG_MAIN, 1, "AST OUTPUT\n");
 	for (m = 0; m < container_index; m++) {
-		printf("ast_container[%d]", m);
+		debug_print(DEBUG_MAIN, 1, "ast_container[%d]", m);
 		if (m >= AST_SIZE) {
 			break;
 		}
@@ -1100,7 +1129,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	}
 	for (m = 0; m < if_then_else_index; m++) {
 		int type;
-		printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+		debug_print(DEBUG_MAIN, 1, "parent = 0x%x, 0x%"PRIx64", 0x%x\n",
 			ast_if_then_else[m].parent.type,
 			ast_if_then_else[m].parent.index,
 			ast_if_then_else[m].parent.offset);
@@ -1110,61 +1139,61 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		type = ast_if_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if_then_else expression_node empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else expression_node empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if_then_else[%d].expression_node.type = 0x%x\n", m, ast_if_then_else[m].expression_node.type);
-			printf("ast_if_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].expression_node.index);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].expression_node.type = 0x%x\n", m, ast_if_then_else[m].expression_node.type);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].expression_node.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if_then_else[%d].expression_node\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].expression_node\n", m);
 			tmp = ast_if_then_else[m].expression_node.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if_then_else expression_node default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else expression_node default\n");
 			break;
 		}
 		type = ast_if_then_else[m].if_then.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if_then_else if_then empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else if_then empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if_then_else[%d].if_then.type = 0x%x\n", m, ast_if_then_else[m].if_then.type);
-			printf("ast_if_then_else[%d].if_then.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_then.index);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_then.type = 0x%x\n", m, ast_if_then_else[m].if_then.type);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_then.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_then.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if_then_else[%d].if_then\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_then\n", m);
 			tmp = ast_if_then_else[m].if_then.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if_then_else if_then default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else if_then default\n");
 			break;
 		}
 		type = ast_if_then_else[m].if_else.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if_then_else if_else empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else if_else empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if_then_else[%d].if_else.type = 0x%x\n", m, ast_if_then_else[m].if_else.type);
-			printf("ast_if_then_else[%d].if_else.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_else.index);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_else.type = 0x%x\n", m, ast_if_then_else[m].if_else.type);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_else.index = 0x%"PRIx64"\n", m, ast_if_then_else[m].if_else.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if_then_else[%d].if_else\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else[%d].if_else\n", m);
 			tmp = ast_if_then_else[m].if_else.index;
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if_then_else if_else default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_else if_else default\n");
 			break;
 		}
 	}
 	for (m = 0; m < if_then_goto_index; m++) {
 		int type;
-		printf("parent = 0x%x, 0x%"PRIx64", 0x%x\n",
+		debug_print(DEBUG_MAIN, 1, "parent = 0x%x, 0x%"PRIx64", 0x%x\n",
 			ast_if_then_goto[m].parent.type,
 			ast_if_then_goto[m].parent.index,
 			ast_if_then_goto[m].parent.offset);
@@ -1174,14 +1203,14 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		type = ast_if_then_goto[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if_then_goto expression_node empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto expression_node empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if_then_goto[%d].expression_node.type = 0x%x\n", m, ast_if_then_goto[m].expression_node.type);
-			printf("ast_if_then_goto[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if_then_goto[m].expression_node.index);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].expression_node.type = 0x%x\n", m, ast_if_then_goto[m].expression_node.type);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_if_then_goto[m].expression_node.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if_then_goto[%d].expression_node\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].expression_node\n", m);
 			tmp = ast_if_then_goto[m].expression_node.index;
 			if (tmp >= AST_SIZE) {
 				break;
@@ -1189,20 +1218,20 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if_then_goto expression_node default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto expression_node default\n");
 			break;
 		}
 		type = ast_if_then_goto[m].if_then_goto.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_if_then_goto if_then empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto if_then empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_if_then_goto[%d].if_then_goto.type = 0x%x\n", m, ast_if_then_goto[m].if_then_goto.type);
-			printf("ast_if_then_goto[%d].if_then_goto.index = 0x%"PRIx64"\n", m, ast_if_then_goto[m].if_then_goto.index);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].if_then_goto.type = 0x%x\n", m, ast_if_then_goto[m].if_then_goto.type);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].if_then_goto.index = 0x%"PRIx64"\n", m, ast_if_then_goto[m].if_then_goto.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_if_then_goto[%d].if_then_goto\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto[%d].if_then_goto\n", m);
 			tmp = ast_if_then_goto[m].if_then_goto.index;
 			if (tmp >= AST_SIZE) {
 				break;
@@ -1210,12 +1239,12 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_if_then_goto if_then_goto default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_if_then_goto if_then_goto default\n");
 			break;
 		}
 	}
 	for (m = 0; m < loop_index; m++) {
-		printf("ast_loop[%d].body\n", m);
+		debug_print(DEBUG_MAIN, 1, "ast_loop[%d].body\n", m);
 		if (m >= AST_SIZE) {
 			break;
 		}
@@ -1233,14 +1262,14 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 		type = ast_loop_then_else[m].expression_node.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_loop_then_else expression_node empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else expression_node empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_loop_then_else[%d].expression_node.type = 0x%x\n", m, ast_loop_then_else[m].expression_node.type);
-			printf("ast_loop_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].expression_node.index);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].expression_node.type = 0x%x\n", m, ast_loop_then_else[m].expression_node.type);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].expression_node.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].expression_node.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_loop_then_else[%d].expression_node\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].expression_node\n", m);
 			tmp = ast_loop_then_else[m].expression_node.index;
 			if (tmp >= AST_SIZE) {
 				break;
@@ -1248,20 +1277,20 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_loop_then_else expression_node default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else expression_node default\n");
 			break;
 		}
 		type = ast_loop_then_else[m].loop_then.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_loop_then_else loop_then empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else loop_then empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_loop_then_else[%d].loop_then.type = 0x%x\n", m, ast_loop_then_else[m].loop_then.type);
-			printf("ast_loop_then_else[%d].loop_then.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_then.index);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_then.type = 0x%x\n", m, ast_loop_then_else[m].loop_then.type);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_then.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_then.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_loop_then_else[%d].loop_then\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_then\n", m);
 			tmp = ast_loop_then_else[m].loop_then.index;
 			if (tmp >= AST_SIZE) {
 				break;
@@ -1269,20 +1298,20 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_loop_then_else loop_then default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else loop_then default\n");
 			break;
 		}
 		type = ast_loop_then_else[m].loop_else.type;
 		switch (type) {
 		case AST_TYPE_EMPTY:
-			printf("ast_loop_then_else loop_else empty\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else loop_else empty\n");
 			break;
 		case AST_TYPE_NODE:
-			printf("ast_loop_then_else[%d].loop_else.type = 0x%x\n", m, ast_loop_then_else[m].loop_else.type);
-			printf("ast_loop_then_else[%d].loop_else.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_else.index);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_else.type = 0x%x\n", m, ast_loop_then_else[m].loop_else.type);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_else.index = 0x%"PRIx64"\n", m, ast_loop_then_else[m].loop_else.index);
 			break;
 		case AST_TYPE_CONTAINER:
-			printf("ast_loop_then_else[%d].loop_else\n", m);
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else[%d].loop_else\n", m);
 			tmp = ast_loop_then_else[m].loop_else.index;
 			if (tmp >= AST_SIZE) {
 				break;
@@ -1290,7 +1319,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 			print_ast_container(&ast_container[tmp]);
 			break;
 		default:
-			printf("ast_loop_then_else loop_else default\n");
+			debug_print(DEBUG_MAIN, 1, "ast_loop_then_else loop_else default\n");
 			break;
 		}
 	}
@@ -1317,11 +1346,11 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 
 	fd = fopen(filename, "w");
 	if (!fd) {
-		printf("Failed to open file %s, error=%p\n", filename, fd);
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
 		return 1;
 	}
-	printf(".dot fd=%p\n", fd);
-	printf("writing out dot to file\n");
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
 	tmp = fprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
@@ -1434,11 +1463,11 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 
 	fd = fopen(filename, "w");
 	if (!fd) {
-		printf("Failed to open file %s, error=%p\n", filename, fd);
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
 		return 1;
 	}
-	printf(".dot fd=%p\n", fd);
-	printf("writing out dot to file\n");
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
 	tmp = fprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
@@ -1612,18 +1641,18 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_if_then_else[n].if_else.type) {
 		case AST_TYPE_NODE:
 			color = "red";
-			printf("if_then_else:0x%x TYPE_NODE \n", n);
+			debug_print(DEBUG_MAIN, 1, "if_then_else:0x%x TYPE_NODE \n", n);
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
-			printf("if_then_else:0x%x TYPE_CONTAINER \n", n);
+			debug_print(DEBUG_MAIN, 1, "if_then_else:0x%x TYPE_CONTAINER \n", n);
 			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
-			printf("if_then_else:0x%x TYPE 0x%x UNKNOWN \n", n, ast_if_then_else[n].if_else.type);
+			debug_print(DEBUG_MAIN, 1, "if_then_else:0x%x TYPE 0x%x UNKNOWN \n", n, ast_if_then_else[n].if_else.type);
 			break;
 		}
 	}
@@ -1829,10 +1858,12 @@ int main(int argc, char *argv[])
 	struct ast_s *ast;
 	int *section_number_mapping;
 
+	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
+
 	if (argc != 2) {
-		printf("Syntax error\n");
-		printf("Usage: dis64 filename\n");
-		printf("Where \"filename\" is the input .o file\n");
+		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
+		debug_print(DEBUG_MAIN, 1, "Usage: dis64 filename\n");
+		debug_print(DEBUG_MAIN, 1, "Where \"filename\" is the input .o file\n");
 		exit(1);
 	}
 	file = argv[1];
@@ -1841,27 +1872,27 @@ int main(int argc, char *argv[])
 
 	handle = bf_test_open_file(file);
 	if (!handle) {
-		printf("Failed to find or recognise file\n");
+		debug_print(DEBUG_MAIN, 1, "Failed to find or recognise file\n");
 		return 1;
 	}
 	tmp = bf_get_arch_mach(handle, &arch, &mach);
 	if ((arch != 9) ||
 		(mach != 8)) {
-		printf("File not the correct arch(0x%x) and mach(0x%"PRIx64")\n", arch, mach);
+		debug_print(DEBUG_MAIN, 1, "File not the correct arch(0x%x) and mach(0x%"PRIx64")\n", arch, mach);
 		return 1;
 	}
 
-	printf("symtab_size = %ld\n", handle->symtab_sz);
+	debug_print(DEBUG_MAIN, 1, "symtab_size = %ld\n", handle->symtab_sz);
 	for (l = 0; l < handle->symtab_sz; l++) {
-		printf("%d\n", l);
-		printf("type:0x%02x\n", handle->symtab[l]->flags);
-		printf("name:%s\n", handle->symtab[l]->name);
-		printf("value=0x%02"PRIx64"\n", handle->symtab[l]->value);
-		printf("section=%p\n", handle->symtab[l]->section);
-		printf("section name=%s\n", handle->symtab[l]->section->name);
-		printf("section flags=0x%02x\n", handle->symtab[l]->section->flags);
-		printf("section index=0x%02"PRIx32"\n", handle->symtab[l]->section->index);
-		printf("section id=0x%02"PRIx32"\n", handle->symtab[l]->section->id);
+		debug_print(DEBUG_MAIN, 1, "%d\n", l);
+		debug_print(DEBUG_MAIN, 1, "type:0x%02x\n", handle->symtab[l]->flags);
+		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->symtab[l]->name);
+		debug_print(DEBUG_MAIN, 1, "value=0x%02"PRIx64"\n", handle->symtab[l]->value);
+		debug_print(DEBUG_MAIN, 1, "section=%p\n", handle->symtab[l]->section);
+		debug_print(DEBUG_MAIN, 1, "section name=%s\n", handle->symtab[l]->section->name);
+		debug_print(DEBUG_MAIN, 1, "section flags=0x%02x\n", handle->symtab[l]->section->flags);
+		debug_print(DEBUG_MAIN, 1, "section index=0x%02"PRIx32"\n", handle->symtab[l]->section->index);
+		debug_print(DEBUG_MAIN, 1, "section id=0x%02"PRIx32"\n", handle->symtab[l]->section->id);
 	}
 
 	section_number_mapping = calloc(handle->section_sz, sizeof(int));
@@ -1879,56 +1910,56 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	printf("sectiontab_size = %ld\n", handle->section_sz);
+	debug_print(DEBUG_MAIN, 1, "sectiontab_size = %ld\n", handle->section_sz);
 	for (l = 0; l < handle->section_sz; l++) {
-		printf("%d\n", l);
-		printf("flags:0x%02x\n", handle->section[l]->flags);
-		printf("name:%s\n", handle->section[l]->name);
-		printf("index=0x%02"PRIx32"\n", handle->section[l]->index);
-		printf("id=0x%02"PRIx32"\n", handle->section[l]->id);
-		printf("sectio=%p\n", handle->section[l]);
-		printf("section_number_mapping=0x%x\n", section_number_mapping[l]);
+		debug_print(DEBUG_MAIN, 1, "%d\n", l);
+		debug_print(DEBUG_MAIN, 1, "flags:0x%02x\n", handle->section[l]->flags);
+		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->section[l]->name);
+		debug_print(DEBUG_MAIN, 1, "index=0x%02"PRIx32"\n", handle->section[l]->index);
+		debug_print(DEBUG_MAIN, 1, "id=0x%02"PRIx32"\n", handle->section[l]->id);
+		debug_print(DEBUG_MAIN, 1, "sectio=%p\n", handle->section[l]);
+		debug_print(DEBUG_MAIN, 1, "section_number_mapping=0x%x\n", section_number_mapping[l]);
 	}
 
-	printf("Setup ok\n");
+	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
 	inst_size = bf_get_code_size(handle);
 	inst = malloc(inst_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(inst, 0, inst_size);
 	bf_copy_code_section(handle, inst, inst_size);
-	printf("dis:.text Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
+	debug_print(DEBUG_MAIN, 1, "dis:.text Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
 	for (n = 0; n < inst_size; n++) {
-		printf(" 0x%02x", inst[n]);
+		debug_print(DEBUG_MAIN, 1,  "0x%02x", inst[n]);
 	}
-	printf("\n");
+	debug_print(DEBUG_MAIN, 1, "\n");
 
 	data_size = bf_get_data_size(handle);
 	data = malloc(data_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(data, 0, data_size);
 	bf_copy_data_section(handle, data, data_size);
-	printf("dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
+	debug_print(DEBUG_MAIN, 1, "dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
 	for (n = 0; n < data_size; n++) {
-		printf(" 0x%02x", data[n]);
+		debug_print(DEBUG_MAIN, 1,  "0x%02x", data[n]);
 	}
-	printf("\n");
+	debug_print(DEBUG_MAIN, 1, "\n");
 
 	rodata_size = bf_get_rodata_size(handle);
 	rodata = malloc(rodata_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(rodata, 0, rodata_size);
 	bf_copy_rodata_section(handle, rodata, rodata_size);
-	printf("dis:.rodata Data at %p, size=0x%"PRIx64"\n", rodata, rodata_size);
+	debug_print(DEBUG_MAIN, 1, "dis:.rodata Data at %p, size=0x%"PRIx64"\n", rodata, rodata_size);
 	for (n = 0; n < rodata_size; n++) {
-		printf(" 0x%02x", rodata[n]);
+		debug_print(DEBUG_MAIN, 1,  "0x%02x", rodata[n]);
 	}
-	printf("\n");
+	debug_print(DEBUG_MAIN, 1, "\n");
 
 	inst_log_entry = calloc(INST_LOG_ENTRY_SIZE, sizeof(struct inst_log_entry_s));
 	relocations =  calloc(RELOCATION_SIZE, sizeof(struct relocation_s));
 	external_entry_points = calloc(EXTERNAL_ENTRY_POINTS_MAX, sizeof(struct external_entry_point_s));
 	self = malloc(sizeof *self);
-	printf("sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
+	debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
 	self->section_number_mapping = section_number_mapping;
 	self->data_size = data_size;
 	self->data = data;
@@ -1948,16 +1979,16 @@ int main(int argc, char *argv[])
 	/* valgrind does not know about bf_copy_data_section */
 	memset(data, 0, data_size);
 	bf_copy_data_section(handle, data, data_size);
-	printf("dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
+	debug_print(DEBUG_MAIN, 1, "dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
 	for (n = 0; n < data_size; n++) {
-		printf(" 0x%02x", data[n]);
+		debug_print(DEBUG_MAIN, 1, " 0x%02x", data[n]);
 	}
-	printf("\n");
+	debug_print(DEBUG_MAIN, 1, "\n");
 
 	bf_get_reloc_table_code_section(handle);
-	printf("reloc_table_code_sz=0x%"PRIx64"\n", handle->reloc_table_code_sz);
+	debug_print(DEBUG_MAIN, 1, "reloc_table_code_sz=0x%"PRIx64"\n", handle->reloc_table_code_sz);
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
-		printf("reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
+		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_code[n].address,
 			handle->reloc_table_code[n].size,
 			handle->reloc_table_code[n].value,
@@ -1968,7 +1999,7 @@ int main(int argc, char *argv[])
 
 	bf_get_reloc_table_data_section(handle);
 	for (n = 0; n < handle->reloc_table_data_sz; n++) {
-		printf("reloc_table_data:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
+		debug_print(DEBUG_MAIN, 1, "reloc_table_data:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_data[n].address,
 			handle->reloc_table_data[n].size,
 			handle->reloc_table_data[n].value,
@@ -1978,7 +2009,7 @@ int main(int argc, char *argv[])
 	}
 	bf_get_reloc_table_rodata_section(handle);
 	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
-		printf("reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
+		debug_print(DEBUG_MAIN, 1, "reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_rodata[n].address,
 			handle->reloc_table_rodata[n].size,
 			handle->reloc_table_rodata[n].value,
@@ -1987,9 +2018,9 @@ int main(int argc, char *argv[])
 			handle->reloc_table_rodata[n].symbol_name);
 	}
 	
-	printf("handle=%p\n", handle);
+	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
 	
-	printf("handle=%p\n", handle);
+	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
 	init_disassemble_info(&disasm_info, stdout, (fprintf_ftype) fprintf);
 	disasm_info.flavour = bfd_get_flavour(handle->bfd);
 	disasm_info.arch = bfd_get_arch(handle->bfd);
@@ -2002,20 +2033,20 @@ int main(int argc, char *argv[])
 	disasm_info.buffer_length = inst_size;
 	disasm_info.buffer = inst;
 
-	printf("disassemble_fn\n");
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn\n");
 	disassemble_fn = disassembler(handle->bfd);
 	self->disassemble_fn = disassemble_fn;
-	printf("disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
 	dis_instructions.bytes_used = 0;
 	inst_exe = &inst_log_entry[0];
 
 	tmp = external_entry_points_init(external_entry_points, handle);
 	if (tmp) return 1;
 
-	printf("Number of functions = %d\n", n);
+	debug_print(DEBUG_MAIN, 1, "Number of functions = %d\n", n);
 	for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
 		if (external_entry_points[n].valid != 0) {
-		printf("%d: type = %d, sect_offset = %d, sect_id = %d, sect_index = %d, &%s() = 0x%04"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "%d: type = %d, sect_offset = %d, sect_id = %d, sect_index = %d, &%s() = 0x%04"PRIx64"\n",
 			n,
 			external_entry_points[n].type,
 			external_entry_points[n].section_offset,
@@ -2030,7 +2061,7 @@ int main(int argc, char *argv[])
 	if (tmp) return 1;
 
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
-		printf("reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", type = %d, function_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
+		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", type = %d, function_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_code[n].address,
 			handle->reloc_table_code[n].size,
 			handle->reloc_table_code[n].type,
@@ -2045,7 +2076,7 @@ int main(int argc, char *argv[])
 			struct process_state_s *process_state;
 			struct entry_point_s *entry_point = self->entry_point;
 			
-			printf("Start function block: %s:0x%"PRIx64"\n", external_entry_points[l].name, external_entry_points[l].value);	
+			debug_print(DEBUG_MAIN, 1, "Start function block: %s:0x%"PRIx64"\n", external_entry_points[l].name, external_entry_points[l].value);	
 			process_state = &external_entry_points[l].process_state;
 			memory_text = process_state->memory_text;
 			memory_stack = process_state->memory_stack;
@@ -2073,7 +2104,7 @@ int main(int argc, char *argv[])
 				for (n = 0; n < self->entry_point_list_length; n++ ) {
 					/* EIP is a parameter for process_block */
 					/* Update EIP */
-					//printf("entry:%d\n",n);
+					//debug_print(DEBUG_MAIN, 1, "entry:%d\n",n);
 					if (entry_point[n].used) {
 						memory_reg[0].init_value = entry_point[n].esp_init_value;
 						memory_reg[0].offset_value = entry_point[n].esp_offset_value;
@@ -2083,33 +2114,33 @@ int main(int argc, char *argv[])
 						memory_reg[2].offset_value = entry_point[n].eip_offset_value;
 						inst_log_prev = entry_point[n].previous_instuction;
 						not_finished = 1;
-						printf ("LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
-						printf ("LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
+						debug_print(DEBUG_MAIN, 1, "LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
+						debug_print(DEBUG_MAIN, 1, "LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
 						err = process_block(self, process_state, handle, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
 						entry_point[n].used = 0;
 						if (err) {
-							printf("process_block failed\n");
+							debug_print(DEBUG_MAIN, 1, "process_block failed\n");
 							return err;
 						}
 					}
 				}
 			} while (not_finished);	
 			external_entry_points[l].inst_log_end = inst_log - 1;
-			printf ("LOGS: inst_log_end = 0x%"PRIx64"\n", inst_log);
+			debug_print(DEBUG_MAIN, 1, "LOGS: inst_log_end = 0x%"PRIx64"\n", inst_log);
 		}
 	}
 /*
 	if (entry_point_list_length > 0) {
 		for (n = 0; n < entry_point_list_length; n++ ) {
-			printf("eip = 0x%"PRIx64", prev_inst = 0x%"PRIx64"\n",
+			debug_print(DEBUG_MAIN, 1, "eip = 0x%"PRIx64", prev_inst = 0x%"PRIx64"\n",
 				entry_point[n].eip_offset_value,
 				entry_point[n].previous_instuction);
 		}
 	}
 */
 	//inst_log--;
-	printf("Instructions=%"PRId64", entry_point_list_length=%"PRId64"\n",
+	debug_print(DEBUG_MAIN, 1, "Instructions=%"PRId64", entry_point_list_length=%"PRId64"\n",
 		inst_log,
 		self->entry_point_list_length);
 
@@ -2162,7 +2193,7 @@ int main(int argc, char *argv[])
 //			nodes[external_entry_points[l].start_node].entry_point = l + 1;
 //		}
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
-			printf("Starting external entry point %d:%s\n", l, external_entry_points[l].name);
+			debug_print(DEBUG_MAIN, 1, "Starting external entry point %d:%s\n", l, external_entry_points[l].name);
 			int paths_used = 0;
 			int loops_used = 0;
 			int *multi_ret = NULL;
@@ -2184,19 +2215,19 @@ int main(int argc, char *argv[])
 
 			tmp = build_control_flow_paths(self, nodes, &nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
-			printf("tmp = %d, PATHS used = %d\n", tmp, paths_used);
+			debug_print(DEBUG_MAIN, 1, "tmp = %d, PATHS used = %d\n", tmp, paths_used);
 			tmp = analyse_multi_ret(self, paths, &paths_size, &multi_ret_size, &multi_ret);
 			if (multi_ret_size) {
-				printf("tmp = %d, multi_ret_size = %d\n", tmp, multi_ret_size);
+				debug_print(DEBUG_MAIN, 1, "tmp = %d, multi_ret_size = %d\n", tmp, multi_ret_size);
 				for (m = 0; m < multi_ret_size; m++) {
-					printf("multi_ret: node 0x%x\n", multi_ret[m]);
+					debug_print(DEBUG_MAIN, 1, "multi_ret: node 0x%x\n", multi_ret[m]);
 				}
 				if (multi_ret_size == 2) {
 					tmp = analyse_merge_nodes(self, nodes, &nodes_size, multi_ret[0], multi_ret[1]);
 					tmp = build_control_flow_paths(self, nodes, &nodes_size,
 						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 				} else if (multi_ret_size > 2) {
-					printf("multi_ret_size > 2 not yet handled\n");
+					debug_print(DEBUG_MAIN, 1, "multi_ret_size > 2 not yet handled\n");
 					exit(1);
 				}
 			}
@@ -2227,7 +2258,7 @@ int main(int argc, char *argv[])
 					loops_used = n + 1;
 				}
 			}
-			printf("loops_used = 0x%x\n", loops_used);
+			debug_print(DEBUG_MAIN, 1, "loops_used = 0x%x\n", loops_used);
 			external_entry_points[l].loops_size = loops_used;
 			external_entry_points[l].loops = calloc(loops_used, sizeof(struct loop_s));
 			for (n = 0; n < loops_used; n++) {
@@ -2247,7 +2278,7 @@ int main(int argc, char *argv[])
 	tmp = build_node_type(self, nodes, &nodes_size);
 	//tmp = build_control_flow_depth(self, nodes, &nodes_size,
 	//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
-	//printf("Merge: 0x%x\n", nodes_size);
+	//debug_print(DEBUG_MAIN, 1, "Merge: 0x%x\n", nodes_size);
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
 			tmp = build_control_flow_loops_multi_exit(self, nodes, nodes_size,
@@ -2261,7 +2292,7 @@ int main(int argc, char *argv[])
 	for (n = 0; n < nodes_size; n++) {
 		if ((nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
 			(nodes[n].if_tail == 0)) {
-			printf("FAILED: Node 0x%x with no if_tail\n", n);
+			debug_print(DEBUG_MAIN, 1, "FAILED: Node 0x%x with no if_tail\n", n);
 		}
 	}
 
@@ -2271,7 +2302,7 @@ int main(int argc, char *argv[])
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
 			tmp = external_entry_points[l].start_node;
-			printf("External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, tmp);
+			debug_print(DEBUG_MAIN, 1, "External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, tmp);
 			tmp = print_control_flow_paths(self, external_entry_points[l].paths, &(external_entry_points[l].paths_size));
 			tmp = print_control_flow_loops(self, external_entry_points[l].loops, &(external_entry_points[l].loops_size));
 		}
@@ -2289,7 +2320,7 @@ int main(int argc, char *argv[])
 
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			/* Control flow graph to Abstract syntax tree */
-			printf("cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
+			debug_print(DEBUG_MAIN, 1, "cfg_to_ast. external entry point %d:%s\n", l, external_entry_points[l].name);
 			external_entry_points[l].start_ast_container = ast->container_size;
 			tmp = cfg_to_ast(self, nodes, &nodes_size, ast, external_entry_points[l].start_node);
 			tmp = print_ast(self, ast);
@@ -2308,7 +2339,7 @@ int main(int argc, char *argv[])
 			struct entry_point_s *entry_point = self->entry_point;
 
 			if (entry_point[n].used) {
-				printf("%d, eip = 0x%"PRIx64", prev_inst = 0x%"PRIx64"\n",
+				debug_print(DEBUG_MAIN, 1, "%d, eip = 0x%"PRIx64", prev_inst = 0x%"PRIx64"\n",
 					entry_point[n].used,
 					entry_point[n].eip_offset_value,
 					entry_point[n].previous_instuction);
@@ -2319,11 +2350,11 @@ int main(int argc, char *argv[])
 	 * This section deals with correcting SSA for branches/joins.
 	 * This bit creates the labels table, ready for the next step.
 	 ************************************************************/
-	printf("Number of labels = 0x%x\n", self->local_counter);
+	debug_print(DEBUG_MAIN, 1, "Number of labels = 0x%x\n", self->local_counter);
 	/* FIXME: +1 added as a result of running valgrind, but need a proper fix */
 	label_redirect = calloc(self->local_counter + 1, sizeof(struct label_redirect_s));
 	labels = calloc(self->local_counter + 1, sizeof(struct label_s));
-	printf("JCD6: self->local_counter=%d\n", self->local_counter);
+	debug_print(DEBUG_MAIN, 1, "JCD6: self->local_counter=%d\n", self->local_counter);
 	labels[0].lab_pointer = 1; /* EIP */
 	labels[1].lab_pointer = 1; /* ESP */
 	labels[2].lab_pointer = 1; /* EBP */
@@ -2336,7 +2367,7 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		printf("value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
@@ -2370,7 +2401,7 @@ int main(int argc, char *argv[])
 				value_id3 = inst_log1->value3.value_id;
 			}
 			if (value_id3 > self->local_counter) {
-				printf("SSA Failed at inst_log 0x%x\n", n);
+				debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
 			memset(&label, 0, sizeof(struct label_s));
@@ -2384,7 +2415,7 @@ int main(int argc, char *argv[])
 				inst_log1->value3.indirect_value_id,
 				&label);
 			if (tmp) {
-				printf("Inst:0x, value3 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
 			}
 			if (!tmp && value_id3 > 0) {
 				label_redirect[value_id3].redirect = value_id3;
@@ -2400,7 +2431,7 @@ int main(int argc, char *argv[])
 				value_id = inst_log1->value1.value_id;
 			}
 			if (value_id > self->local_counter) {
-				printf("SSA Failed at inst_log 0x%x\n", n);
+				debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
 			memset(&label, 0, sizeof(struct label_s));
@@ -2414,7 +2445,7 @@ int main(int argc, char *argv[])
 				inst_log1->value1.indirect_value_id,
 				&label);
 			if (tmp) {
-				printf("Inst:0x, value1 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
 			}
 			if (!tmp && value_id > 0) {
 				label_redirect[value_id].redirect = value_id;
@@ -2434,7 +2465,7 @@ int main(int argc, char *argv[])
 				value_id2 = inst_log1->value2.value_id;
 			}
 			if (value_id2 > self->local_counter) {
-				printf("SSA Failed at inst_log 0x%x\n", n);
+				debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
 			memset(&label, 0, sizeof(struct label_s));
@@ -2448,7 +2479,7 @@ int main(int argc, char *argv[])
 				inst_log1->value2.indirect_value_id,
 				&label);
 			if (tmp) {
-				printf("Inst:0x, value3 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
 			}
 			if (!tmp && value_id2 > 0) {
 				label_redirect[value_id2].redirect = value_id2;
@@ -2464,7 +2495,7 @@ int main(int argc, char *argv[])
 				value_id = inst_log1->value1.value_id;
 			}
 			if (value_id > self->local_counter) {
-				printf("SSA Failed at inst_log 0x%x\n", n);
+				debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
 			memset(&label, 0, sizeof(struct label_s));
@@ -2478,7 +2509,7 @@ int main(int argc, char *argv[])
 				inst_log1->value1.indirect_value_id,
 				&label);
 			if (tmp) {
-				printf("Inst:0x, value1 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
 			}
 			if (!tmp && value_id > 0) {
 				label_redirect[value_id].redirect = value_id;
@@ -2490,14 +2521,14 @@ int main(int argc, char *argv[])
 			break;
 
 		case CALL:
-			printf("SSA CALL inst_log 0x%x\n", n);
+			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
 			if (IND_MEM == instruction->dstA.indirect) {
 				value_id = inst_log1->value3.indirect_value_id;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
 			if (value_id > self->local_counter) {
-				printf("SSA Failed at inst_log 0x%x\n", n);
+				debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 				return 1;
 			}
 			memset(&label, 0, sizeof(struct label_s));
@@ -2511,7 +2542,7 @@ int main(int argc, char *argv[])
 				inst_log1->value3.indirect_value_id,
 				&label);
 			if (tmp) {
-				printf("Inst:0x, value3 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
 			}
 			if (!tmp && value_id > 0) {
 				label_redirect[value_id].redirect = value_id;
@@ -2524,7 +2555,7 @@ int main(int argc, char *argv[])
 			if (IND_MEM == instruction->srcA.indirect) {
 				value_id = inst_log1->value1.indirect_value_id;
 				if (value_id > self->local_counter) {
-					printf("SSA Failed at inst_log 0x%x\n", n);
+					debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 					return 1;
 				}
 				memset(&label, 0, sizeof(struct label_s));
@@ -2538,7 +2569,7 @@ int main(int argc, char *argv[])
 					inst_log1->value1.indirect_value_id,
 					&label);
 				if (tmp) {
-					printf("Inst:0x, value1 unknown label %x\n", n);
+					debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
 				}
 				if (!tmp && value_id > 0) {
 					label_redirect[value_id].redirect = value_id;
@@ -2555,13 +2586,13 @@ int main(int argc, char *argv[])
 		case JMPT:
 			break;
 		default:
-			printf("SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
+			debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
 			return 1;
 			break;
 		}
 	}
 	for (n = 0; n < self->local_counter; n++) {
-		printf("labels 0x%x: redirect=0x%"PRIx64", scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", value=0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "labels 0x%x: redirect=0x%"PRIx64", scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", value=0x%"PRIx64"\n",
 			n, label_redirect[n].redirect, labels[n].scope, labels[n].type, labels[n].lab_pointer, labels[n].value);
 	}
 	
@@ -2599,9 +2630,9 @@ int main(int argc, char *argv[])
 			value_id = label_redirect[value_id1].redirect;
 			if ((1 == labels[value_id].scope) &&
 				(1 == labels[value_id].type)) {
-				printf("Found local_reg Inst:0x%x:value_id:0x%"PRIx64"\n", n, value_id1);
+				debug_print(DEBUG_MAIN, 1, "Found local_reg Inst:0x%x:value_id:0x%"PRIx64"\n", n, value_id1);
 				if (0 == inst_log1->prev_size) {
-					printf("search_back ended\n");
+					debug_print(DEBUG_MAIN, 1, "search_back ended\n");
 					return 1;
 				}
 				if (0 < inst_log1->prev_size) {
@@ -2610,16 +2641,16 @@ int main(int argc, char *argv[])
 					for (l = 0; l < inst_log1->prev_size; l++) {
 						mid_start[l].mid_start = inst_log1->prev[l];
 						mid_start[l].valid = 1;
-						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
+						debug_print(DEBUG_MAIN, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
 				}
 				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, inst_log1->instruction.srcA.index, 0, &size, self->search_back_seen, &inst_list);
 				if (tmp) {
-					printf("SSA search_back Failed at inst_log 0x%x\n", n);
+					debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
 					return 1;
 				}
 			}
-			printf("SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
+			debug_print(DEBUG_MAIN, 1, "SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
 			/* Renaming is only needed if there are more than one label present */
 			if (size > 0) {
 				uint64_t value_id_highest = value_id;
@@ -2636,9 +2667,9 @@ int main(int argc, char *argv[])
 					if (label_redirect[inst_log_l->value3.value_id].redirect > value_id_highest) {
 						value_id_highest = label_redirect[inst_log_l->value3.value_id].redirect;
 					}
-					printf("rel inst:0x%"PRIx64"\n", inst_list[l]);
+					debug_print(DEBUG_MAIN, 1, "rel inst:0x%"PRIx64"\n", inst_list[l]);
 				}
-				printf("Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
+				debug_print(DEBUG_MAIN, 1, "Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
 					label_redirect[value_id1].redirect,
 					value_id_highest);
 				label_redirect[value_id1].redirect =
@@ -2646,7 +2677,7 @@ int main(int argc, char *argv[])
 				for (l = 0; l < size; l++) {
 					struct inst_log_entry_s *inst_log_l;
 					inst_log_l = &inst_log_entry[inst_list[l]];
-					printf("Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
+					debug_print(DEBUG_MAIN, 1, "Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
 						label_redirect[inst_log_l->value3.value_id].redirect,
 						value_id_highest);
 					label_redirect[inst_log_l->value3.value_id].redirect =
@@ -2677,7 +2708,7 @@ int main(int argc, char *argv[])
 		value_id1 = inst_log1->value1.value_id;
 		
 		if (value_id1 > self->local_counter) {
-			printf("SSA Failed at inst_log 0x%x\n", n);
+			debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 			return 1;
 		}
 		switch (instruction->opcode) {
@@ -2703,9 +2734,9 @@ int main(int argc, char *argv[])
 			value_id = label_redirect[value_id1].redirect;
 			if ((1 == labels[value_id].scope) &&
 				(2 == labels[value_id].type)) {
-				printf("Found local_stack Inst:0x%x:value_id:0x%"PRIx64"\n", n, value_id1);
+				debug_print(DEBUG_MAIN, 1, "Found local_stack Inst:0x%x:value_id:0x%"PRIx64"\n", n, value_id1);
 				if (0 == inst_log1->prev_size) {
-					printf("search_back ended\n");
+					debug_print(DEBUG_MAIN, 1, "search_back ended\n");
 					return 1;
 				}
 				if (0 < inst_log1->prev_size) {
@@ -2714,16 +2745,16 @@ int main(int argc, char *argv[])
 					for (l = 0; l < inst_log1->prev_size; l++) {
 						mid_start[l].mid_start = inst_log1->prev[l];
 						mid_start[l].valid = 1;
-						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
+						debug_print(DEBUG_MAIN, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
 				}
 				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.indirect_init_value, inst_log1->value1.indirect_offset_value, &size, self->search_back_seen, &inst_list);
 				if (tmp) {
-					printf("SSA search_back Failed at inst_log 0x%x\n", n);
+					debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
 					return 1;
 				}
 			}
-			printf("SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
+			debug_print(DEBUG_MAIN, 1, "SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
 			/* Renaming is only needed if there are more than one label present */
 			if (size > 0) {
 				uint64_t value_id_highest = value_id;
@@ -2740,9 +2771,9 @@ int main(int argc, char *argv[])
 					if (label_redirect[inst_log_l->value3.value_id].redirect > value_id_highest) {
 						value_id_highest = label_redirect[inst_log_l->value3.value_id].redirect;
 					}
-					printf("rel inst:0x%"PRIx64"\n", inst_list[l]);
+					debug_print(DEBUG_MAIN, 1, "rel inst:0x%"PRIx64"\n", inst_list[l]);
 				}
-				printf("Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
+				debug_print(DEBUG_MAIN, 1, "Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
 					label_redirect[value_id1].redirect,
 					value_id_highest);
 				label_redirect[value_id1].redirect =
@@ -2750,7 +2781,7 @@ int main(int argc, char *argv[])
 				for (l = 0; l < size; l++) {
 					struct inst_log_entry_s *inst_log_l;
 					inst_log_l = &inst_log_entry[inst_list[l]];
-					printf("Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
+					debug_print(DEBUG_MAIN, 1, "Renaming label 0x%"PRIx64" to 0x%"PRIx64"\n",
 						label_redirect[inst_log_l->value3.value_id].redirect,
 						value_id_highest);
 					label_redirect[inst_log_l->value3.value_id].redirect =
@@ -2764,11 +2795,11 @@ int main(int argc, char *argv[])
 		case JMPT:
 			break;
 		case CALL:
-			//printf("SSA2 failed for inst:0x%x, CALL\n", n);
+			//debug_print(DEBUG_MAIN, 1, "SSA2 failed for inst:0x%x, CALL\n", n);
 			//return 1;
 			break;
 		default:
-			printf("SSA2 failed for inst:0x%x, OP 0x%x\n", n, instruction->opcode);
+			debug_print(DEBUG_MAIN, 1, "SSA2 failed for inst:0x%x, OP 0x%x\n", n, instruction->opcode);
 			return 1;
 			break;
 		/* FIXME: TODO */
@@ -2782,20 +2813,20 @@ int main(int argc, char *argv[])
 	for (n = 0; n < (self->local_counter - 1); n++) {
 		int tmp1;
 		tmp1 = label_redirect[n].redirect;
-		printf("param_reg:scanning base label 0x%x\n", n);
+		debug_print(DEBUG_MAIN, 1, "param_reg:scanning base label 0x%x\n", n);
 		if ((tmp1 == n) &&
 			(labels[tmp1].scope == 2) &&
 			(labels[tmp1].type == 1)) {
 			int tmp2;
 			/* This is a param_stack */
 			for (l = n + 1; l < self->local_counter; l++) {
-				printf("param_reg:scanning label 0x%x\n", l);
+				debug_print(DEBUG_MAIN, 1, "param_reg:scanning label 0x%x\n", l);
 				tmp2 = label_redirect[l].redirect;
 				if ((tmp2 == n) &&
 					(labels[tmp2].scope == 2) &&
 					(labels[tmp2].type == 1) &&
 					(labels[tmp1].value == labels[tmp2].value) ) {
-					printf("param_stack:found duplicate\n");
+					debug_print(DEBUG_MAIN, 1, "param_stack:found duplicate\n");
 					label_redirect[l].redirect = n;
 				}
 			}
@@ -2816,14 +2847,14 @@ int main(int argc, char *argv[])
 				label_redirect,
 				labels);
 		if (tmp) {
-			printf("Unhandled scan instruction 0x%x\n", l);
+			debug_print(DEBUG_MAIN, 1, "Unhandled scan instruction 0x%x\n", l);
 			return 1;
 		}
 
 		/* Expected param order: %rdi, %rsi, %rdx, %rcx, %r08, %r09 
 		                         0x40, 0x38, 0x18, 0x10, 0x50, 0x58, then stack */
 		
-		printf("scanned: params = 0x%x, locals = 0x%x\n",
+		debug_print(DEBUG_MAIN, 1, "scanned: params = 0x%x, locals = 0x%x\n",
 			external_entry_points[l].params_size,
 			external_entry_points[l].locals_size);
 		}
@@ -2838,24 +2869,24 @@ int main(int argc, char *argv[])
 			for (n = 0; n < external_entry_points[l].params_size; n++) {
 				uint64_t tmp_param;
 				tmp = external_entry_points[l].params[n];
-				printf("JCD5: labels 0x%x, params_size=%d\n", tmp, external_entry_points[l].params_size);
+				debug_print(DEBUG_MAIN, 1, "JCD5: labels 0x%x, params_size=%d\n", tmp, external_entry_points[l].params_size);
 				if (tmp >= self->local_counter) {
-					printf("Invalid entry point 0x%x, l=%d, m=%d, n=%d, params_size=%d\n",
+					debug_print(DEBUG_MAIN, 1, "Invalid entry point 0x%x, l=%d, m=%d, n=%d, params_size=%d\n",
 						tmp, l, m, n, external_entry_points[l].params_size);
 					return 0;
 				}
 				label = &labels[tmp];
-				printf("JCD5: labels 0x%x\n", external_entry_points[l].params[n]);
-				printf("JCD5: label=%p, l=%d, m=%d, n=%d\n", label, l, m, n);
-				printf("reg_params_order = 0x%x,", reg_params_order[m]);
-				printf(" label->value = 0x%"PRIx64"\n", label->value);
+				debug_print(DEBUG_MAIN, 1, "JCD5: labels 0x%x\n", external_entry_points[l].params[n]);
+				debug_print(DEBUG_MAIN, 1, "JCD5: label=%p, l=%d, m=%d, n=%d\n", label, l, m, n);
+				debug_print(DEBUG_MAIN, 1, "reg_params_order = 0x%x,", reg_params_order[m]);
+				debug_print(DEBUG_MAIN, 1, " label->value = 0x%"PRIx64"\n", label->value);
 				if ((label->scope == 2) &&
 					(label->type == 1) &&
 					(label->value == reg_params_order[m])) {
 					/* Swap params */
 					/* FIXME: How to handle the case of params_size <= n or m */
 					if (n != m) {
-						printf("JCD4: swapping n=0x%x and m=0x%x\n", n, m);
+						debug_print(DEBUG_MAIN, 1, "JCD4: swapping n=0x%x and m=0x%x\n", n, m);
 						tmp = external_entry_points[l].params_size;
 						if ((m >= tmp || n >= tmp)) { 
 							external_entry_points[l].params_size++;
@@ -2903,12 +2934,12 @@ int main(int argc, char *argv[])
 		value_id1 = inst_log1->value1.value_id;
 		
 		if (value_id1 > self->local_counter) {
-			printf("PARAM Failed at inst_log 0x%x\n", n);
+			debug_print(DEBUG_MAIN, 1, "PARAM Failed at inst_log 0x%x\n", n);
 			return 1;
 		}
 		switch (instruction->opcode) {
 		case CALL:
-			printf("PRINTING INST CALL\n");
+			debug_print(DEBUG_MAIN, 1, "PRINTING INST CALL\n");
 			tmp = print_inst(self, instruction, n, labels);
 			external_entry_point = &external_entry_points[instruction->srcA.index];
 			inst_log1->extension = calloc(1, sizeof(struct extension_call_s));
@@ -2917,15 +2948,15 @@ int main(int argc, char *argv[])
 			/* FIXME: use struct in sizeof bit here */
 			call->params = calloc(call->params_size, sizeof(int *));
 			if (!call) {
-				printf("PARAM failed for inst:0x%x, CALL. Out of memory\n", n);
+				debug_print(DEBUG_MAIN, 1, "PARAM failed for inst:0x%x, CALL. Out of memory\n", n);
 				return 1;
 			}
-			printf("PARAM:call size=%x\n", call->params_size);
-			printf("PARAM:params size=%x\n", external_entry_point->params_size);
+			debug_print(DEBUG_MAIN, 1, "PARAM:call size=%x\n", call->params_size);
+			debug_print(DEBUG_MAIN, 1, "PARAM:params size=%x\n", external_entry_point->params_size);
 			for (m = 0; m < external_entry_point->params_size; m++) {
 				label = &labels[external_entry_point->params[m]];
 				if (0 == inst_log1->prev_size) {
-					printf("search_back ended\n");
+					debug_print(DEBUG_MAIN, 1, "search_back ended\n");
 					return 1;
 				}
 				if (0 < inst_log1->prev_size) {
@@ -2934,31 +2965,31 @@ int main(int argc, char *argv[])
 					for (l = 0; l < inst_log1->prev_size; l++) {
 						mid_start[l].mid_start = inst_log1->prev[l];
 						mid_start[l].valid = 1;
-						printf("mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
+						debug_print(DEBUG_MAIN, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
 				}
 				/* param_regXXX */
 				if ((2 == label->scope) &&
 					(1 == label->type)) {
-					printf("PARAM: Searching for REG0x%"PRIx64":0x%"PRIx64" + label->value(0x%"PRIx64")\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
+					debug_print(DEBUG_MAIN, 1, "PARAM: Searching for REG0x%"PRIx64":0x%"PRIx64" + label->value(0x%"PRIx64")\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
 					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, label->value, 0, &size, self->search_back_seen, &inst_list);
-					printf("search_backJCD1: tmp = %d\n", tmp);
+					debug_print(DEBUG_MAIN, 1, "search_backJCD1: tmp = %d\n", tmp);
 				} else {
 				/* param_stackXXX */
 				/* SP value held in value1 */
-					printf("PARAM: Searching for SP(0x%"PRIx64":0x%"PRIx64") + label->value(0x%"PRIx64") - 8\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
+					debug_print(DEBUG_MAIN, 1, "PARAM: Searching for SP(0x%"PRIx64":0x%"PRIx64") + label->value(0x%"PRIx64") - 8\n", inst_log1->value1.init_value, inst_log1->value1.offset_value, label->value);
 					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.init_value, inst_log1->value1.offset_value + label->value - 8, &size, self->search_back_seen, &inst_list);
 				/* FIXME: Some renaming of local vars will also be needed if size > 1 */
 				}
 				if (tmp) {
-					printf("PARAM search_back Failed at inst_log 0x%x\n", n);
+					debug_print(DEBUG_MAIN, 1, "PARAM search_back Failed at inst_log 0x%x\n", n);
 					return 1;
 				}
 				tmp = output_label(label, stdout);
 				tmp = fprintf(stdout, ");\n");
 				tmp = fprintf(stdout, "PARAM size = 0x%"PRIx64"\n", size);
 				if (size > 1) {
-					printf("number of param locals (0x%"PRIx64") found too big at instruction 0x%x\n", size, n);
+					debug_print(DEBUG_MAIN, 1, "number of param locals (0x%"PRIx64") found too big at instruction 0x%x\n", size, n);
 //					return 1;
 //					break;
 				}
@@ -2968,12 +2999,12 @@ int main(int argc, char *argv[])
 						inst_log_l = &inst_log_entry[inst_list[l]];
 						call->params[m] = inst_log_l->value3.value_id;
 						// FIXME: Check next line. Force value type to unknown.
-						printf("JCD3: Setting value_type to 0, was 0x%x\n", inst_log_l->value3.value_type);
+						debug_print(DEBUG_MAIN, 1, "JCD3: Setting value_type to 0, was 0x%x\n", inst_log_l->value3.value_type);
 						if (6 == inst_log_l->value3.value_type) {	
 							inst_log_l->value1.value_type = 3;
 							inst_log_l->value3.value_type = 3;
 						}
-						printf("JCD1: Param = 0x%"PRIx64", inst_list[0x%x] = 0x%"PRIx64"\n",
+						debug_print(DEBUG_MAIN, 1, "JCD1: Param = 0x%"PRIx64", inst_list[0x%x] = 0x%"PRIx64"\n",
 
 							inst_log_l->value3.value_id,
 							l,
@@ -2984,7 +3015,7 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
-			//printf("SSA2 failed for inst:0x%x, CALL\n", n);
+			//debug_print(DEBUG_MAIN, 1, "SSA2 failed for inst:0x%x, CALL\n", n);
 			//return 1;
 			break;
 
@@ -3008,7 +3039,7 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		printf("value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
@@ -3036,7 +3067,7 @@ int main(int argc, char *argv[])
 				labels[value_id3].lab_pointer += labels[value_id].lab_pointer;
 				labels[value_id].lab_pointer = labels[value_id3].lab_pointer;
 			}
-			printf("JCD4: value_id = 0x%"PRIx64", lab_pointer = 0x%"PRIx64", value_id3 = 0x%"PRIx64", lab_pointer = 0x%"PRIx64"\n",
+			debug_print(DEBUG_MAIN, 1, "JCD4: value_id = 0x%"PRIx64", lab_pointer = 0x%"PRIx64", value_id3 = 0x%"PRIx64", lab_pointer = 0x%"PRIx64"\n",
 				value_id, labels[value_id].lab_pointer, value_id3, labels[value_id3].lab_pointer);
 			break;
 
@@ -3055,7 +3086,7 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		printf("value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
@@ -3083,7 +3114,7 @@ int main(int argc, char *argv[])
 				labels[value_id3].lab_pointer += labels[value_id].lab_pointer;
 				labels[value_id].lab_pointer = labels[value_id3].lab_pointer;
 			}
-			printf("JCD4: value_id = 0x%"PRIx64", lab_pointer = 0x%"PRIx64", value_id3 = 0x%"PRIx64", lab_pointer = 0x%"PRIx64"\n",
+			debug_print(DEBUG_MAIN, 1, "JCD4: value_id = 0x%"PRIx64", lab_pointer = 0x%"PRIx64", value_id3 = 0x%"PRIx64", lab_pointer = 0x%"PRIx64"\n",
 				value_id, labels[value_id].lab_pointer, value_id3, labels[value_id3].lab_pointer);
 			break;
 
@@ -3099,32 +3130,32 @@ int main(int argc, char *argv[])
 	filename = "test.c";
 	fd = fopen(filename, "w");
 	if (!fd) {
-		printf("Failed to open file %s, error=%p\n", filename, fd);
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
 		return 1;
 	}
-	printf(".c fd=%p\n", fd);
-	printf("writing out to file\n");
+	debug_print(DEBUG_MAIN, 1, ".c fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, "writing out to file\n");
 	tmp = fprintf(fd, "#include <stdint.h>\n\n");
-	printf("\nPRINTING MEMORY_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "\nPRINTING MEMORY_DATA\n");
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		struct process_state_s *process_state;
 		if (external_entry_points[l].valid) {
 			process_state = &external_entry_points[l].process_state;
 			memory_data = process_state->memory_data;
 			for (n = 0; n < 4; n++) {
-				printf("memory_data:0x%x: 0x%"PRIx64"\n", n, memory_data[n].valid);
+				debug_print(DEBUG_MAIN, 1, "memory_data:0x%x: 0x%"PRIx64"\n", n, memory_data[n].valid);
 				if (memory_data[n].valid) {
 	
 					tmp = relocated_data(handle, memory_data[n].start_address, 4);
 					if (tmp) {
-						printf("int *data%04"PRIx64" = &data%04"PRIx64"\n",
+						debug_print(DEBUG_MAIN, 1, "int *data%04"PRIx64" = &data%04"PRIx64"\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
 						tmp = fprintf(fd, "int *data%04"PRIx64" = &data%04"PRIx64";\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
 					} else {
-						printf("int data%04"PRIx64" = 0x%04"PRIx64"\n",
+						debug_print(DEBUG_MAIN, 1, "int data%04"PRIx64" = 0x%04"PRIx64"\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
 						tmp = fprintf(fd, "int data%04"PRIx64" = 0x%"PRIx64";\n",
@@ -3136,7 +3167,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	tmp = fprintf(fd, "\n");
-	printf("\n");
+	debug_print(DEBUG_MAIN, 1, "\n");
 #if 0
 	for (n = 0; n < 100; n++) {
 		param_present[n] = 0;
@@ -3147,7 +3178,7 @@ int main(int argc, char *argv[])
 			uint64_t present_index;
 			present_index = memory_stack[n].start_address - 0x10000;
 			if (present_index >= 100) {
-				printf("param limit reached:memory_stack[%d].start_address == 0x%"PRIx64"\n",
+				debug_print(DEBUG_MAIN, 1, "param limit reached:memory_stack[%d].start_address == 0x%"PRIx64"\n",
 					n, memory_stack[n].start_address);
 				continue;
 			}
@@ -3157,7 +3188,7 @@ int main(int argc, char *argv[])
 	}
 	for (n = 0; n < 100; n++) {
 		if (param_present[n]) {
-			printf("param%04x\n", n);
+			debug_print(DEBUG_MAIN, 1, "param%04x\n", n);
 			tmp = param_size[n];
 			n += tmp;
 		}
@@ -3169,7 +3200,7 @@ int main(int argc, char *argv[])
 		/*        We need to be able to handle more than
 		          one function per .o file. */
 		if (external_entry_points[l].valid) {
-			printf("%d:%s:start=%"PRIu64", end=%"PRIu64"\n", l,
+			debug_print(DEBUG_MAIN, 1, "%d:%s:start=%"PRIu64", end=%"PRIu64"\n", l,
 					external_entry_points[l].name,
 					external_entry_points[l].inst_log,
 					external_entry_points[l].inst_log_end);
@@ -3188,7 +3219,7 @@ int main(int argc, char *argv[])
 				struct label_s *label;
 				for (n = 0; n < external_entry_points[l].params_size; n++) {
 					label = &labels[external_entry_points[l].params[n]];
-					printf("reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[m], label->value);
+					debug_print(DEBUG_MAIN, 1, "reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[m], label->value);
 					if ((label->scope == 2) &&
 						(label->type == 1) &&
 						(label->value == reg_params_order[m])) {
@@ -3256,17 +3287,17 @@ int main(int argc, char *argv[])
 	bf_test_close_file(handle);
 	print_mem(memory_reg, 1);
 	for (n = 0; n < inst_size; n++) {
-		printf("0x%04x: %d\n", n, memory_used[n]);
+		debug_print(DEBUG_MAIN, 1, "0x%04x: %d\n", n, memory_used[n]);
 	}
-	printf("\nPRINTING MEMORY_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "\nPRINTING MEMORY_DATA\n");
 	for (n = 0; n < 4; n++) {
 		print_mem(memory_data, n);
-		printf("\n");
+		debug_print(DEBUG_MAIN, 1, "\n");
 	}
-	printf("\nPRINTING STACK_DATA\n");
+	debug_print(DEBUG_MAIN, 1, "\nPRINTING STACK_DATA\n");
 	for (n = 0; n < 10; n++) {
 		print_mem(memory_stack, n);
-		printf("\n");
+		debug_print(DEBUG_MAIN, 1, "\n");
 	}
 	for (n = 0; n < 100; n++) {
 		param_present[n] = 0;
@@ -3277,7 +3308,7 @@ int main(int argc, char *argv[])
 			uint64_t present_index;
 			present_index = memory_stack[n].start_address - 0x10000;
 			if (present_index >= 100) {
-				printf("param limit reached:memory_stack[%d].start_address == 0x%"PRIx64"\n",
+				debug_print(DEBUG_MAIN, 1, "param limit reached:memory_stack[%d].start_address == 0x%"PRIx64"\n",
 					n, memory_stack[n].start_address);
 				continue;
 			}
@@ -3288,14 +3319,14 @@ int main(int argc, char *argv[])
 
 	for (n = 0; n < 100; n++) {
 		if (param_present[n]) {
-			printf("param%04x\n", n);
+			debug_print(DEBUG_MAIN, 1, "param%04x\n", n);
 			tmp = param_size[n];
 			n += tmp;
 		}
 	}
 #endif
 end_main:
-	printf("END - FINISHED PROCESSING\n");
+	debug_print(DEBUG_MAIN, 1, "END - FINISHED PROCESSING\n");
 	return 0;
 }
 
