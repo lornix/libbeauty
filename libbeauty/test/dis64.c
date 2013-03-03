@@ -70,6 +70,8 @@ int debug_input_bfd = 0;
 int debug_input_dis = 0;
 int debug_exe = 0;
 int debug_analyse = 0;
+int debug_analyse_paths = 1;
+
 char disassemble_string[1024];
 
 void debug_print(int module, int level, const char *format, ...) {
@@ -103,6 +105,12 @@ void debug_print(int module, int level, const char *format, ...) {
 	case DEBUG_ANALYSE:
 		if (level <= debug_analyse) {
 			fprintf(stderr, "DEBUG_ANALYSE,0x%x:", level);
+			vfprintf(stderr, format, ap);
+		}
+		break;
+	case DEBUG_ANALYSE_PATHS:
+		if (level <= debug_analyse_paths) {
+			fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
@@ -2343,13 +2351,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#if 0
+#if 1
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
 			tmp = external_entry_points[l].start_node;
-			debug_print(DEBUG_MAIN, 1, "External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, tmp);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, tmp);
 			tmp = print_control_flow_paths(self, external_entry_points[l].paths, &(external_entry_points[l].paths_size));
 			tmp = print_control_flow_loops(self, external_entry_points[l].loops, &(external_entry_points[l].loops_size));
 		}

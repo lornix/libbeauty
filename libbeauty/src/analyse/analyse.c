@@ -511,7 +511,13 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 		type = 0;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
-			continue;
+			if (nodes[n].next_size > 2) {
+				/* FIXME: need to get this better. Check for JMPT instruction */
+				type = NODE_TYPE_JMPT;
+				goto build_node_type_found;
+			} else {
+				continue;
+			}
 		}
 		/* A loop_head statement */
 		if (nodes[n].loop_head) {
@@ -539,6 +545,7 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 		if (!type) {
 			continue;
 		}
+build_node_type_found:
 		nodes[n].type = type;
 		debug_print(DEBUG_ANALYSE, 1, "node_type: node = 0x%x, type = 0x%x\n", n, nodes[n].type);
 	}
@@ -672,6 +679,18 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 		debug_print(DEBUG_ANALYSE, 1, "if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
 		switch (nodes[n].type) {
 		case NODE_TYPE_IF_THEN_ELSE:
+			/* A normal IF statement */
+			if (nodes[n].path_size >= 2) {
+				subset_method = 0; /* paths */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 1;
+			} else {
+				subset_method = 1; /* loops */
+				branch_follow_exit = 0;  /* 0 = non-exit link, 1 = exit_links */
+				follow_path = 1;
+			}
+			break;
+		case NODE_TYPE_JMPT:
 			/* A normal IF statement */
 			if (nodes[n].path_size >= 2) {
 				subset_method = 0; /* paths */
@@ -1039,12 +1058,12 @@ int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *no
 int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *paths_size)
 {
 	int n, m;
-	debug_print(DEBUG_ANALYSE, 1, "print control flow paths size=0x%x\n", *paths_size);
+	debug_print(DEBUG_ANALYSE_PATHS, 1, "print control flow paths size=0x%x\n", *paths_size);
 	for (m = 0; m < *paths_size; m++) {
 		if (paths[m].used) {
-			debug_print(DEBUG_ANALYSE, 1, "Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);
 			for (n = 0; n < paths[m].path_size; n++) {
-				debug_print(DEBUG_ANALYSE, 1, "Path 0x%x=0x%x\n", m, paths[m].path[n]);
+				debug_print(DEBUG_ANALYSE_PATHS, 1, "Path 0x%x=0x%x\n", m, paths[m].path[n]);
 			}
 //		} else {
 			//debug_print(DEBUG_ANALYSE, 1, "Un-used Path 0x%x: type=%d, loop_head=0x%x, prev 0x%x:0x%x\n", m, paths[m].type, paths[m].loop_head, paths[m].path_prev, paths[m].path_prev_index);

@@ -39,6 +39,7 @@
 #define DEBUG_OUTPUT 4
 #define DEBUG_EXE 5
 #define DEBUG_ANALYSE 6
+#define DEBUG_ANALYSE_PATHS 7
 
 void debug_print(int module, int level, const char *format, ...);
 
@@ -296,6 +297,7 @@ struct node_link_s {
 #define NODE_TYPE_IF_THEN_GOTO 3
 #define NODE_TYPE_NORMAL 4
 #define NODE_TYPE_LOOP_THEN_ELSE 5
+#define NODE_TYPE_JMPT 6
 
 struct control_flow_node_s {
 	int valid; /* 0 == invalid/un-used, 1 == valid/used */
