@@ -673,10 +673,10 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 		loops_size = self->external_entry_points[nodes[start_node].entry_point - 1].loops_size;
 		loops = self->external_entry_points[nodes[start_node].entry_point - 1].loops;
 		/* Check that it is a branch statement */
-		if (2 != nodes[n].next_size) {
+		if (2 > nodes[n].next_size) {
 			continue;
 		}
-		debug_print(DEBUG_ANALYSE, 1, "if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
+		debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail: start_node = 0x%x, type = 0x%x\n", start_node, nodes[start_node].type);
 		switch (nodes[n].type) {
 		case NODE_TYPE_IF_THEN_ELSE:
 			/* A normal IF statement */
@@ -733,11 +733,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 			break;
 		default:
-			debug_print(DEBUG_ANALYSE, 1, "if_tail node type 0x%x unknown\n", nodes[n].type);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail node type 0x%x unknown\n", nodes[n].type);
 			exit(1);
 		}
 
-		debug_print(DEBUG_ANALYSE, 1, "if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x, follow_path = 0x%x\n",
+		debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail: subset_method = 0x%x, branch_follow_exit = 0x%x, follow_path = 0x%x\n",
 			subset_method, branch_follow_exit, follow_path);
 		node_b = n;
 		while ((node_b != 0) ) {
@@ -752,11 +752,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 
 				if (nodes[start_node].path_size >= 2) {
 					path = nodes[start_node].path[0];
-					debug_print(DEBUG_ANALYSE, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
 					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
-					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
 					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
-					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path next_node = 0x%x\n", next_node);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "find_node_in_path next_node = 0x%x\n", next_node);
 					if (!tmp) {
 						tmp = next_node;
 					} else {
@@ -764,53 +764,53 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					}
 				} else if (nodes[start_node].path_size == 1) {
 					path = nodes[start_node].path[0];
-					debug_print(DEBUG_ANALYSE, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "Folling path 0x%x, size 0x%x, looking for node 0x%x\n", path, paths[path].path_size, node_b);
 					tmp = find_node_in_path(self, paths, paths_size, path, node_b, &index);
-					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "find_node_in_path=%d, index=%d\n", tmp, index);
 					tmp = find_node_at_index_in_path(self, paths, paths_size, path, index + 1, &next_node);
-					debug_print(DEBUG_ANALYSE, 1, "find_node_in_path next_node = 0x%x\n", next_node);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "find_node_in_path next_node = 0x%x\n", next_node);
 					if (!tmp) {
 						tmp = next_node;
 					} else {
 						tmp = 0;
 					}
 				} else {
-					debug_print(DEBUG_ANALYSE, 1, "follow path failed1 path_size = 0x%x\n", nodes[start_node].path_size);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "follow path failed1 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else if (follow_path && subset_method) {
 				int path;
 
-				debug_print(DEBUG_ANALYSE, 1, "follow if...then...else in loop. looped_path_size = 0x%x\n",
+				debug_print(DEBUG_ANALYSE_PATHS, 1, "follow if...then...else in loop. looped_path_size = 0x%x\n",
 					nodes[start_node].looped_path_size);
 				if (nodes[start_node].looped_path_size >= 2) {
 					path = nodes[start_node].looped_path[0];
 					for (m = 0; m < paths[path].path_size; m++) {
-						debug_print(DEBUG_ANALYSE, 1, "node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
+						debug_print(DEBUG_ANALYSE_PATHS, 1, "node_b = 0x%x, looped_path = 0x%x, m = 0x%x\n",
 							node_b, path, m);
 						if (paths[path].path[m] == node_b) {
 							if ((m + 1) < paths[path].path_size) {
 								tmp = paths[path].path[m + 1];
-								debug_print(DEBUG_ANALYSE, 1, "follow path next = 0x%x\n", tmp);
+								debug_print(DEBUG_ANALYSE_PATHS, 1, "follow path next = 0x%x\n", tmp);
 								break;
 							} else {
-								debug_print(DEBUG_ANALYSE, 1, "follow path failed2/n");
+								debug_print(DEBUG_ANALYSE_PATHS, 1, "follow path failed2/n");
 								exit(1);
 							}
 						}
 					}
 				} else {
-					debug_print(DEBUG_ANALYSE, 1, "follow path failed3 path_size = 0x%x\n", nodes[start_node].path_size);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "follow path failed3 path_size = 0x%x\n", nodes[start_node].path_size);
 					exit(1);
 				}
 			} else {
 				if (nodes[node_b].next_size == 0) {
-					debug_print(DEBUG_ANALYSE, 1, "if_tail: end of function()\n");
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail: end of function()\n");
 					break;
 				} else if (nodes[node_b].next_size == 1) {
 					link = &(nodes[node_b].link_next[0]);
 					if (link->is_loop_edge) {
-						debug_print(DEBUG_ANALYSE, 1, "if_tail: not following loop edge\n");
+						debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail: not following loop edge\n");
 						break;
 					}
 				} else if (nodes[node_b].next_size == 2) {
@@ -832,25 +832,25 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 					} else if (nodes[node_b].link_next[1].is_normal == 1) {
 						link = &(nodes[node_b].link_next[1]);
 					}
-					if (link) debug_print(DEBUG_ANALYSE, 1, "link node = 0x%x\n", link->node);
-					if (link_exit) debug_print(DEBUG_ANALYSE, 1, "link_exit node = 0x%x\n", link_exit->node);
+					if (link) debug_print(DEBUG_ANALYSE_PATHS, 1, "link node = 0x%x\n", link->node);
+					if (link_exit) debug_print(DEBUG_ANALYSE_PATHS, 1, "link_exit node = 0x%x\n", link_exit->node);
 					if (branch_follow_exit) {
 						link = link_exit;
 					}
 					if (!link) {
-						debug_print(DEBUG_ANALYSE, 1, "node_if_tail: empty link\n");
+						debug_print(DEBUG_ANALYSE_PATHS, 1, "node_if_tail: empty link\n");
 						break;
 					}
 					/* Do not follow loop edges */
 					if (link->is_loop_edge) {
 						break;
 					}
-					debug_print(DEBUG_ANALYSE, 1, "node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "node = 0x%x, is_norm = %d, is_loop_edge = %d, is_loop_exit = %d, is_loop_entry = %d\n",
 						node_b, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 					tmp = link->node;
 				}
 			}
-			debug_print(DEBUG_ANALYSE, 1, "next node=0x%x\n", tmp);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "next node=0x%x\n", tmp);
 
 			node_b = tmp;
 			if (0 == node_b) {
@@ -861,11 +861,11 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 			} else {
 				tmp = is_subset(nodes[start_node].looped_path_size, nodes[start_node].looped_path, nodes[node_b].looped_path_size, nodes[node_b].looped_path);
 			}
-			debug_print(DEBUG_ANALYSE, 1, "node_if_tail: %d = 0x%x, 0x%x\n", tmp, start_node, node_b);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "node_if_tail: %d = 0x%x, 0x%x\n", tmp, start_node, node_b);
 			count++;
 			if (count > 1000) {
-				debug_print(DEBUG_ANALYSE, 1, "node_if_tail: failed, too many if_tails\n");
-				debug_print(DEBUG_ANALYSE, 1, "Start node: 0x%x is_norm = %d, is_loop_edge = %d is_loop_exit = %d is_loop_entry = %d\n",
+				debug_print(DEBUG_ANALYSE_PATHS, 1, "node_if_tail: failed, too many if_tails\n");
+				debug_print(DEBUG_ANALYSE_PATHS, 1, "Start node: 0x%x is_norm = %d, is_loop_edge = %d is_loop_exit = %d is_loop_entry = %d\n",
 					n, link->is_normal, link->is_loop_edge, link->is_loop_exit, link->is_loop_entry);
 				exit(1);
 			}
@@ -874,9 +874,9 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 				break;
 			}
 		}
-		debug_print(DEBUG_ANALYSE, 1, "if_tail:function end\n");
+		debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail:function end\n");
 	}
-	debug_print(DEBUG_ANALYSE, 1, "if_tail:end\n");
+	debug_print(DEBUG_ANALYSE_PATHS, 1, "if_tail:end\n");
 	return 0;
 }
 
@@ -888,7 +888,7 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 	int path;
 	int offset;
 
-	debug_print(DEBUG_ANALYSE, 1, "paths_size = %d\n", *paths_size);
+	debug_print(DEBUG_ANALYSE_PATHS, 1, "paths_size = %d\n", *paths_size);
 	for (l = 0; l < *paths_size; l++) {
 		path = l;
 		offset = paths[l].path_size - 1;
@@ -950,7 +950,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			paths[path].path[step] = node;
 			paths[path].path_prev = node_mid_start[n].path_prev;
 			paths[path].path_prev_index = node_mid_start[n].path_prev_index;
-			debug_print(DEBUG_ANALYSE, 1, "JCD1: path 0x%x:0x%x, 0x%x\n", path, step, node_mid_start[n].node);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: path 0x%x:0x%x, 0x%x\n", path, step, node_mid_start[n].node);
 			node_mid_start[n].node = 0;
 			step++;
 			loop = 0;
@@ -958,7 +958,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 				loop = path_loop_check(paths, path, step - 1, node, *nodes_size);
 
 				if (loop) {
-					debug_print(DEBUG_ANALYSE, 1, "JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
 					paths[path].loop_head = node;
 					nodes[node].type = NODE_TYPE_LOOP;
 					nodes[node].loop_head = 1;
@@ -966,14 +966,14 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 					if (step >= 2) {
 						int node1 = paths[path].path[step - 2];
 						int node2 = paths[path].path[step - 1];
-						debug_print(DEBUG_ANALYSE, 1, "JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
+						debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD4:loop: 0x%x, 0x%x\n", paths[path].path[step - 2], paths[path].path[step - 1]);
 						for (n = 0; n < nodes[node1].next_size; n++) {
 							if (nodes[node1].link_next[n].node == node2) {
 								nodes[node1].link_next[n].is_loop_edge = 1;
 							}
 						}
 					} else {
-						debug_print(DEBUG_ANALYSE, 1, "JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
+						debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: testing for do while loop on node = 0x%x, step = 0x%x, path=0x%x\n",
 							node, step, path);
 						paths[path].loop_head = node;
 						nodes[node].type = NODE_TYPE_LOOP;
@@ -996,13 +996,13 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 						break;
 					}
 				} else if (nodes[node].next_size == 1) {
-					debug_print(DEBUG_ANALYSE, 1, "JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD2: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
 					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
 				} else if (nodes[node].next_size > 1) {
 					tmp = node_mid_start_add(&nodes[node], node_mid_start, path, step - 1);
-					debug_print(DEBUG_ANALYSE, 1, "JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
 					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;
@@ -1010,9 +1010,9 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			} while ((nodes[node].next_size > 0) && (loop == 0));
 			paths[path].path_size = step;
 			path++;
-			debug_print(DEBUG_ANALYSE, 1, "end path = 0x%x\n", path);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "end path = 0x%x\n", path);
 			if (path >= *paths_size) {
-				debug_print(DEBUG_ANALYSE, 1, "TOO MANY PATHS, %d\n", path);
+				debug_print(DEBUG_ANALYSE_PATHS, 1, "TOO MANY PATHS, %d\n", path);
 				return 1;
 			}
 		}
