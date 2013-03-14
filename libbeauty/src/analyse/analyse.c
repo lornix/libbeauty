@@ -1088,34 +1088,49 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 	debug_print(DEBUG_ANALYSE, 1, "build_control_flow_nodes:\n");	
 	inst_log_entry[inst_start].node_start = 1;
-	debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
+	debug_print(DEBUG_ANALYSE, 1, "f_node_start = inst 0x%x\n", inst_start);	
 	/* Start by scanning all the inst_log for node_start and node_end. */
 	for (n = 1; n <= inst_log; n++) {
 		inst_log1 = &inst_log_entry[n];
+		debug_print(DEBUG_ANALYSE, 1, "inst 0x%x prev_size = %d, next_size = %d\n", n, inst_log1->prev_size, inst_log1->next_size);	
+		if (inst_log1->prev_size > 0) {
+			debug_print(DEBUG_ANALYSE, 1, "inst 0x%x prev = 0x%x\n", n, inst_log1->prev[0]);
+		}
+		if (inst_log1->next_size > 0) {
+			debug_print(DEBUG_ANALYSE, 1, "inst 0x%x next = 0x%x\n", n, inst_log1->next[0]);
+		}
+
 		/* Test for end of node */
 		if ((inst_log1->next_size > 1) ||
 			(inst_log1->next_size == 0)) {
 			inst_end = n;
 			inst_log_entry[inst_end].node_end = 1;
-			debug_print(DEBUG_ANALYSE, 1, "node_end = inst 0x%x\n", inst_end);	
+			debug_print(DEBUG_ANALYSE, 1, "n_node_end = inst 0x%x\n", inst_end);	
 			/* Handle special case of duplicate prev_inst */
 			/* FIXME: Stop duplicate prev_inst being created in the first place */
 			for (m = 0; m < inst_log1->next_size; m++) {
 				/* Mark all the node_starts */
 				inst_start = inst_log_entry[inst_end].next[m];
 				inst_log_entry[inst_start].node_start = 1;
-				debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
+				debug_print(DEBUG_ANALYSE, 1, "n_node_start = inst 0x%x\n", inst_start);	
 			}
 		}
-		if (inst_log1->prev_size > 1) {
+		if ((inst_log1->prev_size > 1) ||
+			(inst_log1->prev_size == 0) ||
+			((inst_log1->prev_size == 1) && (inst_log1->prev[0] == 0))) {
+			/* FIXME: The above prev_size == 1 and prev[0] == 0 should be fixed to be prev_size == 0. */
 			inst_start = n;
 			inst_log_entry[inst_start].node_start = 1;
-			debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
+			debug_print(DEBUG_ANALYSE, 1, "p_node_start = inst 0x%x\n", inst_start);	
 			for (m = 0; m < inst_log1->prev_size; m++) {
 				/* Mark all the node_starts */
 				inst_end = inst_log_entry[inst_start].prev[m];
 				inst_log_entry[inst_end].node_end = 1;
-				debug_print(DEBUG_ANALYSE, 1, "node_end = inst 0x%x\n", inst_end);	
+				debug_print(DEBUG_ANALYSE, 1, "p_node_end = inst 0x%x\n", inst_end);	
+				if (inst_log_entry[inst_end].next_size == 1) {
+					inst_log_entry[inst_log_entry[inst_end].next[0]].node_start = 1;
+					debug_print(DEBUG_ANALYSE, 1, "p_node_start2 = inst 0x%x\n", inst_log_entry[inst_end].next[0]);	
+				}
 			}
 			/* Handle special case of duplicate prev_inst */
 			/* FIXME: Stop duplicate prev_inst being created in the first place */
@@ -1163,7 +1178,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].link_next = calloc(inst_log1->next_size, sizeof(struct node_link_s));
 			nodes[n].next_size = inst_log1->next_size;
 			if (nodes[n].next_size > 2) {
-				debug_print(DEBUG_ANALYSE, 1, "build_cfg next_size too big for node 0x%x, inst 0x%x. Might be a JMPT\n", n, nodes[n].inst_end);
+				debug_print(DEBUG_ANALYSE, 1, "build_cfg next_size, 0x%x, too big for node 0x%x, inst 0x%x. Might be a JMPT.\n", nodes[n].next_size, n, nodes[n].inst_end);
 			}
 
 			for (m = 0; m < inst_log1->next_size; m++) {
