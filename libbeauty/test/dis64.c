@@ -70,7 +70,7 @@ int debug_input_bfd = 0;
 int debug_input_dis = 0;
 int debug_exe = 0;
 int debug_analyse = 0;
-int debug_analyse_paths = 1;
+int debug_analyse_paths = 0;
 
 char disassemble_string[1024];
 
@@ -1394,6 +1394,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	int node;
 	int tmp;
 	int n;
+	int block_end;
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
@@ -1441,14 +1442,21 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 				nodes[node].if_tail);
 		}
 		process_state = &external_entry_points[nodes[node].entry_point - 1].process_state;
-		for (n = nodes[node].inst_start; n <= nodes[node].inst_end; n++) {
+		n = nodes[node].inst_start;
+		block_end = 0;
+		do {
 			inst_log1 =  &inst_log_entry[n];
 			instruction =  &inst_log1->instruction;
 			//tmp = write_inst(self, fd, instruction, n, NULL);
 			//tmp = fprintf(fd, "\\l");
 			tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\l");
 			//tmp = fprintf(fd, "\\l\n");
-		}
+			if (inst_log1->node_end || !(inst_log1->next_size)) {
+				block_end = 1;
+			} else {
+				n = inst_log1->next[0];
+			}
+		} while (!block_end);
 		tmp = fprintf(fd, "\"];\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
 			char *label;

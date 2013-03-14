@@ -86,6 +86,7 @@ struct inst_log_entry_s {
 	struct memory_s value2;		/* Second input value */
 	struct memory_s value3;		/* Result */
 	int node_start;			/* Is this instruction the start of a node 0 == No, 1 == Yes */
+	int node_member;		/* The node this instrustion is a member off */
 	int node_end;			/* Is this instruction the end of a node 0 == No, 1 == Yes */
 	void *extension;		/* Instruction specific extention */
 } ;

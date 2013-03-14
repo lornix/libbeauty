@@ -1076,6 +1076,7 @@ int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *pat
 int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
 	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log2;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	int node = 1;
 	int inst_start = 1;
@@ -1086,37 +1087,64 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int tmp;
 
 	debug_print(DEBUG_ANALYSE, 1, "build_control_flow_nodes:\n");	
+	inst_log_entry[inst_start].node_start = 1;
+	debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
+	/* Start by scanning all the inst_log for node_start and node_end. */
 	for (n = 1; n <= inst_log; n++) {
-		inst_log1 =  &inst_log_entry[n];
+		inst_log1 = &inst_log_entry[n];
 		/* Test for end of node */
 		if ((inst_log1->next_size > 1) ||
-			(inst_log1->next_size == 0) ||
-			((inst_log1->next_size == 1) && (inst_log1->next[0] != (n + 1)))) {
+			(inst_log1->next_size == 0)) {
 			inst_end = n;
+			inst_log_entry[inst_end].node_end = 1;
+			debug_print(DEBUG_ANALYSE, 1, "node_end = inst 0x%x\n", inst_end);	
 			/* Handle special case of duplicate prev_inst */
 			/* FIXME: Stop duplicate prev_inst being created in the first place */
-			if (inst_end >= inst_start) {
-				nodes[node].inst_start = inst_start;
-				nodes[node].inst_end = inst_end;
-				nodes[node].valid = 1;
-				node++;
-				inst_start = n + 1;
+			for (m = 0; m < inst_log1->next_size; m++) {
+				/* Mark all the node_starts */
+				inst_start = inst_log_entry[inst_end].next[m];
+				inst_log_entry[inst_start].node_start = 1;
+				debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
 			}
 		}
 		if (inst_log1->prev_size > 1) {
-			inst_end = n - 1;
+			inst_start = n;
+			inst_log_entry[inst_start].node_start = 1;
+			debug_print(DEBUG_ANALYSE, 1, "node_start = inst 0x%x\n", inst_start);	
+			for (m = 0; m < inst_log1->prev_size; m++) {
+				/* Mark all the node_starts */
+				inst_end = inst_log_entry[inst_start].prev[m];
+				inst_log_entry[inst_end].node_end = 1;
+				debug_print(DEBUG_ANALYSE, 1, "node_end = inst 0x%x\n", inst_end);	
+			}
 			/* Handle special case of duplicate prev_inst */
 			/* FIXME: Stop duplicate prev_inst being created in the first place */
-			if (inst_end >= inst_start) {
-				nodes[node].inst_start = inst_start;
-				nodes[node].inst_end = inst_end;
-				nodes[node].valid = 1;
-				node++;
-				inst_start = n;
+		}
+	}
+	node = 1;
+	for (n = 1; n <= inst_log; n++) {
+		inst_log1 = &inst_log_entry[n];
+		if (inst_log1->node_start) {
+			inst_start = n;
+			inst_log1->node_member = node;
+			if (!inst_log1->node_end) {
+				do {
+					tmp = inst_log1->next[0];
+					inst_log1 = &inst_log_entry[tmp];
+					inst_log1->node_member = node;
+				} while (!(inst_log1->node_end));
+				inst_end = tmp;
+			} else {
+				inst_end = n;
 			}
+			nodes[node].inst_start = inst_start;
+			nodes[node].inst_end = inst_end;
+			nodes[node].valid = 1;
+			node++;
 		}
 	}
 	*node_size = node - 1;
+
 	/* Start by building the entire node table, with prev and next node. */
 	for (n = 1; n <= *node_size; n++) {
 		inst_log1 =  &inst_log_entry[nodes[n].inst_start];
