@@ -77,6 +77,7 @@ enum {
 #define SEX 0x1f /* Signed Extention */
 #define JMPT 0x20 /* Jump Table */
 #define CALLT 0x21 /* Call jump table */
+#define PHI 0x22 /* A PHI point */
 
 #define OVERFLOW 0
 #define NOT_OVERFLOW 1
