@@ -1,0 +1,30 @@
+This project is called libbeauty.
+It is written as a library, so that a client program can use its services to help decompile binary files.
+
+Currently, it does the following:
+INPUT:
+It processes x86-64 .o binary files and reads the .text sections where the CPU instructions are, together with any data segments are relocation information.
+
+EXECUTE:
+It it given an entry point by the client program and proceeds to read each x86-64 ASM instruction octets. It converts them into a mid-level representation called RTL.
+It then executes the RTL instruction and stores a log of each instruction executed, and keeps state of all registers and memory/stack accesses.
+The log of each instruction is stored in an instruction_log.
+
+ANALYSE:
+Once the EXECUTE process is finished, it then does the following steps:
+1) Groups blocks of instructions into Nodes.
+Nodes end at the end or a function, or at a branch point, or at a join point.
+2) Links between the Nodes are created, building a Control Flow Graph (CFG).
+3) SSA processing is done. This raises the RTL instructions to a higher level where SSA is represented as an unlimited register set instead of registers and stack variables.
+This higher level is called the SSA representation.
+This SSA step also adds PHI instructions, where needed. (PHI is currently TODO)
+4) Perform AST analsis and try to build structure that resembles the structures in a .c source code program.
+
+OUTPUT:
+1) Output the CFG in .dot graphviz format.
+2) Output the SSA representation in LLVM IR format. (LLVM IR format is currently TODO, need to add PHI instructions first)
+3) Output .c source code, based on the AST. (Work in progress)
+
+
+
+
