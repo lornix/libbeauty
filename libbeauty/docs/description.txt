@@ -3,7 +3,7 @@ It is written as a library, so that a client program can use its services to hel
 
 Currently, it does the following:
 INPUT:
-It processes x86-64 .o binary files and reads the .text sections where the CPU instructions are, together with any data segments are relocation information.
+It processes x86-64 .o binary files and reads the .text sections where the CPU instructions are, together with any data segments and relocation information.
 
 EXECUTE:
 It it given an entry point by the client program and proceeds to read each x86-64 ASM instruction octets. It converts them into a mid-level representation called RTL.
