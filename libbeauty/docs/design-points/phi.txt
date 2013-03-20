@@ -72,7 +72,10 @@ as the most search back would be to the previous node.
 Within the node, keep register -> label mapping, as you go, this will reduce the search back to nil. register -> label mapping only changed based on DST.
 mapping as follows:
 list of all registers. for each register, point to the instruction that did the assign. Have an extra param for valid or not_valid.
+We have already defined the key for the labels is the instruction that assigned DST, so pointing to the instruction that did the assign is the same as giving it a label.
+
 4) As we go along or as a separate pass, build a label table with: assigned at( the key), used at, and possible dead info (label not used after this instruction)
+Might need a CFG for the label table, in order to identify the dead point.
 
 5) FIXME: Then, keeping state of register -> label, label the SRC parameters of each instruction.
 What happens in loops? The phi has taken care or that.
