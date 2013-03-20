@@ -1,5 +1,6 @@
 Support for PHI.
 
+The options suggested so far:
 1) First pass, give each assignment a new valueid.
 New assignment (DST) is a MOV or an ADD etc., not just MOV.
 2) Starting at the top of a function, scan back via all paths, and locate the DST assignment or SRC that used the same register.
@@ -28,9 +29,12 @@ Need to work out how to do the stack vars searches.
 Then need to find a way to convert path based PHI to previous node based PHI and be able to prove it has done it correctly.
 
 
-Currently, (4) is preferred.
+After some detailed though, the follow is planned:
+
 Steps:
 1) For each block, list each of the registers (SRC) used. Take account of the SRC, DST order within the block.
+Call this the node_used_register table.
+The nodes can be processed in any order for this step.
 SRC, DST -> PHI SRC
 DST, SRC -> No PHI needed.
 DST first -> No PHI needed.
@@ -40,11 +44,13 @@ SRC first -> PHI SRC.
 2 = DST first
 If SRC and DST in same instruction, set SRC first.
 
-
-2) Create a phi instruction for each one, the phi assignment register is set.
+2) Create a PHI instruction for each entry in the node_used_register table, the PHI instruction DST register is identified and set.
 This problem is then reduced to a node level problem, and not an instruction level problem.
+The nodes can be processed in any order for this step.
+
 3) Then for each path running through each node, locate the previous node that used that register.
 Enter the path number, previously used node into the phi list for that register.
+The nodes must be processed in path order for this step.
 
 Cleaning up:
 5) Remove any phi instructions with 1 or 0 previously used different node, leaving only ones with 2 or more.
@@ -55,20 +61,20 @@ Continue migrating up, until a join point is reached.
 9) Verify that all the paths for a particular immedately previous node match the previous node that used the register.
 At this point, all the PHIs are in the right place, and at register level.
 
-Assigning variable names:
-1) Due to SSA, the assignment will be a unique instruction, so for each assignment, create a list of all future instructions using it. Problem, this is variable name (label)  based and not register based.
+Assigning variable names (labels):
+1) Due to SSA, the assignment will be a unique instruction, so for each assignment, create a list of all future instructions using it. Problem, this is label based and not register based. (<- not possible at this step).
 2) Assign a new label on each assignment DST (MOV, ADD, PHI etc.) <- easy. Cover all instructions in one go.
+Instructions can be processed in any order for this step.
 3) label each SRC <- Harder.
-As the PHI has already been done. Only need to search back on one path.
+As the PHI has already been done. Only need to search back on one path, except the PHI instruction that will have more than one back path.
 Maybe, Store Node-end level register -> label mapping for the Node exit point, after taking PHIs into account. This should speed up searches,
 as the most search back would be to the previous node.
 Within the node, keep register -> label mapping, as you go, this will reduce the search back to nil. register -> label mapping only changed based on DST.
 mapping as follows:
 list of all registers. for each register, point to the instruction that did the assign. Have an extra param for valid or not_valid.
-4) As we go along or as a separate pass, build a label table with: assigned at( the key), used at.
+4) As we go along or as a separate pass, build a label table with: assigned at( the key), used at, and possible dead info (label not used after this instruction)
 
-3) Maybe, Store Node level register -> variable name mapping for the Node entry point, after taking PHIs into account. This should speed up searches.
-4) Then, keeping state of register -> variable, label the SRC parameters of each instruction.
+5) FIXME: Then, keeping state of register -> label, label the SRC parameters of each instruction.
 What happens in loops? The phi has taken care or that.
 
 Need to work out how to do PHI for stack variables. Although LLVM IR does not need this.
