@@ -1,0 +1,81 @@
+Support for PHI.
+
+1) First pass, give each assignment a new valueid.
+New assignment (DST) is a MOV or an ADD etc., not just MOV.
+2) Starting at the top of a function, scan back via all paths, and locate the DST assignment or SRC that used the same register.
+To make it easier, scan down and back on one path, then the next, adding the links between assignment and use.
+3) If assignment and use are in the same node, this is the simple case shortcut. No Phi node needs adding.
+It will be the same result for all paths.
+4) If all paths result in the same previous node, this is a simple case shortcut, No Phi node needs adding.
+5) If there are different previous nodes, then PHI needs to be added. FIXME: Need to work out where to add the PHI instruction?
+The PHI will go at a join point.
+Count join points between current instruction and previous one. If only 1 join point, shortcut, add PHI there.
+
+What to do in the multi-join case?
+1) For each join point, use the top one first, search back and find the one that works, that is closest to the DST or SRC where it was last used.
+2) Alternatively, there will be a list of paths, work out a way to merge paths, to find the differences between x1 and x2.
+Start at once SRC/DST point and go down the path until the first join point where a path appears from the other set.
+3) Alternatively, go backwards from the current instruction until a join point splits the paths so only x1 or x2 remain or until one x1 or x2 leaves the group.
+Then add the PHI at that point.
+If the join point has 3 links, it could result in multiple locations of PHI points.
+
+4) 
+Leave the PHI information at the current instruction. The PHI info is the per path previous register/var information.
+Problem here with search for previous user, and the user has not been defined yet. If using the register and not the var for the search, it will work.
+Once all PHI information is collected for each instruction, use that to start adding SRC var names.
+Migrate the PHI up to the previous join point.
+Need to work out how to do the stack vars searches.
+Then need to find a way to convert path based PHI to previous node based PHI and be able to prove it has done it correctly.
+
+
+Currently, (4) is preferred.
+Steps:
+1) For each block, list each of the registers (SRC) used. Take account of the SRC, DST order within the block.
+SRC, DST -> PHI SRC
+DST, SRC -> No PHI needed.
+DST first -> No PHI needed.
+SRC first -> PHI SRC.
+0 = not seen.
+1 = SRC first
+2 = DST first
+If SRC and DST in same instruction, set SRC first.
+
+
+2) Create a phi instruction for each one, the phi assignment register is set.
+This problem is then reduced to a node level problem, and not an instruction level problem.
+3) Then for each path running through each node, locate the previous node that used that register.
+Enter the path number, previously used node into the phi list for that register.
+
+Cleaning up:
+5) Remove any phi instructions with 1 or 0 previously used different node, leaving only ones with 2 or more.
+6) If this is not a join point, migrate and merge the phi instructions to the previous node, removing duplicates.
+Continue migrating up, until a join point is reached.
+7) To convert path based PHI to previous Node based phi:
+8) Identify the immediately previous Nodes, then separate the paths based on the previous node link.
+9) Verify that all the paths for a particular immedately previous node match the previous node that used the register.
+At this point, all the PHIs are in the right place, and at register level.
+
+Assigning variable names:
+1) Due to SSA, the assignment will be a unique instruction, so for each assignment, create a list of all future instructions using it. Problem, this is variable name (label)  based and not register based.
+2) Assign a new label on each assignment DST (MOV, ADD, PHI etc.) <- easy. Cover all instructions in one go.
+3) label each SRC <- Harder.
+As the PHI has already been done. Only need to search back on one path.
+Maybe, Store Node-end level register -> label mapping for the Node exit point, after taking PHIs into account. This should speed up searches,
+as the most search back would be to the previous node.
+Within the node, keep register -> label mapping, as you go, this will reduce the search back to nil. register -> label mapping only changed based on DST.
+mapping as follows:
+list of all registers. for each register, point to the instruction that did the assign. Have an extra param for valid or not_valid.
+4) As we go along or as a separate pass, build a label table with: assigned at( the key), used at.
+
+3) Maybe, Store Node level register -> variable name mapping for the Node entry point, after taking PHIs into account. This should speed up searches.
+4) Then, keeping state of register -> variable, label the SRC parameters of each instruction.
+What happens in loops? The phi has taken care or that.
+
+Need to work out how to do PHI for stack variables. Although LLVM IR does not need this.
+
+How to handle node splits.
+e.g. changing a list of instructions in a node into more than one node, when adding if statements.
+Eg. test case test61.c  SBB 
+
+See wip-sbb.txt
+
