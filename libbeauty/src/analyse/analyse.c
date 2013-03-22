@@ -97,6 +97,7 @@ int tidy_inst_log(struct self_s *self)
 
 int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int inst)
 {
+/* FIXME: this needs fixing to use next and prev instructions, instead of linear n */
 	int n;
 	int found = 0;
 	for (n = 1; n <= *node_size; n++) {

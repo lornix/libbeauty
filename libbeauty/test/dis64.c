@@ -65,12 +65,12 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
-int debug_dis64 = 0;
-int debug_input_bfd = 0;
-int debug_input_dis = 0;
-int debug_exe = 0;
-int debug_analyse = 0;
-int debug_analyse_paths = 0;
+int debug_dis64 = 1;
+int debug_input_bfd = 1;
+int debug_input_dis = 1;
+int debug_exe = 1;
+int debug_analyse = 1;
+int debug_analyse_paths = 1;
 
 char disassemble_string[1024];
 
@@ -1873,6 +1873,161 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	return 0;
 }
 
+int init_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	int node;
+	for (node = 1; node <= *node_size; node++) {
+		/* FIXME: Set 0xa0 to a #define value */
+		nodes[node].used_register = calloc(0xa0, sizeof(struct node_used_register_s));
+	}
+	return 0;
+}
+
+int fill_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	int n;
+	int tmp;
+	int node;
+	int inst;
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log2;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct instruction_s *instruction;
+
+	for (node = 1; node <= *node_size; node++) {
+		inst = nodes[node].inst_start;
+		inst_log1 = &inst_log_entry[inst];
+		do {
+			debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
+			instruction =  &inst_log1->instruction;
+			switch (instruction->opcode) {
+			/* DSTA, SRCA, SRCB == nothing */
+			case MOV:
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
+					nodes[node].used_register[instruction->dstA.index].seen = 2;
+					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x\n", instruction->dstA.index);
+				}
+				/* If SRC and DST in same instruction, let SRC dominate. */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					nodes[node].used_register[instruction->srcA.index].seen = 1;
+					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				break;
+			/* DSTA, SRCA, SRCB == DSTA */
+			case ADD:
+			case ADC:
+			case SUB:
+			case SBB:
+			case MUL:
+			case IMUL:
+			case OR:
+			case XOR:
+			case rAND:
+			case NOT:
+			case NEG:
+			case SHL:
+			case SHR:
+			case SAL:
+			case SAR:
+			case SEX:
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
+					nodes[node].used_register[instruction->dstA.index].seen = 1;
+					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
+				}
+				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					nodes[node].used_register[instruction->srcA.index].seen = 1;
+					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				break;
+
+			/* Specially handled because value3 is not assigned and writen to a destination. */
+			/* DSTA = nothing, SRCA, SRCB == DSTA */
+			case TEST:
+			/* DSTA = nothing, SRCA, SRCB == DSTA */
+			case CMP:
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
+					nodes[node].used_register[instruction->dstA.index].seen = 1;
+					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
+				}
+				/* DST does not exist, let DSTA be the SRC dominate. */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					nodes[node].used_register[instruction->srcA.index].seen = 1;
+					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				break;
+
+			/* DSTA = EAX, SRCN = parameters */
+			case CALL:
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
+					nodes[node].used_register[instruction->dstA.index].seen = 1;
+					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
+				}
+				/* FIXME: TODO params */
+				break;
+
+			case IF:
+				/* This does nothing to the table */
+				break;
+			/* DSTA = nothing, SRCA, SRCB = nothing */
+			case RET:
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					nodes[node].used_register[instruction->srcA.index].seen = 1;
+					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				break;
+			/* DSTA = nothing, SRCN = nothing */
+			case JMP:
+			/* DSTA = nothing, SRCA = table index , but not known yet. = Pointer + 8 * index.
+			 * Eventually it will be the label for the index */
+			case JMPT:
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT) &&
+					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					nodes[node].used_register[instruction->srcA.index].seen = 1;
+					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				break;
+			default:
+				debug_print(DEBUG_MAIN, 1, "FIXME: fill node used register table: unknown instruction OP 0x%x\n", instruction->opcode);
+				return 1;
+				break;
+			}
+		if (!inst_log1->node_end) {
+			tmp = inst_log1->next[0];
+			inst_log1 = &inst_log_entry[tmp];
+		}
+
+        	} while (!(inst_log1->node_end));
+	}
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -1887,7 +2042,7 @@ int main(int argc, char *argv[])
 	int tmp;
 	int err;
 	const char *file = "test.obj";
-	size_t inst_size = 0;
+//	size_t inst_size = 0;
 //	uint64_t reloc_size = 0;
 	int l, m;
 	struct instruction_s *instruction;
@@ -2374,6 +2529,8 @@ int main(int argc, char *argv[])
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 
 //	Doing this after SSA now.
+#if 0
+//      Don't bother with the AST output for now 
 //	tmp = output_cfg_dot(self, nodes, &nodes_size);
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
@@ -2392,6 +2549,7 @@ int main(int argc, char *argv[])
 	tmp = output_ast_dot(self, ast, nodes, &nodes_size);
 	/* FIXME */
 	//goto end_main;
+#endif
 
 #if 1
 
@@ -2409,6 +2567,47 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+
+	/****************************************************************
+	 * This section deals with building the node_used_register table
+	 * The nodes can be processed in any order for this step.
+	 * SRC, DST -> PHI SRC
+	 * DST, SRC -> No PHI needed.
+	 * DST first -> No PHI needed.
+	 * SRC first -> PHI SRC.
+	 * 0 = not seen.
+	 * 1 = SRC first
+	 * 2 = DST first
+	 * If SRC and DST in same instruction, set SRC first.
+	 ****************************************************************/
+	tmp = init_node_used_register_table(self, nodes, &nodes_size);
+	tmp = fill_node_used_register_table(self, nodes, &nodes_size);
+	if (tmp) {
+		debug_print(DEBUG_MAIN, 1, "FIXME: fill node used register table failed\n");
+		exit(1);
+	}
+
+	/****************************************************************
+	 * This section deals with building the initial PHI DST instructions
+	 * Create a PHI instruction for each entry in the node_used_register table,
+	 * the PHI instruction DST register is identified and set.
+         * This problem is then reduced to a node level problem, and not an instruction level problem.
+         * The nodes can be processed in any order for this step.
+	 ****************************************************************/
+
+	/* TODO */
+
+
+	/****************************************************************
+	 * Then for each path running through each node, locate the previous node that used that register.
+	 * Enter the path number, previously used node into the phi list for that register.
+	 * The nodes must be processed in path order for this step.
+	 ****************************************************************/
+
+	/* TODO */
+
+
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
 	 * This bit creates the labels table, ready for the next step.

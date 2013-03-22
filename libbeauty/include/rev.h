@@ -291,6 +291,13 @@ struct node_link_s {
 	int elasticity;
 };
 
+struct node_used_register_s {
+	/* 0 = Not seen, 1 = SRC first, 2 = DST first */
+	/* If SRC and DST in same instruction, set SRC first. */
+	int seen; /* The index of the register seen */
+	int size; /* The size of the register seen */
+};
+
 #define NODE_TYPE_UNKNOWN 0
 #define NODE_TYPE_LOOP 1
 #define NODE_TYPE_IF_THEN_ELSE 2
@@ -322,6 +329,7 @@ struct control_flow_node_s {
 	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
 	int depth; /* Where abouts in a graph does it go. 1 = Top of graph, 10 = 10th step down */
 	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
+	struct node_used_register_s *used_register;
 };
 
 struct external_entry_point_s {
