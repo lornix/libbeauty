@@ -298,6 +298,16 @@ struct node_used_register_s {
 	int size; /* The size of the register seen */
 };
 
+struct path_node_s {
+	int path;
+	int node;
+};
+
+struct phi_s {
+	int reg;
+	struct path_node_s *path_node;
+};
+
 #define NODE_TYPE_UNKNOWN 0
 #define NODE_TYPE_LOOP 1
 #define NODE_TYPE_IF_THEN_ELSE 2
@@ -330,6 +340,8 @@ struct control_flow_node_s {
 	int depth; /* Where abouts in a graph does it go. 1 = Top of graph, 10 = 10th step down */
 	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
 	struct node_used_register_s *used_register;
+	int phi_size;
+	struct phi_s *phi;
 };
 
 struct external_entry_point_s {

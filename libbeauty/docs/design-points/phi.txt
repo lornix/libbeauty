@@ -44,12 +44,13 @@ SRC first -> PHI SRC.
 2 = DST first
 If SRC and DST in same instruction, set SRC first.
 
-2) Create a PHI instruction for each entry in the node_used_register table, the PHI instruction DST register is identified and set.
+2) Create a PHI instruction for each entry in the node_used_register table, the PHI instruction when used = 1, PHI DST register is identified and set.
 This problem is then reduced to a node level problem, and not an instruction level problem.
 The nodes can be processed in any order for this step.
+Locate the nearest previous join node, place the phi at the join point. Saves having to do step (6)
 
-3) Then for each path running through each node, locate the previous node that used that register.
-Enter the path number, previously used node into the phi list for that register.
+3) Then for each path running through each phi node, locate the previous node that modified that register.
+Enter the path number, previously modified node into the phi list for that register.
 The nodes must be processed in path order for this step.
 
 Cleaning up:

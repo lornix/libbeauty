@@ -2028,6 +2028,71 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 	return 0;
 }
 
+int search_back_for_join(struct control_flow_node_s *nodes, int *node_size, int node, int *phi_node) 
+{
+	int test_node;
+	struct control_flow_node_s *this_node;
+
+	*phi_node = 0;
+	do {
+		this_node = &(nodes[node]);
+		if (this_node->prev_size > 1) {
+			*phi_node = node;
+			return 0;
+		}
+		if (this_node->prev_size == 1) {
+			node = this_node->prev_node[0];
+		}
+	} while (node > 0 && this_node->prev_size == 1);
+
+	return 1;
+}
+
+int add_phi_to_node(struct control_flow_node_s *node, int reg)
+{
+	int n;
+
+	if (node->phi_size == 0) {
+		node->phi = calloc(1, sizeof(struct phi_s));
+		node->phi[0].reg = reg;
+		node->phi_size = 1;
+	} else {
+		for (n = 0; n < node->phi_size; n++) {
+			if (node->phi[n].reg == reg) {
+				return 1;
+			}
+		}
+		node->phi = realloc(node->phi, (node->phi_size + 1) * sizeof(struct phi_s));
+		node->phi[node->phi_size].reg = reg;
+		node->phi_size++;
+	}
+	return 0;
+}
+
+int fill_node_phi(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	int node;
+	int phi_node;
+	int n;
+	int tmp;
+
+	for (node = 1; node <= *node_size; node++) {
+		tmp = search_back_for_join(nodes, node_size, node, &phi_node);
+		if (tmp) {
+			/* No previous join node found */
+			continue;
+		}
+		for (n = 0; n < 0xa0; n++) {
+			if (nodes[node].used_register[n].seen == 1) {
+				debug_print(DEBUG_MAIN, 1, "Adding register 0x%x to phi_node 0x%x\n", n, phi_node);
+				tmp = add_phi_to_node(&(nodes[phi_node]), n);
+				debug_print(DEBUG_MAIN, 1, "Adding register 0x%x to phi_node 0x%x, status = %d\n", n, phi_node, tmp);
+			}
+		}
+	}
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -2596,8 +2661,7 @@ int main(int argc, char *argv[])
          * The nodes can be processed in any order for this step.
 	 ****************************************************************/
 
-	/* TODO */
-
+	tmp = fill_node_phi(self, nodes, &nodes_size);
 
 	/****************************************************************
 	 * Then for each path running through each node, locate the previous node that used that register.
