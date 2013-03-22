@@ -70,6 +70,7 @@ char * opcode_table[] = {
 	"SEX",   // 0x1F   /* Signed extension */
 	"JMPT",	 // 0x20
 	"CALLT"  // 0x21
+	"PHI"  // 0x22
 };
 
 char *store_table[] = { "i", "r", "m", "s" };

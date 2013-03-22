@@ -296,6 +296,7 @@ struct node_used_register_s {
 	/* If SRC and DST in same instruction, set SRC first. */
 	int seen; /* The index of the register seen */
 	int size; /* The size of the register seen */
+	int dst;  /* Set when the register is modified by the node */
 };
 
 struct path_node_s {

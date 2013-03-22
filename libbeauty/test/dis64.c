@@ -1908,6 +1908,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
 					nodes[node].used_register[instruction->dstA.index].seen = 2;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					nodes[node].used_register[instruction->dstA.index].dst = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x\n", instruction->dstA.index);
 				}
 				/* If SRC and DST in same instruction, let SRC dominate. */
@@ -1941,6 +1942,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
 					nodes[node].used_register[instruction->dstA.index].seen = 1;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					nodes[node].used_register[instruction->dstA.index].dst = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
 				}
 				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
@@ -1982,6 +1984,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
 					nodes[node].used_register[instruction->dstA.index].seen = 1;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					nodes[node].used_register[instruction->dstA.index].dst = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
 				}
 				/* FIXME: TODO params */
