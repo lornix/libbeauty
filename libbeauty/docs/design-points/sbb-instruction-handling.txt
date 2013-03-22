@@ -1,4 +1,4 @@
-Handling SBB instruction.
+Handling SBB (Subtract with Borrow) instruction.
 The SBB instruction is used in x86 assembly, but it cannot be directly represented in C or LLVM IR.
 The plan is therefore to remove the SBB instruction from an binary input and replace it with other equivalent instructions.
 
