@@ -1,0 +1,36 @@
+Handling SBB instruction.
+The SBB instruction is used in x86 assembly, but it cannot be directly represented in C or LLVM IR.
+The plan is therefore to remove the SBB instruction from an binary input and replace it with other equivalent instructions.
+
+How to handle node splits.
+e.g. changing a list of instructions in a node into more than one node, when adding if statements.
+Eg. test case test61.c  SBB 
+Probably do this before instruction to node creation. I.e. Very early on.
+Or, alternatively, at output generation. I prefer the early on solution, because it removes the need to handle SBB at all in the rest of the processing.
+So, a better win if done early.
+This will require early handling of instruction swaps so as to get the pattern:
+cmp
+sbb
+and
+add
+
+also:
+cmp
+sbb
+add  (note the and missed)
+
+resulting in:
+if %cond  {
+	a = 1;
+} else {
+	a = 2;
+}
+
+separate out the swap calls:
+1)  can_swap_inst(a, b)		  <- test is swapping two instructions would alter meaning or not.
+2)  swap_inst(a, b)               <- swaps two instructions.
+3)  can_replace_inst(a, count, b, count)  <- tests to make sure the instructions are replaceable. I.e. They are not across an existing branch or join point.
+4)  replace_inst(a, count, b, count)   <- replaces one instruction list with another.
+5)  cut_paste_inst(a, b)	  <- Like swap but works over a larger step. (Not sure if this is wise or not yet).
+Watch out in case we wish to do the processing multithreaded. Need a method to lock instructions during the swap/replace, as also any dependent instructions.
+
