@@ -1909,7 +1909,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					nodes[node].used_register[instruction->dstA.index].seen = 2;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
-					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* If SRC and DST in same instruction, let SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
@@ -1943,7 +1943,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					nodes[node].used_register[instruction->dstA.index].seen = 1;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
 				if ((instruction->srcA.store == STORE_REG) &&
@@ -1985,7 +1985,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					nodes[node].used_register[instruction->dstA.index].seen = 1;
 					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* FIXME: TODO params */
 				break;
@@ -2072,7 +2072,7 @@ int add_phi_to_node(struct control_flow_node_s *node, int reg)
 	return 0;
 }
 
-int fill_node_phi(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
 	int node;
 	int phi_node;
@@ -2664,12 +2664,15 @@ int main(int argc, char *argv[])
          * The nodes can be processed in any order for this step.
 	 ****************************************************************/
 
-	tmp = fill_node_phi(self, nodes, &nodes_size);
+	tmp = fill_node_phi_dst(self, nodes, &nodes_size);
 
 	/****************************************************************
-	 * Then for each path running through each node, locate the previous node that used that register.
+	 * Then for each path running through each PHI node, locate the previous node that used that register.
 	 * Enter the path number, previously used node into the phi list for that register.
 	 * The nodes must be processed in path order for this step.
+	 * Optimizations can be made if paths are not unique at the current PHI node or above.
+	 * Start at end of path, search back down the path to the current node,
+	 * return which base path it is on. Only process if not a previous path.
 	 ****************************************************************/
 
 	/* TODO */
