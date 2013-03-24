@@ -128,7 +128,7 @@ struct path_s {
 	int path_size;
 	int type; /* 0 = Unknown, 1 = Loop */
 	int loop_head; /* Index to the node that is the loop head for this path. */
-	int *path;
+	int *path; /* The node within the path, FIXME: rename this to node */
 };
 
 struct node_mid_start_s {

@@ -2072,6 +2072,50 @@ int add_phi_to_node(struct control_flow_node_s *node, int reg)
 	return 0;
 }
 
+/* Input: path to search in.
+ *        node to search for.
+ * Output: common base_path that the node is part of.
+ */
+int path_node_to_base_path(struct self_s *self, struct path_s *paths, int paths_size, int path, int node, int *base_path)
+{
+	int step;
+	int tmp;
+	int ret;
+
+	ret = 0;
+	*base_path = path;
+	step = paths[path].path_size - 1; /* convert size to index */
+	tmp = paths[path].path[step];
+	if (tmp == node) {
+		*base_path = path;
+		ret = 0;
+		goto exit_path_node_to_base_path;
+	}
+	while (1) {
+		step--;
+		if (step < 0) {
+			/* If path_prev == path, we have reached the beginning of the path list */
+			if (paths[path].path_prev != path) {
+				tmp = paths[path].path_prev;
+				step = paths[path].path_prev_index;
+				path = tmp;
+			} else {
+				/* Node not found in path */
+				ret = 1;
+				break;
+			}
+		}
+		tmp = paths[path].path[step];
+		if (tmp == node) {
+			*base_path = path;
+			ret = 0;
+			break;
+		}
+	}
+exit_path_node_to_base_path:
+	return 0;
+}
+
 int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
 	int node;
