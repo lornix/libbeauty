@@ -1885,12 +1885,10 @@ int init_node_used_register_table(struct self_s *self, struct control_flow_node_
 
 int fill_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
-	int n;
 	int tmp;
 	int node;
 	int inst;
 	struct inst_log_entry_s *inst_log1;
-	struct inst_log_entry_s *inst_log2;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
 
@@ -2033,7 +2031,6 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 
 int search_back_for_join(struct control_flow_node_s *nodes, int *node_size, int node, int *phi_node) 
 {
-	int test_node;
 	struct control_flow_node_s *this_node;
 
 	*phi_node = 0;
@@ -3022,11 +3019,11 @@ int main(int argc, char *argv[])
 						mid_start[l].valid = 1;
 						debug_print(DEBUG_MAIN, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
-				}
-				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, inst_log1->instruction.srcA.index, 0, &size, self->search_back_seen, &inst_list);
-				if (tmp) {
-					debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
-					return 1;
+					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 1, inst_log1->instruction.srcA.index, 0, &size, self->search_back_seen, &inst_list);
+					if (tmp) {
+						debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
+						return 1;
+					}
 				}
 			}
 			debug_print(DEBUG_MAIN, 1, "SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
@@ -3126,11 +3123,11 @@ int main(int argc, char *argv[])
 						mid_start[l].valid = 1;
 						debug_print(DEBUG_MAIN, 1, "mid_start added 0x%"PRIx64" at 0x%x\n", mid_start[l].mid_start, l);
 					}
-				}
-				tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.indirect_init_value, inst_log1->value1.indirect_offset_value, &size, self->search_back_seen, &inst_list);
-				if (tmp) {
-					debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
-					return 1;
+					tmp = search_back_local_reg_stack(self, mid_start_size, mid_start, 2, inst_log1->value1.indirect_init_value, inst_log1->value1.indirect_offset_value, &size, self->search_back_seen, &inst_list);
+					if (tmp) {
+						debug_print(DEBUG_MAIN, 1, "SSA search_back Failed at inst_log 0x%x\n", n);
+						return 1;
+					}
 				}
 			}
 			debug_print(DEBUG_MAIN, 1, "SSA inst:0x%x:size=0x%"PRIx64"\n", n, size);
@@ -3298,7 +3295,6 @@ int main(int argc, char *argv[])
 // FIXME: Working on this
 	for (n = 1; n < inst_log; n++) {
 		struct label_s *label;
-		uint64_t value_id;
 		uint64_t value_id1;
 		uint64_t size;
 		uint64_t *inst_list;
@@ -3412,7 +3408,6 @@ int main(int argc, char *argv[])
 	 * causing the iteration to never exit.
 	 **************************************************/
 	for (n = 1; n <= inst_log; n++) {
-		struct label_s label;
 		uint64_t value_id;
 		uint64_t value_id3;
 
@@ -3459,7 +3454,6 @@ int main(int argc, char *argv[])
 	 * This section deals with variable types, scanning backwards
 	 **************************************************/
 	for (n = inst_log; n > 0; n--) {
-		struct label_s label;
 		uint64_t value_id;
 		uint64_t value_id3;
 
@@ -3704,7 +3698,7 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-end_main:
+//end_main:
 	debug_print(DEBUG_MAIN, 1, "END - FINISHED PROCESSING\n");
 	return 0;
 }
