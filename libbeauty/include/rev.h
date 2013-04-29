@@ -306,6 +306,7 @@ struct path_node_s {
 
 struct phi_s {
 	int reg;
+	int path_node_size;
 	struct path_node_s *path_node;
 };
 
