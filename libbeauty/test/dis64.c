@@ -1441,6 +1441,12 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			tmp = fprintf(fd, "if_tail = 0x%x\\l",
 				nodes[node].if_tail);
 		}
+		if (nodes[node].phi_size) {
+			for (n = 0; n < nodes[node].phi_size; n++) {
+				tmp = fprintf(fd, "phi[%d] = 0x%x\\l",
+					n, nodes[node].phi[n].reg);
+			}
+		}
 		process_state = &external_entry_points[nodes[node].entry_point - 1].process_state;
 		n = nodes[node].inst_start;
 		block_end = 0;
@@ -2055,6 +2061,7 @@ int add_phi_to_node(struct control_flow_node_s *node, int reg)
 	if (node->phi_size == 0) {
 		node->phi = calloc(1, sizeof(struct phi_s));
 		node->phi[0].reg = reg;
+		node->phi[0].path_node_size = 0;
 		node->phi_size = 1;
 	} else {
 		for (n = 0; n < node->phi_size; n++) {
@@ -2064,6 +2071,7 @@ int add_phi_to_node(struct control_flow_node_s *node, int reg)
 		}
 		node->phi = realloc(node->phi, (node->phi_size + 1) * sizeof(struct phi_s));
 		node->phi[node->phi_size].reg = reg;
+		node->phi[node->phi_size].path_node_size = 0;
 		node->phi_size++;
 	}
 	return 0;
