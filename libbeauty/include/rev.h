@@ -292,9 +292,8 @@ struct node_link_s {
 };
 
 struct node_used_register_s {
-	/* 0 = Not seen, 1 = SRC first, 2 = DST first */
 	/* If SRC and DST in same instruction, set SRC first. */
-	int seen; /* The index of the register seen */
+	int seen; /* 0 = Not seen, 1 = SRC first, 2 = DST first */
 	int size; /* The size of the register seen */
 	int dst;  /* Set when the register is modified by the node */
 };
@@ -302,10 +301,12 @@ struct node_used_register_s {
 struct path_node_s {
 	int path;
 	int node;
+	int value_id; /* The SSA ID of the label attached to this phi instruction src. */
 };
 
 struct phi_s {
-	int reg;
+	int reg; /* The CPU RTL register that this phi instruction refers to. */
+	int value_id; /* The SSA ID of the label attached to this phi instruction dst. */
 	int path_node_size;
 	struct path_node_s *path_node;
 };
