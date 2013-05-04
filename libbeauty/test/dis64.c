@@ -2121,7 +2121,61 @@ int path_node_to_base_path(struct self_s *self, struct path_s *paths, int paths_
 		}
 	}
 exit_path_node_to_base_path:
-	return 0;
+	return ret;
+}
+
+/* Input: path to search in.
+ *        step to step back from.
+	  node is the current node.
+ * Output: prev_path that is the previous node.
+ *         prev_step that is the previous node.
+ *	   prev_node
+ */
+int find_prev_path_step_node(struct self_s *self, struct path_s *paths, int paths_size, int path, int step, int node, int *prev_path, int *prev_step, int *prev_node)
+{
+	int tmp;
+	int ret;
+
+	ret = 0;
+	*prev_node = 0;
+	*prev_path = 0;
+	*prev_step = 0;
+	/* Sanity checks */
+	if (step > paths[path].path_size - 1) { /* convert size to index */
+		ret = 1;
+		goto exit_find_prev_path_step_node;
+	}
+	/* Sanity checks */
+	if (path >= paths_size) {
+		ret = 1;
+		goto exit_find_prev_path_step_node;
+	}
+	/* Sanity checks */
+	tmp = paths[path].path[step];
+	if (tmp != node) {
+		ret = 1;
+		goto exit_find_prev_path_step_node;
+	}
+
+	step--;
+	if (step < 0) {
+		/* If path_prev == path, we have reached the beginning of the path list */
+		if (paths[path].path_prev != path) {
+			tmp = paths[path].path_prev;
+			step = paths[path].path_prev_index;
+			path = tmp;
+		} else {
+			/* finished following path */
+			ret = 1;
+			goto exit_find_prev_path_step_node;
+		}
+	}
+	*prev_node = paths[path].path[step];
+	*prev_path = path;
+	*prev_step = step;
+
+exit_find_prev_path_step_node:
+	return ret;
 }
 
 int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
