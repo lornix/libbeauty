@@ -634,9 +634,9 @@ int find_node_at_index_in_path(struct self_s *self, struct path_s *paths, int pa
 		}
 	}
 	if (found) {
+		*node = paths[path].path[step];
 		debug_print(DEBUG_ANALYSE, 1, "found node_at_index base_path = 0x%X, node = 0x%x, path = 0x%x step = 0x%x, position = 0x%x\n",
 			base_path, node, path, step, position);
-		*node = paths[path].path[step];
 		return 0;
 	} else {
 		debug_print(DEBUG_ANALYSE, 1, "not found node_at_index\n");
