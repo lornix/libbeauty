@@ -2202,6 +2202,35 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 	return 0;
 }
 
+int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int paths_size)
+{
+	int path = 1;
+	int step;
+	int node = 3;
+	int tmp;
+	int base_path;
+	int base_step;
+	int prev_path;
+	int prev_step;
+	int prev_node;
+
+	tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
+	debug_print(DEBUG_MAIN, 1, "phi_src:base_path = 0x%x, base_step = 0x%x\n", base_path, base_step);
+	path = base_path;
+	step = base_step;
+	/* node = node; */
+	while (tmp == 0) {
+		tmp = find_prev_path_step_node(self, paths, paths_size, path, step, node, &prev_path, &prev_step, &prev_node);
+		debug_print(DEBUG_MAIN, 1, "phi_src:tmp = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, prev_path, prev_step, prev_node);
+		path = prev_path;
+		step = prev_step;
+		node = prev_node;
+	}
+		
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -2782,7 +2811,7 @@ int main(int argc, char *argv[])
 	 ****************************************************************/
 
 	/* TODO */
-
+	tmp = fill_node_phi_src(self, nodes, &nodes_size, paths, paths_size);
 
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
