@@ -40,6 +40,7 @@
 #define DEBUG_EXE 5
 #define DEBUG_ANALYSE 6
 #define DEBUG_ANALYSE_PATHS 7
+#define DEBUG_ANALYSE_PHI 8
 
 void debug_print(int module, int level, const char *format, ...);
 

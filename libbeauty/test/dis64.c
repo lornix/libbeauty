@@ -22,6 +22,8 @@
  *   Copyright (C) 2007 James Courtier-Dutton James@superbug.co.uk
  * 29-03-2009 Updates.
  *   Copyright (C) 2009 James Courtier-Dutton James@superbug.co.uk
+ * 05-05-2013 Updates.
+ *   Copyright (C) 2004-2013 James Courtier-Dutton James@superbug.co.uk
  */
 
 /* Intel ia32 instruction format: -
@@ -71,6 +73,7 @@ int debug_input_dis = 1;
 int debug_exe = 1;
 int debug_analyse = 1;
 int debug_analyse_paths = 1;
+int debug_analyse_phi = 1;
 
 char disassemble_string[1024];
 
@@ -111,6 +114,12 @@ void debug_print(int module, int level, const char *format, ...) {
 	case DEBUG_ANALYSE_PATHS:
 		if (level <= debug_analyse_paths) {
 			fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x:", level);
+			vfprintf(stderr, format, ap);
+		}
+		break;
+	case DEBUG_ANALYSE_PHI:
+		if (level <= debug_analyse_phi) {
+			fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
 		break;
@@ -2202,29 +2211,48 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 	return 0;
 }
 
-int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int paths_size)
+int find_phi_src_node_reg(struct self_s *self, struct path_s *paths, int paths_size, int path, int step, int node, int reg, int *src_node)
 {
-	int path = 1;
-	int step;
-	int node = 3;
-	int tmp;
-	int base_path;
-	int base_step;
 	int prev_path;
 	int prev_step;
 	int prev_node;
+	int tmp = 0;
+	int tmp_node;
 
-	tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
-	debug_print(DEBUG_MAIN, 1, "phi_src:base_path = 0x%x, base_step = 0x%x\n", base_path, base_step);
-	path = base_path;
-	step = base_step;
-	/* node = node; */
+	tmp_node = node;
 	while (tmp == 0) {
-		tmp = find_prev_path_step_node(self, paths, paths_size, path, step, node, &prev_path, &prev_step, &prev_node);
+		tmp = find_prev_path_step_node(self, paths, paths_size, path, step, tmp_node, &prev_path, &prev_step, &prev_node);
 		debug_print(DEBUG_MAIN, 1, "phi_src:tmp = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, prev_path, prev_step, prev_node);
 		path = prev_path;
 		step = prev_step;
-		node = prev_node;
+		tmp_node = prev_node;
+	}
+	return 0;
+}
+
+int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int node_size)
+{
+	int path;
+	int node;
+	int tmp;
+	int base_path;
+	int base_step;
+	int src_node;
+	struct path_s *paths;
+	int paths_size;
+	int reg = 0;
+	struct external_entry_point_s *external_entry_points = self->external_entry_points;
+
+	for (node = 1; node <= node_size; node++) {
+		debug_print(DEBUG_MAIN, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
+			external_entry_points[nodes[node].entry_point - 1].name);
+		paths = external_entry_points[nodes[node].entry_point - 1].paths;
+		paths_size = external_entry_points[nodes[node].entry_point - 1].paths_size;
+		debug_print(DEBUG_MAIN, 1, "phi_src:paths = %p, paths_size = 0x%x\n", paths, paths_size);
+		path = nodes[node].path[0];
+		tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
+		debug_print(DEBUG_MAIN, 1, "phi_src:tmp = %d, base_path = 0x%x, base_step = 0x%x\n", tmp, base_path, base_step);
+		tmp = find_phi_src_node_reg(self, paths, paths_size, base_path, base_step, node, reg, &src_node);
 	}
 		
 	return 0;
@@ -2811,7 +2839,7 @@ int main(int argc, char *argv[])
 	 ****************************************************************/
 
 	/* TODO */
-	tmp = fill_node_phi_src(self, nodes, &nodes_size, paths, paths_size);
+	tmp = fill_node_phi_src(self, nodes, nodes_size);
 
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
