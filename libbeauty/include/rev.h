@@ -301,6 +301,7 @@ struct node_used_register_s {
 
 struct path_node_s {
 	int path;
+	int first_prev_node;
 	int node;
 	int value_id; /* The SSA ID of the label attached to this phi instruction src. */
 };
@@ -310,6 +311,8 @@ struct phi_s {
 	int value_id; /* The SSA ID of the label attached to this phi instruction dst. */
 	int path_node_size;
 	struct path_node_s *path_node;
+	int looped_path_node_size;
+	struct path_node_s *looped_path_node;
 };
 
 #define NODE_TYPE_UNKNOWN 0

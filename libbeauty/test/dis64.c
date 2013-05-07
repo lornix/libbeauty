@@ -1403,6 +1403,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	int node;
 	int tmp;
 	int n;
+	int m;
 	int block_end;
 	const char *font = "graph.font";
 	const char *color;
@@ -1452,8 +1453,21 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		}
 		if (nodes[node].phi_size) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
-				tmp = fprintf(fd, "phi[%d] = 0x%x\\l",
+				tmp = fprintf(fd, "phi[%d] = REG0x%x:",
 					n, nodes[node].phi[n].reg);
+				for (m = 0; m < nodes[node].path_size; m++) {
+					tmp = fprintf(fd, "P0x%x:FPN:0x%x:SN:0x%x, ",
+						nodes[node].phi[n].path_node[m].path,
+						nodes[node].phi[n].path_node[m].first_prev_node,
+						nodes[node].phi[n].path_node[m].node);
+				}
+				for (m = 0; m < nodes[node].looped_path_size; m++) {
+					tmp = fprintf(fd, "LP0x%x:FPN:0x%x:SN:0x%x, ",
+						nodes[node].phi[n].looped_path_node[m].path,
+						nodes[node].phi[n].looped_path_node[m].first_prev_node,
+						nodes[node].phi[n].looped_path_node[m].node);
+				}
+				tmp = fprintf(fd, "\\l");
 			}
 		}
 		process_state = &external_entry_points[nodes[node].entry_point - 1].process_state;
@@ -2202,32 +2216,50 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 		}
 		for (n = 0; n < 0xa0; n++) {
 			if (nodes[node].used_register[n].seen == 1) {
-				debug_print(DEBUG_MAIN, 1, "Adding register 0x%x to phi_node 0x%x\n", n, phi_node);
+				debug_print(DEBUG_ANALYSE_PHI, 1, "Adding register 0x%x to phi_node 0x%x\n", n, phi_node);
 				tmp = add_phi_to_node(&(nodes[phi_node]), n);
-				debug_print(DEBUG_MAIN, 1, "Adding register 0x%x to phi_node 0x%x, status = %d\n", n, phi_node, tmp);
+				debug_print(DEBUG_ANALYSE_PHI, 1, "Adding register 0x%x to phi_node 0x%x, status = %d\n", n, phi_node, tmp);
 			}
 		}
 	}
 	return 0;
 }
 
-int find_phi_src_node_reg(struct self_s *self, struct path_s *paths, int paths_size, int path, int step, int node, int reg, int *src_node)
+int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes, int node_size, struct path_s *paths, int paths_size, int path, int step, int node, int reg, int *src_node, int *first_prev_node)
 {
 	int prev_path;
 	int prev_step;
 	int prev_node;
 	int tmp = 0;
+	int tmp2 = 0;
 	int tmp_node;
+	int ret = 1;
+	int first = 1;
+	
 
+	*src_node = 0;
+	*first_prev_node = 0;
 	tmp_node = node;
 	while (tmp == 0) {
 		tmp = find_prev_path_step_node(self, paths, paths_size, path, step, tmp_node, &prev_path, &prev_step, &prev_node);
-		debug_print(DEBUG_MAIN, 1, "phi_src:tmp = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, prev_path, prev_step, prev_node);
 		path = prev_path;
 		step = prev_step;
 		tmp_node = prev_node;
+		if (first) {
+			*first_prev_node = prev_node;
+			first = 0;
+		}
+		if (tmp == 0) {
+			tmp2 = nodes[tmp_node].used_register[reg].dst;
+			debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:tmp = 0x%x, tmp2 = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, tmp2, prev_path, prev_step, prev_node);
+			if (tmp2 == 1) {
+				*src_node = tmp_node;
+				ret = 0; /* Found */
+				break;
+			}
+		}
 	}
-	return 0;
+	return ret;
 }
 
 int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int node_size)
@@ -2238,21 +2270,56 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	int base_path;
 	int base_step;
 	int src_node;
+	int first_prev_node;
 	struct path_s *paths;
 	int paths_size;
 	int reg = 0;
+	int n, m;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 
 	for (node = 1; node <= node_size; node++) {
-		debug_print(DEBUG_MAIN, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
-			external_entry_points[nodes[node].entry_point - 1].name);
-		paths = external_entry_points[nodes[node].entry_point - 1].paths;
-		paths_size = external_entry_points[nodes[node].entry_point - 1].paths_size;
-		debug_print(DEBUG_MAIN, 1, "phi_src:paths = %p, paths_size = 0x%x\n", paths, paths_size);
-		path = nodes[node].path[0];
-		tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
-		debug_print(DEBUG_MAIN, 1, "phi_src:tmp = %d, base_path = 0x%x, base_step = 0x%x\n", tmp, base_path, base_step);
-		tmp = find_phi_src_node_reg(self, paths, paths_size, base_path, base_step, node, reg, &src_node);
+		if (nodes[node].phi_size > 0) {
+			for (n = 0; n < nodes[node].phi_size; n++) {
+				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
+					external_entry_points[nodes[node].entry_point - 1].name);
+				paths = external_entry_points[nodes[node].entry_point - 1].paths;
+				paths_size = external_entry_points[nodes[node].entry_point - 1].paths_size;
+				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:paths = %p, paths_size = 0x%x\n", paths, paths_size);
+				reg = nodes[node].phi[n].reg;
+				if (nodes[node].path_size > 0) {
+					nodes[node].phi[n].path_node = calloc(nodes[node].path_size, sizeof(struct path_node_s));
+					nodes[node].phi[n].path_node_size = nodes[node].path_size;
+				}
+				if (nodes[node].looped_path_size > 0) {
+					nodes[node].phi[n].looped_path_node = calloc(nodes[node].looped_path_size, sizeof(struct path_node_s));
+					nodes[node].phi[n].looped_path_node_size = nodes[node].looped_path_size;
+				}
+
+				for (m = 0; m < nodes[node].path_size; m++) {
+					path = nodes[node].path[m];
+					tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
+					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, n = 0x%x, m = 0x%x\n", node, n, m);
+					nodes[node].phi[n].path_node[m].path = path;
+					nodes[node].phi[n].path_node[m].first_prev_node = first_prev_node;
+					nodes[node].phi[n].path_node[m].node = src_node;
+					
+				}
+				for (m = 0; m < nodes[node].looped_path_size; m++) {
+					path = nodes[node].looped_path[m];
+					tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
+					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, n = 0x%x, m = 0x%x\n", node, n, m);
+					nodes[node].phi[n].looped_path_node[m].path = path;
+					nodes[node].phi[n].looped_path_node[m].first_prev_node = first_prev_node;
+					nodes[node].phi[n].looped_path_node[m].node = src_node;
+				}
+			}
+		}
 	}
 		
 	return 0;
