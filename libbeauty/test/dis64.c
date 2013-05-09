@@ -1405,6 +1405,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	int n;
 	int m;
 	int block_end;
+	int node_size_limited;
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
@@ -1421,7 +1422,13 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
-	for (node = 1; node <= *node_size; node++) {
+	node_size_limited = *node_size;
+#if 0
+	if (node_size_limited > 50) {
+		node_size_limited = 50;
+	}
+#endif
+	for (node = 1; node <= node_size_limited; node++) {
 #if 0
 		if ((node != 0x13) && 
 			(node != 0x14) && 
@@ -1931,19 +1938,22 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			/* DSTA, SRCA, SRCB == nothing */
 			case MOV:
 				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
-					nodes[node].used_register[instruction->dstA.index].seen = 2;
-					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 2;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					}
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* If SRC and DST in same instruction, let SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
-					(instruction->srcA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
-					nodes[node].used_register[instruction->srcA.index].seen = 1;
-					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					}
+					nodes[node].used_register[instruction->srcA.index].src = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -1965,19 +1975,22 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case SAR:
 			case SEX:
 				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
-					nodes[node].used_register[instruction->dstA.index].seen = 1;
-					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 1;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					}
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
 				if ((instruction->srcA.store == STORE_REG) &&
-					(instruction->srcA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
-					nodes[node].used_register[instruction->srcA.index].seen = 1;
-					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					}
+					nodes[node].used_register[instruction->srcA.index].src = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -1988,18 +2001,23 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			/* DSTA = nothing, SRCA, SRCB == DSTA */
 			case CMP:
 				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
-					nodes[node].used_register[instruction->dstA.index].seen = 1;
-					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 1;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					}
+					/* CMP and TEST do not have a dst */
+					nodes[node].used_register[instruction->dstA.index].src = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
 				}
 				/* DST does not exist, let DSTA be the SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
-					(instruction->srcA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
-					nodes[node].used_register[instruction->srcA.index].seen = 1;
-					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					}
+					nodes[node].used_register[instruction->srcA.index].src = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -2007,12 +2025,13 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			/* DSTA = EAX, SRCN = parameters */
 			case CALL:
 				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->dstA.index].seen == 0)) {
-					nodes[node].used_register[instruction->dstA.index].seen = 1;
-					nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 1;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+					}
 					nodes[node].used_register[instruction->dstA.index].dst = 1;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "CALL Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* FIXME: TODO params */
 				break;
@@ -2023,10 +2042,12 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			/* DSTA = nothing, SRCA, SRCB = nothing */
 			case RET:
 				if ((instruction->srcA.store == STORE_REG) &&
-					(instruction->srcA.indirect == IND_DIRECT) &&
-					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
-					nodes[node].used_register[instruction->srcA.index].seen = 1;
-					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					}
+					nodes[node].used_register[instruction->srcA.index].src = 1;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -2040,6 +2061,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
 					nodes[node].used_register[instruction->srcA.index].seen = 1;
 					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+					/* TODO: Add register src index here */
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -2251,7 +2273,9 @@ int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes
 		}
 		if (tmp == 0) {
 			tmp2 = nodes[tmp_node].used_register[reg].dst;
-			debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:tmp = 0x%x, tmp2 = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, tmp2, prev_path, prev_step, prev_node);
+			if (node <= 4) {
+				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:tmp = 0x%x, tmp2 = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, tmp2, prev_path, prev_step, prev_node);
+				}
 			if (tmp2 == 1) {
 				*src_node = tmp_node;
 				ret = 0; /* Found */
@@ -2267,6 +2291,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	int path;
 	int node;
 	int tmp;
+	int node_size_limited;
 	int base_path;
 	int base_step;
 	int src_node;
@@ -2277,7 +2302,13 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	int n, m;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 
-	for (node = 1; node <= node_size; node++) {
+	node_size_limited = node_size;
+#if 0
+	if (node_size_limited > 50) {
+		node_size_limited = 50;
+	}
+#endif
+	for (node = 1; node <= node_size_limited; node++) {
 		if (nodes[node].phi_size > 0) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
@@ -2301,7 +2332,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 					debug_print(DEBUG_ANALYSE_PHI, 1, "path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
 					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
-					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, n = 0x%x, m = 0x%x\n", node, n, m);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, phi:n = 0x%x, path_node:m = 0x%x\n", node, n, m);
 					nodes[node].phi[n].path_node[m].path = path;
 					nodes[node].phi[n].path_node[m].first_prev_node = first_prev_node;
 					nodes[node].phi[n].path_node[m].node = src_node;
@@ -2313,7 +2344,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
 					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
-					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, n = 0x%x, m = 0x%x\n", node, n, m);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, phi:n = 0x%x, path_node:m = 0x%x\n", node, n, m);
 					nodes[node].phi[n].looped_path_node[m].path = path;
 					nodes[node].phi[n].looped_path_node[m].first_prev_node = first_prev_node;
 					nodes[node].phi[n].looped_path_node[m].node = src_node;
