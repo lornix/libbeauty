@@ -375,6 +375,8 @@ struct external_entry_point_s {
 	struct path_s *paths;
 	int loops_size;
 	struct loop_s *loops;
+	int member_nodes_size; 
+	int *member_nodes; /* A list of all the nodes that are part of this function */
 	int start_ast_container;
 	/* FIXME: add function return type and param types */
 };

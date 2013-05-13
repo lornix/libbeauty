@@ -1391,7 +1391,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 }
 
 int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size,
-                         struct label_redirect_s *label_redirect, struct label_s *labels)
+                         struct label_redirect_s *label_redirect, struct label_s *labels, int entry_point)
 {
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
@@ -1404,12 +1404,19 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	int tmp;
 	int n;
 	int m;
+	int member;
 	int block_end;
 	int node_size_limited;
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
-	filename = "test.dot";
+
+	if (external_entry_points[entry_point].member_nodes_size == 0) {
+		debug_print(DEBUG_MAIN, 1, "external_entry_point 0x%x empty\n", entry_point);
+		return 1;
+	}
+	filename = calloc(1024, sizeof(char));
+	tmp = snprintf(filename, 1024, "./cfg/test-0x%04x-%s.dot", entry_point, external_entry_points[entry_point].name);
 
 	fd = fopen(filename, "w");
 	if (!fd) {
@@ -1428,7 +1435,9 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		node_size_limited = 50;
 	}
 #endif
-	for (node = 1; node <= node_size_limited; node++) {
+	for (member = 0; member < external_entry_points[entry_point].member_nodes_size; member++) {
+		node = external_entry_points[entry_point].member_nodes[member];
+//	for (node = 1; node <= node_size_limited; node++) {
 #if 0
 		if ((node != 0x13) && 
 			(node != 0x14) && 
@@ -2357,6 +2366,56 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 }
 
 
+int build_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point, int nodes_size)
+{
+	int *nodes;
+	int members_size;
+	int members_offset;
+	int n, m;
+	nodes = calloc(nodes_size + 1, sizeof(int));
+	if (!nodes) {
+		return 1;
+	}
+	for (n = 0; n < external_entry_point->paths_size; n++) {
+		for (m = 0; m < external_entry_point->paths[n].path_size; m++) {
+			nodes[external_entry_point->paths[n].path[m]] = 1;
+		}
+	}	
+	for (n = 0; n < external_entry_point->paths_size; n++) {
+		for (m = 0; m < external_entry_point->paths[n].path_size; m++) {
+			nodes[external_entry_point->paths[n].path[m]] = 1;
+		}
+	}
+	members_size = 0;
+	for (n = 0; n <= nodes_size; n++) {
+		if (nodes[n] == 1) {
+			members_size++;
+		}
+	}
+	external_entry_point->member_nodes = calloc(members_size, sizeof(int));
+	external_entry_point->member_nodes_size = members_size;
+	members_offset = 0;
+	for (n = 0; n <= nodes_size; n++) {
+		if (nodes[n] == 1) {
+			external_entry_point->member_nodes[members_offset] = n;
+			members_offset++;
+		}
+	}
+	free(nodes);
+	return 0;
+}
+
+int print_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point)
+{
+	int n;
+
+	printf("Members of function %s\n", external_entry_point->name);
+	for (n = 0; n < external_entry_point->member_nodes_size; n++) {
+		printf("0x%x ", external_entry_point->member_nodes[n]);
+	}
+	printf("\n");
+	return 0;
+}
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -2842,7 +2901,15 @@ int main(int argc, char *argv[])
 			debug_print(DEBUG_MAIN, 1, "FAILED: Node 0x%x with no if_tail\n", n);
 		}
 	}
-
+	/* Build the node members list for each function */
+	/* This allows us to output a single function in the .dot output files. */	
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid) {
+			tmp = build_entry_point_node_members(self, &external_entry_points[l], nodes_size);
+			tmp = print_entry_point_node_members(self, &external_entry_points[l]);
+		}
+	}
+	
 #if 1
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 21; l < 22; l++) {
@@ -3713,7 +3780,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels);
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid) {
+			tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels, l);
+		}
+	}
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
