@@ -1,0 +1,21 @@
+include $(top_srcdir)/misc/Makefile.common
+
+AM_CPPFLAGS = -O0 -g3 -Wall -I/usr/include/llvm-3.2 -L/usr/lib/llvm-3.2/lib
+#AM_CFLAGS = -O0 -g3 -Wall
+#CFLAGS = -O0 -g3 -Wall
+
+#modulesdir = $(pkglibdir)/beauty_exe
+lib_LTLIBRARIES = libbeauty_llvm.la
+#bin_PROGRAMS = dis
+
+#include_HEADERS = \
+#	exe.h
+
+#noinst_HEADERS = \
+#	exe.h
+
+libbeauty_llvm_la_SOURCES = \
+	llvm_ir.cpp
+libbeauty_llvm_la_LIBADD = -lLLVM-3.2
+libbeauty_llvm_la_LDFLAGS = \
+	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
