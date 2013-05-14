@@ -2463,6 +2463,7 @@ int main(int argc, char *argv[])
 	int loops_size = 2000;
 	struct ast_s *ast;
 	int *section_number_mapping;
+	struct export_data_s export_data;
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 
@@ -3786,7 +3787,9 @@ int main(int argc, char *argv[])
 			tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels, l);
 		}
 	}
-	tmp = llvm_export(&external_entry_points[0]);
+	export_data.first = 1;
+	export_data.name = "test-file-name-from-dis64.bc";
+	tmp = llvm_export(&export_data);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/

@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "llvm.h"
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 #include "llvm/DerivedTypes.h"
@@ -14,11 +15,11 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
-extern "C" int llvm_export(struct external_entry_point_s *external_entry_point) {
+extern "C" int llvm_export(struct export_data_s *export_data) {
 	LLVMContext Context;
 	const char *Path = "test_llvm_export.bc";
-//	const char *function_name = external_entry_point->name;
-	const char *function_name = "test123";
+	const char *function_name = export_data->name;
+//	const char *function_name = "test123";
 
 	Module *M = new Module("test_llvm_export", Context);
 
