@@ -107,6 +107,7 @@ src/input/instruction_decoder/amd64/Makefile
 src/execute/Makefile
 src/analyse/Makefile
 src/output/Makefile
+src/llvm/Makefile
 test/Makefile
 include/Makefile
 ])

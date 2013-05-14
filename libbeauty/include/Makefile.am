@@ -5,6 +5,7 @@ include_HEADERS = \
 	dis.h \
 	exe.h \
 	opcodes.h \
+	llvm.h \
 	rev.h
 
 

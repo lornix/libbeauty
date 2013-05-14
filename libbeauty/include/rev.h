@@ -415,5 +415,6 @@ extern void disassemble_callback_start(struct self_s *self);
 extern void disassemble_callback_end(struct self_s *self);
 
 #include <analyse.h>
+#include <llvm.h>
 
 #endif /* __REV__ */

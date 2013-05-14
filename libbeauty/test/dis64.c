@@ -3786,6 +3786,7 @@ int main(int argc, char *argv[])
 			tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels, l);
 		}
 	}
+	tmp = llvm_export(&external_entry_points[0]);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
