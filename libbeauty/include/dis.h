@@ -112,6 +112,7 @@ extern uint32_t getbyte(uint8_t *base_address, uint64_t offset);
 
 extern uint32_t getdword(uint8_t *base_address, uint64_t offset);
 
-extern int disassemble_amd64(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
+extern int disassemble_amd64(void *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
+uint32_t print_reloc_table_entry(struct reloc_table_s *reloc_table_entry);
 
 #endif /* __DIS__ */

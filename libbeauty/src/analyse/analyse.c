@@ -2062,34 +2062,3 @@ search_back_exit_free:
 	return 0;
 }
 
-int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct external_entry_point_s *external_entry_points)
-{
-	int n;
-	int l;
-	int tmp;
-
-	for (n = 0; n < handle->reloc_table_code_sz; n++) {
-		int len, len1;
-
-		len = strlen(handle->reloc_table_code[n].symbol_name);
-		for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-			if (external_entry_points[l].valid != 0) {
-				len1 = strlen(external_entry_points[l].name);
-				if (len != len1) {
-					continue;
-				}
-				tmp = strncmp(external_entry_points[l].name, handle->reloc_table_code[n].symbol_name, len);
-				if (0 == tmp) {
-					handle->reloc_table_code[n].external_functions_index = l;
-					handle->reloc_table_code[n].type =
-						external_entry_points[l].type;
-				}
-			}
-		}
-	}
-	return 0;
-}
-
-
-
-

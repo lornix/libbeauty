@@ -19,7 +19,7 @@
 #include <rev.h>
 #include "internal.h"
 
-int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
+int prefix_0f(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
 	int half;
 	uint8_t reg=0;
 	struct instruction_s *instruction;

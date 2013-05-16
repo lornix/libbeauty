@@ -70,38 +70,7 @@ int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t 
 	return 1;
 }
 
-static uint32_t print_reloc_table_entry(struct reloc_table *reloc_table_entry) {
-	debug_print(DEBUG_EXE, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
-	debug_print(DEBUG_EXE, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
-	debug_print(DEBUG_EXE, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
-	debug_print(DEBUG_EXE, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->value);
-	debug_print(DEBUG_EXE, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
-	debug_print(DEBUG_EXE, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
-	debug_print(DEBUG_EXE, 1, "Section name:%s\n", reloc_table_entry->section_name);
-	debug_print(DEBUG_EXE, 1, "Symbol name:%s\n", reloc_table_entry->symbol_name);
-	return 0;
-}
-
-int find_relocation_rodata(struct rev_eng *handle, uint64_t index, int *relocation_area, uint64_t *relocation_index) {
-	int n;
-	int found = 1;
-	struct reloc_table *reloc_table_entry;
-	debug_print(DEBUG_EXE, 1, "JMPT rodata_sz = 0x%"PRIx64"\n", handle->reloc_table_rodata_sz);
-	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
-		if (handle->reloc_table_rodata[n].address == index) {
-			reloc_table_entry = &(handle->reloc_table_rodata[n]);
-			print_reloc_table_entry(reloc_table_entry);
-			found = 0;
-			*relocation_area = handle->section_number_mapping[reloc_table_entry->section_index];
-			*relocation_index = reloc_table_entry->value;
-			break;
-		}
-	}
-	return found;
-}
-
-
-int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
+int process_block(struct self_s *self, struct process_state_s *process_state, void *handle_void, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
 	uint64_t offset = 0;
 	int result;
 	int n, m, l;
@@ -119,7 +88,6 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 	//struct memory_s *memory_data;
 	struct dis_instructions_s dis_instructions;
 	int *memory_used;
-	disassembler_ftype disassemble_fn = self->disassemble_fn;
 	struct entry_point_s *entry = self->entry_point;
 	uint64_t list_length = self->entry_point_list_length;
 
@@ -147,7 +115,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 		debug_print(DEBUG_EXE, 1, "eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
 			memory_reg[2].offset_value, offset);
 		/* the calling program must define this function. This is a callback. */
-		result = disassemble(handle, &dis_instructions, inst, offset);
+		result = disassemble(handle_void, &dis_instructions, inst, offset);
 		debug_print(DEBUG_EXE, 1, "bytes used = %d\n", dis_instructions.bytes_used);
 		/* Memory not used yet */
 		if (0 == memory_used[offset]) {
@@ -210,16 +178,16 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 		//disassemble_fn = disassembler (handle->bfd);
 		//debug_print(DEBUG_EXE, 1, "disassemble_fn done\n");
 		debug_print(DEBUG_EXE, 1, "disassemble att  : ");
-	        disasm_info.disassembler_options = "att";
-		disassemble_callback_start(self);
-		octets = (*disassemble_fn) (offset, &disasm_info);
-		disassemble_callback_end(self);
+		bf_disassemble_set_options(handle_void, "att");
+		bf_disassemble_callback_start(handle_void);
+		octets = bf_disassemble(handle_void, offset);
+		bf_disassemble_callback_end(handle_void);
 		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
 		debug_print(DEBUG_EXE, 1, "disassemble intel: ");
-	        disasm_info.disassembler_options = "intel";
-		disassemble_callback_start(self);
-		octets = (*disassemble_fn) (offset, &disasm_info);
-		disassemble_callback_end(self);
+		bf_disassemble_set_options(handle_void, "intel");
+		bf_disassemble_callback_start(handle_void);
+		octets = bf_disassemble(handle_void, offset);
+		bf_disassemble_callback_end(handle_void);
 		debug_print(DEBUG_EXE, 1, "  octets=%d\n", octets);
 		if (dis_instructions.bytes_used != octets) {
 			debug_print(DEBUG_EXE, 1, "Unhandled instruction. Length mismatch. Got %d, expected %d, Exiting\n", dis_instructions.bytes_used, octets);
@@ -341,7 +309,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, st
 					tmp = 0;
 					
 					do {
-						tmp = find_relocation_rodata(handle, index, &relocation_area, &relocation_index);
+						tmp = bf_find_relocation_rodata(handle_void, index, &relocation_area, &relocation_index);
 						if (!tmp) {
 							if (1 != relocation_area) {
 								debug_print(DEBUG_EXE, 1, "JMPT Relocation area not to code\n");

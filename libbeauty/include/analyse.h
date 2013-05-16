@@ -44,7 +44,6 @@ extern int register_label(struct external_entry_point_s *entry_point, uint64_t v
 extern int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_point_s *entry_point,
 			 int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
 extern int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, struct mid_start_s *mid_start, int reg_stack, uint64_t indirect_init_value, uint64_t indirect_offset_value, uint64_t *size, int *search_back_seen, uint64_t **inst_list);
-extern int link_reloc_table_code_to_external_entry_point(struct rev_eng *handle, struct external_entry_point_s *external_entry_points);
 
 
 

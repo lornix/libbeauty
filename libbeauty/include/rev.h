@@ -27,10 +27,8 @@
 #ifndef __REV__
 #define __REV__
 
-#include <bfd.h>
-#include <bfl.h>
 #include <inttypes.h>
-#include <dis-asm.h>
+//#include <dis-asm.h>
 #include <opcodes.h>
 
 #define DEBUG_MAIN 1
@@ -44,34 +42,16 @@
 
 void debug_print(int module, int level, const char *format, ...);
 
-struct reloc_table {
+struct reloc_table_s {
 	int		type;
 	uint64_t	address;
 	uint64_t	size;
 	uint64_t	value;
 	uint64_t	external_functions_index;
 	uint64_t	section_index;
+	uint64_t	relocated_area;
 	const char	*section_name;
 	const char	*symbol_name;
-};
-
-struct rev_eng {
-	bfd		*bfd;		/* libbfd structure */
-	asection	**section;	/* sections */
-	long		section_sz;
-	asymbol		**symtab;	/* symbols (sorted) */
-	long		symtab_sz;
-	asymbol		**dynsymtab; 	/* dynamic symbols (sorted) */
-	long		dynsymtab_sz;
-	arelent		**dynreloc;	/* dynamic relocations (sorted) */
-	long		dynreloc_sz;
-	struct reloc_table	*reloc_table_code;   /* relocation table */
-	uint64_t	reloc_table_code_sz;
-	struct reloc_table	*reloc_table_data;   /* relocation table */
-	uint64_t	reloc_table_data_sz;
-	struct reloc_table	*reloc_table_rodata;   /* relocation table */
-	uint64_t	reloc_table_rodata_sz;
-	int		*section_number_mapping;    /* Mapping bfd sections onto libbeauty sections */
 };
 
 #include <dis.h>
@@ -388,7 +368,6 @@ struct self_s {
 	size_t rodata_size;
 	uint8_t *rodata;
 	struct inst_log_entry_s *inst_log_entry;
-	disassembler_ftype disassemble_fn;
 	struct external_entry_point_s *external_entry_points;
 	struct relocation_s *relocations;
 	struct entry_point_s *entry_point; /* This is used to hold return values from process block */
@@ -398,7 +377,7 @@ struct self_s {
 };
 
 extern int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);
-extern int process_block(struct self_s *self, struct process_state_s *process_state, struct rev_eng *handle, uint64_t inst_log_prev, uint64_t eip_offset_limit);
+extern int process_block(struct self_s *self, struct process_state_s *process_state, void *handle_void, uint64_t inst_log_prev, uint64_t eip_offset_limit);
 extern int output_label(struct label_s *label, FILE *fd);
 int output_function_body(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
@@ -406,14 +385,15 @@ uint32_t output_function_name(FILE *fd,
 		struct external_entry_point_s *external_entry_point);
 int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr);
-uint32_t relocated_data(struct rev_eng *handle, uint64_t offset, uint64_t size);
+uint32_t relocated_data(void *handle, uint64_t offset, uint64_t size);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int print_inst_short(struct self_s *self, struct instruction_s *instruction);
-extern int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
+extern int disassemble(void *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
 extern void disassemble_callback_start(struct self_s *self);
 extern void disassemble_callback_end(struct self_s *self);
 
+#include <bfl.h>
 #include <analyse.h>
 #include <llvm.h>
 

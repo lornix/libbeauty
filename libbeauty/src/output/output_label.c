@@ -435,23 +435,6 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	return err;
 }
 
-/* If relocated_data returns 1, it means that there was a
- * relocation table entry for this data location.
- * This most likely means that this is a pointer.
- * FIXME: What to do if the relocation is to the code segment? Pointer to function?
- */
-uint32_t relocated_data(struct rev_eng *handle, uint64_t offset, uint64_t size)
-{
-	int n;
-	for (n = 0; n < handle->reloc_table_data_sz; n++) {
-		if (handle->reloc_table_data[n].address == offset) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-
 uint32_t output_function_name(FILE *fd,
 		struct external_entry_point_s *external_entry_point)
 {

@@ -125,7 +125,7 @@ extern struct memory_s *add_new_store(
 
 //extern instructions_t instructions;
 extern uint8_t *inst;
-extern struct rev_eng *handle;
+extern void *handle;
 extern struct disassemble_info disasm_info;
 extern char *dis_flags_table[];
 extern uint64_t inst_log;      /* Pointer to the current free instruction log entry. */

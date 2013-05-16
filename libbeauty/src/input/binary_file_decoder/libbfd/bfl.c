@@ -30,6 +30,7 @@
 #include <inttypes.h>
 
 #include <rev.h>
+#include "bfl-internal.h"
 #include <bfl.h>
 
 /* The symbol table.  */
@@ -37,6 +38,8 @@
 
 /* Number of symbols in `syms'.  */
 //static long symcount = 0;
+
+char *disassemble_string;
 
 static void insert_section(struct bfd *b, asection *sect, void *obj)
 {
@@ -136,8 +139,9 @@ static void print_code_section(struct rev_eng* ret)
 }
 #endif
 
-int bf_find_section(struct rev_eng* ret, char *name, int name_len, int *section_number)
+int bf_find_section(void *handle_void, char *name, int name_len, int *section_number)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	int n;
 	int found = 0;
 	*section_number = 0;
@@ -155,8 +159,9 @@ int bf_find_section(struct rev_eng* ret, char *name, int name_len, int *section_
 }
 
 
-int64_t bf_get_code_size(struct rev_eng* ret)
+int64_t bf_get_code_size(void *handle_void)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection          *section = ret->section[0];
 	bfd_size_type      datasize = 0;
 	int64_t            code_size = 0;
@@ -173,8 +178,9 @@ int64_t bf_get_code_size(struct rev_eng* ret)
 	return code_size;
 }
 
-int64_t bf_get_data_size(struct rev_eng* ret)
+int64_t bf_get_data_size(void *handle_void)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection          *section = ret->section[1];
 	bfd_size_type      datasize = 0;
 	int64_t            code_size = 0;
@@ -191,8 +197,9 @@ int64_t bf_get_data_size(struct rev_eng* ret)
 	return code_size;
 }
 
-int64_t bf_get_rodata_size(struct rev_eng* ret)
+int64_t bf_get_rodata_size(void *handle_void)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection          *section = ret->section[1];
 	bfd_size_type      datasize = 0;
 	int64_t            code_size = 0;
@@ -209,14 +216,94 @@ int64_t bf_get_rodata_size(struct rev_eng* ret)
 	return code_size;
 }
 
-int bf_get_reloc_table_size_code_section(struct rev_eng* ret, uint64_t *size)
+int bf_get_reloc_table_size_code_section(void *handle_void, uint64_t *size)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection          *section = ret->section[0];
 	bfd_size_type      datasize = *size;
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
 	*size = datasize;
 	return 1;
+}
+
+uint32_t bf_relocated_code(void *handle_void, uint8_t *base_address, uint64_t offset, uint64_t size, struct reloc_table_s **reloc_table_entry)
+{
+	int n;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	for (n = 0; n < handle->reloc_table_code_sz; n++) {
+		if (handle->reloc_table_code[n].address == offset) {
+			*reloc_table_entry = &(handle->reloc_table_code[n]);
+			return 0;
+		}
+	}
+	return 1;
+}
+
+int bf_find_relocation_rodata(void *handle_void, uint64_t index, int *relocation_area, uint64_t *relocation_index)
+{
+	int n;
+	int found = 1;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	struct reloc_table_s *reloc_table_entry;
+	debug_print(DEBUG_EXE, 1, "JMPT rodata_sz = 0x%"PRIx64"\n", handle->reloc_table_rodata_sz);
+	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
+		if (handle->reloc_table_rodata[n].address == index) {
+			reloc_table_entry = &(handle->reloc_table_rodata[n]);
+			print_reloc_table_entry(reloc_table_entry);
+			found = 0;
+			*relocation_area = reloc_table_entry->relocated_area;
+			*relocation_index = reloc_table_entry->value;
+			break;
+		}
+	}
+	return found;
+}
+
+int bf_link_reloc_table_code_to_external_entry_point(void *handle_void, struct external_entry_point_s *external_entry_points)
+{
+	int n;
+	int l;
+	int tmp;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+
+	for (n = 0; n < handle->reloc_table_code_sz; n++) {
+		int len, len1;
+
+		len = strlen(handle->reloc_table_code[n].symbol_name);
+		for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+			if (external_entry_points[l].valid != 0) {
+				len1 = strlen(external_entry_points[l].name);
+				if (len != len1) {
+					continue;
+				}
+				tmp = strncmp(external_entry_points[l].name, handle->reloc_table_code[n].symbol_name, len);
+				if (0 == tmp) {
+					handle->reloc_table_code[n].external_functions_index = l;
+					handle->reloc_table_code[n].type =
+						external_entry_points[l].type;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+/* If relocated_data returns 1, it means that there was a
+ * relocation table entry for this data location.
+ * This most likely means that this is a pointer.
+ * FIXME: What to do if the relocation is to the code segment? Pointer to function?
+ */
+uint32_t bf_relocated_data(void *handle_void, uint64_t offset, uint64_t size)
+{
+	int n;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	for (n = 0; n < handle->reloc_table_data_sz; n++) {
+		if (handle->reloc_table_data[n].address == offset) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static void
@@ -288,9 +375,10 @@ dump_reloc_set (bfd *abfd, asection *sec, arelent **relpp, long relcount)
     }
 }
 
-int bf_get_reloc_table_code_section(struct rev_eng* ret)
+int bf_get_reloc_table_code_section(void *handle_void)
 {
 	/* FIXME: search for .text section instead of selecting 0 */
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	asection	*sym_sec;
 	bfd_size_type	datasize;
@@ -341,6 +429,7 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 		sym_val = bfd_asymbol_value(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_code[n].section_index = sym_sec->index;
+		ret->reloc_table_code[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_code[n].section_name = sym_sec->name;
 		ret->reloc_table_code[n].symbol_name = sym_name;
 		
@@ -351,8 +440,9 @@ int bf_get_reloc_table_code_section(struct rev_eng* ret)
 	return 1;
 }
 
-int bf_get_reloc_table_data_section(struct rev_eng* ret)
+int bf_get_reloc_table_data_section(void *handle_void)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	asection	*sym_sec;
 	bfd_size_type	datasize;
@@ -403,6 +493,7 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 		sym_val = bfd_asymbol_value(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_data[n].section_index = sym_sec->index;
+		ret->reloc_table_data[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_data[n].section_name = sym_sec->name;
 		ret->reloc_table_data[n].symbol_name = sym_name;
 		
@@ -413,8 +504,9 @@ int bf_get_reloc_table_data_section(struct rev_eng* ret)
 	return 1;
 }
 
-int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
+int bf_get_reloc_table_rodata_section(void *handle_void)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	asection	*sym_sec;
 	bfd_size_type	datasize;
@@ -466,6 +558,7 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 		sym_val = bfd_asymbol_value(*rel->sym_ptr_ptr);
 		sym_sec = bfd_get_section(*rel->sym_ptr_ptr);
 		ret->reloc_table_rodata[n].section_index = sym_sec->index;
+		ret->reloc_table_rodata[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_rodata[n].section_name = sym_sec->name;
 		ret->reloc_table_rodata[n].symbol_name = sym_name;
 		
@@ -476,8 +569,62 @@ int bf_get_reloc_table_rodata_section(struct rev_eng* ret)
 	return 1;
 }
 
-int bf_copy_code_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
+int external_entry_points_init_bfl(struct external_entry_point_s *external_entry_points, void *handle_void)
 {
+	int n;
+	int l;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+
+	/* Print the symtab */
+	debug_print(DEBUG_MAIN, 1, "symtab_sz = %lu\n", handle->symtab_sz);
+	if (handle->symtab_sz >= 100) {
+		debug_print(DEBUG_MAIN, 1, "symtab too big!!! EXITING\n");
+		return 1;
+	}
+	n = 0;
+	for (l = 0; l < handle->symtab_sz; l++) {
+		size_t length;
+		/* FIXME: value == 0 for the first function in the .o file. */
+		/*        We need to be able to handle more than
+		          one function per .o file. */
+		debug_print(DEBUG_MAIN, 1, "section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
+			handle->symtab[l]->section->id,
+			handle->symtab[l]->section->index,
+			handle->symtab[l]->flags,
+			handle->symtab[l]->value);
+		if ((handle->symtab[l]->flags & 0x8) ||
+			(handle->symtab[l]->flags == 0)) {
+			external_entry_points[n].valid = 1;
+			/* 1: Public function entry point
+			 * 2: Private function entry point
+			 * 3: Private label entry point
+			 */
+			if (handle->symtab[l]->flags & 0x8) {
+				external_entry_points[n].type = 1;
+			} else {
+				external_entry_points[n].type = 2;
+			}
+			external_entry_points[n].section_offset = l;
+			external_entry_points[n].section_id = 
+				handle->symtab[l]->section->id;
+			external_entry_points[n].section_index = 
+				handle->symtab[l]->section->index;
+			external_entry_points[n].value = handle->symtab[l]->value;
+			length = strlen(handle->symtab[l]->name);
+			external_entry_points[n].name = malloc(length+1);
+			strncpy(external_entry_points[n].name, handle->symtab[l]->name, length+1);
+			n++;
+		}
+
+	}
+	return 0;
+}
+
+
+
+int bf_copy_code_section(void *handle_void, uint8_t *data, uint64_t data_size)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	bfd_size_type	datasize = data_size;
 	int		n, tmp;
@@ -497,8 +644,9 @@ int bf_copy_code_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	return result;
 }
 
-int bf_copy_data_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
+int bf_copy_data_section(void *handle_void, uint8_t *data, uint64_t data_size)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	bfd_size_type	datasize = data_size;
 	int		n, tmp;
@@ -518,8 +666,9 @@ int bf_copy_data_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
 	return result;
 }
 
-int bf_copy_rodata_section(struct rev_eng* ret, uint8_t *data, uint64_t data_size)
+int bf_copy_rodata_section(void *handle_void, uint8_t *data, uint64_t data_size)
 {
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
 	asection	*section;
 	bfd_size_type	datasize = data_size;
 	int		n, tmp;
@@ -544,8 +693,9 @@ const char *bfd_err(void)
 	return bfd_errmsg(bfd_get_error());
 }
 
-int bf_get_arch_mach(struct rev_eng *handle, uint32_t *arch, uint64_t *mach)
+int bf_get_arch_mach(void *handle_void, uint32_t *arch, uint64_t *mach)
 {
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
 	bfd *b;
 
 	if (!handle) {
@@ -560,7 +710,7 @@ int bf_get_arch_mach(struct rev_eng *handle, uint32_t *arch, uint64_t *mach)
 }
 
 
-struct rev_eng *bf_test_open_file(const char *fn)
+void *bf_test_open_file(const char *fn)
 {
 	struct rev_eng *ret;
 	int64_t tmp;
@@ -685,11 +835,12 @@ struct rev_eng *bf_test_open_file(const char *fn)
 #endif
         debug_print(DEBUG_INPUT_BFD, 1, "Setup ok\n");
 
-	return ret;
+	return (void*)ret;
 }
 
-void bf_test_close_file(struct rev_eng *r)
+void bf_test_close_file(void *handle_void)
 {
+	struct rev_eng *r = (struct rev_eng*) handle_void;
 	if (!r) return;
 	if ( r->section )
 		free(r->section);
@@ -703,3 +854,150 @@ void bf_test_close_file(struct rev_eng *r)
 	free(r);
 }
 
+
+int bf_print_symtab(void *handle_void)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	int l;
+	debug_print(DEBUG_INPUT_BFD, 1, "symtab_size = %ld\n", handle->symtab_sz);
+	for (l = 0; l < handle->symtab_sz; l++) {
+		debug_print(DEBUG_MAIN, 1, "%d\n", l);
+		debug_print(DEBUG_MAIN, 1, "type:0x%02x\n", handle->symtab[l]->flags);
+		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->symtab[l]->name);
+		debug_print(DEBUG_MAIN, 1, "value=0x%02"PRIx64"\n", handle->symtab[l]->value);
+		debug_print(DEBUG_MAIN, 1, "section=%p\n", handle->symtab[l]->section);
+		debug_print(DEBUG_MAIN, 1, "section name=%s\n", handle->symtab[l]->section->name);
+		debug_print(DEBUG_MAIN, 1, "section flags=0x%02x\n", handle->symtab[l]->section->flags);
+		debug_print(DEBUG_MAIN, 1, "section index=0x%02"PRIx32"\n", handle->symtab[l]->section->index);
+		debug_print(DEBUG_MAIN, 1, "section id=0x%02"PRIx32"\n", handle->symtab[l]->section->id);
+	}
+	return 0;
+}
+
+int bf_init_section_number_mapping(void *handle_void, int **section_number_mapping)
+{
+	int l;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	int *map;
+
+	map = calloc(handle->section_sz, sizeof(int));
+	handle->section_number_mapping = map;
+	for (l = 0; l < handle->section_sz; l++) {
+			const char *name = handle->section[l]->name;
+		if (!strncmp(".text", name, 5)) {
+			map[l] = 1;
+		}
+		if (!strncmp(".rodata", name, 7)) {
+			map[l] = 2;
+		}
+		if (!strncmp(".data", name, 5)) {
+			map[l] = 3;
+		}
+	}
+	*section_number_mapping = map;
+	return 0;
+}
+
+int bf_print_sectiontab(void *handle_void)
+{
+	int l;
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+
+	debug_print(DEBUG_MAIN, 1, "sectiontab_size = %ld\n", handle->section_sz);
+	for (l = 0; l < handle->section_sz; l++) {
+		debug_print(DEBUG_MAIN, 1, "%d\n", l);
+		debug_print(DEBUG_MAIN, 1, "flags:0x%02x\n", handle->section[l]->flags);
+		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->section[l]->name);
+		debug_print(DEBUG_MAIN, 1, "index=0x%02"PRIx32"\n", handle->section[l]->index);
+		debug_print(DEBUG_MAIN, 1, "id=0x%02"PRIx32"\n", handle->section[l]->id);
+		debug_print(DEBUG_MAIN, 1, "sectio=%p\n", handle->section[l]);
+		debug_print(DEBUG_MAIN, 1, "section_number_mapping=0x%x\n", handle->section_number_mapping[l]);
+	}
+	return 0;
+}
+
+void bf_disassemble_callback_start(void *handle_void)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	handle->disassemble_string[0] = 0;
+}
+
+void bf_disassemble_callback_end(void *handle_void)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	debug_print(DEBUG_INPUT_DIS, 1, "%s\n", handle->disassemble_string);
+}
+
+int bf_disassemble_print_callback(FILE *stream, const char *format, ...)
+{
+	va_list ap;
+	char *str1;
+	va_start(ap, format);
+	if (!strncmp(format, "%s", 2)) {
+		str1 = va_arg(ap, char *);
+		strcat(disassemble_string, str1);
+	} else if (!strncmp(format, "0x%s", 4)) {
+		str1 = va_arg(ap, char *);
+		strcat(disassemble_string, "0x");
+		strcat(disassemble_string, str1);
+	} else {
+		strcat(disassemble_string, format);
+	}
+	va_end(ap);
+	return 0;
+}
+
+
+int bf_disassemble_init(void *handle_void, int inst_size, uint8_t *inst)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	struct disassemble_info *disasm_info = &(handle->disasm_info);
+	disassembler_ftype disassemble_fn;
+
+	init_disassemble_info(disasm_info, stdout, (fprintf_ftype) bf_disassemble_print_callback);
+	disasm_info->flavour = bfd_get_flavour(handle->bfd);
+	disasm_info->arch = bfd_get_arch(handle->bfd);
+	disasm_info->mach = bfd_get_mach(handle->bfd);
+	disasm_info->disassembler_options = "intel";
+	disasm_info->octets_per_byte = bfd_octets_per_byte(handle->bfd);
+	disasm_info->skip_zeroes = 8;
+	disasm_info->skip_zeroes_at_end = 3;
+	disasm_info->disassembler_needs_relocs = 0;
+	disasm_info->buffer_length = inst_size;
+	disasm_info->buffer = inst;
+
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn inst=%p, inst_size = 0x%x\n", inst, inst_size);
+	disassemble_fn = disassembler(handle->bfd);
+	handle->disassemble_fn = disassemble_fn;
+	/* disassemble_string point needs to be a global for the bf_disassemble_print_callback */
+	disassemble_string = calloc(1, 1024);
+	handle->disassemble_string = disassemble_string;
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %llx, %llx\n", disassemble_fn, print_insn_i386);
+	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %llx, %llx\n", *disassemble_fn, *print_insn_i386);
+	return 0;
+}
+
+int bf_disassemble_set_options(void *handle_void, char *options)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	handle->disasm_info.disassembler_options = options;
+	return 0;
+}
+
+int bf_disassemble(void *handle_void, int offset)
+{
+	struct rev_eng *handle = (struct rev_eng*) handle_void;
+	struct disassemble_info *disasm_info = &(handle->disasm_info);
+	disassembler_ftype disassemble_fn = handle->disassemble_fn;
+	int octets = 0;
+	debug_print(DEBUG_MAIN, 1, "bf_disassemble_fn %p, %p offset = 0x%x\n", disassemble_fn, print_insn_i386, offset);
+#if 0
+	for (n = 0; n < disasm_info->buffer_length; n++) {
+		printf("0x%x ", disasm_info->buffer[n]);
+	}
+	printf("\n");
+#endif
+	octets = (*disassemble_fn) (offset, disasm_info);
+	return octets;
+}

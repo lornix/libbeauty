@@ -19,7 +19,7 @@
 #include <rev.h>
 #include "internal.h"
 
-int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint64_t size, uint8_t rex) {
+int prefix_0f(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint64_t size, uint8_t rex) {
 	int half;
 	uint8_t reg = 0;
 	int tmp;
@@ -103,7 +103,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		instruction->srcA.value_size = 4;
 		debug_print(DEBUG_INPUT_DIS, 1, "JCD7: Before: %d\n", dis_instructions->instruction_number);
 		dis_instructions->instruction_number++;
-		result = dis_Gx_Ex(handle, MOV, rex, dis_instructions, base_address, offset, &reg, size);
+		result = dis_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, size);
 		debug_print(DEBUG_INPUT_DIS, 1, "JCD7: After: %d\n", dis_instructions->instruction_number);
 		break;
 	/* JMP */
@@ -183,7 +183,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 4;
 		dis_instructions->instruction_number++;
-		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
+		tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
 		instruction->flags = 0;
@@ -222,7 +222,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 	case 0xb4:												/* LFS Ev */
 	case 0xb5:												/* LGS Ev */
 	case 0xb6:												/* MOVZX Gv,Eb */
-		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
+		tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
 		instruction->flags = 0;
@@ -243,7 +243,7 @@ int prefix_0f(struct rev_eng *handle, struct dis_instructions_s *dis_instruction
 		result = 1;
 		break;
 	case 0xb7:												/* MOVZX Gv,Ev */
-		tmp = rmb(handle, dis_instructions, base_address, offset, size, rex, &reg, &half);
+		tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, &reg, &half);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = MOV;
 		instruction->flags = 0;

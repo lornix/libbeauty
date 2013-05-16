@@ -60,8 +60,7 @@ uint8_t *data;
 size_t data_size = 0;
 uint8_t *rodata;
 size_t rodata_size = 0;
-struct rev_eng *handle;
-struct disassemble_info disasm_info;
+void *handle_void;
 char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
@@ -74,8 +73,6 @@ int debug_exe = 1;
 int debug_analyse = 1;
 int debug_analyse_paths = 1;
 int debug_analyse_phi = 1;
-
-char disassemble_string[1024];
 
 void debug_print(int module, int level, const char *format, ...) {
 	va_list ap;
@@ -127,33 +124,6 @@ void debug_print(int module, int level, const char *format, ...) {
 	va_end(ap);
 }
 
-void disassemble_callback_start(struct self_s *self) {
-	disassemble_string[0] = 0;
-}
-
-void disassemble_callback_end(struct self_s *self) {
-	debug_print(DEBUG_INPUT_DIS, 1, "%s\n", disassemble_string);
-}
-
-int disassemble_print_callback(FILE *stream, const char *format, ...) {
-	va_list ap;
-	char *str1;
-	va_start(ap, format);
-	if (!strncmp(format, "%s", 2)) {
-		str1 = va_arg(ap, char *);
-		strcat(disassemble_string, str1);
-	} else if (!strncmp(format, "0x%s", 4)) {
-		str1 = va_arg(ap, char *);
-		strcat(disassemble_string, "0x");
-		strcat(disassemble_string, str1);
-	} else {
-		strcat(disassemble_string, format);
-	}
-	va_end(ap);
-	return 0;
-}
-
-
 #define AST_SIZE 300
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
@@ -173,9 +143,9 @@ int memory_used[MEMORY_USED_SIZE];
 /* Used to keep a non bfd version of the relocation entries */
 int memory_relocation[MEMORY_USED_SIZE];
 
-int disassemble(struct rev_eng *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
+int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
 	int tmp;
-	tmp = disassemble_amd64(handle, dis_instructions, base_address, offset);
+	tmp = disassemble_amd64(handle_void, dis_instructions, base_address, offset);
 	return tmp;
 }
 
@@ -470,54 +440,17 @@ int print_mem(struct memory_s *memory, int location) {
 	return 0;
 }
 
-int external_entry_points_init(struct external_entry_point_s *external_entry_points, struct rev_eng *handle)
+int external_entry_points_init(struct external_entry_point_s *external_entry_points, void *handle_void)
 {
+	int tmp;
 	int n;
-	int l;
-	//struct memory_s *memory_text;
 	struct memory_s *memory_stack;
 	struct memory_s *memory_reg;
 	struct memory_s *memory_data;
-	//int *memory_used;
 
-	/* Print the symtab */
-	debug_print(DEBUG_MAIN, 1, "symtab_sz = %lu\n", handle->symtab_sz);
-	if (handle->symtab_sz >= 100) {
-		debug_print(DEBUG_MAIN, 1, "symtab too big!!! EXITING\n");
-		return 1;
-	}
-	n = 0;
-	for (l = 0; l < handle->symtab_sz; l++) {
-		size_t length;
-		/* FIXME: value == 0 for the first function in the .o file. */
-		/*        We need to be able to handle more than
-		          one function per .o file. */
-		debug_print(DEBUG_MAIN, 1, "section_id = %d, section_index = %d, flags = 0x%04x, value = 0x%04"PRIx64"\n",
-			handle->symtab[l]->section->id,
-			handle->symtab[l]->section->index,
-			handle->symtab[l]->flags,
-			handle->symtab[l]->value);
-		if ((handle->symtab[l]->flags & 0x8) ||
-			(handle->symtab[l]->flags == 0)) {
-			external_entry_points[n].valid = 1;
-			/* 1: Public function entry point
-			 * 2: Private function entry point
-			 * 3: Private label entry point
-			 */
-			if (handle->symtab[l]->flags & 0x8) {
-				external_entry_points[n].type = 1;
-			} else {
-				external_entry_points[n].type = 2;
-			}
-			external_entry_points[n].section_offset = l;
-			external_entry_points[n].section_id = 
-				handle->symtab[l]->section->id;
-			external_entry_points[n].section_index = 
-				handle->symtab[l]->section->index;
-			external_entry_points[n].value = handle->symtab[l]->value;
-			length = strlen(handle->symtab[l]->name);
-			external_entry_points[n].name = malloc(length+1);
-			strncpy(external_entry_points[n].name, handle->symtab[l]->name, length+1);
+	tmp = external_entry_points_init_bfl(external_entry_points, handle_void);
+	for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
+		if (external_entry_points[n].valid != 0) {
 			external_entry_points[n].process_state.memory_text =
 				calloc(MEMORY_TEXT_SIZE, sizeof(struct memory_s));
 			external_entry_points[n].process_state.memory_stack =
@@ -542,12 +475,9 @@ int external_entry_points_init(struct external_entry_point_s *external_entry_poi
 			memory_reg[2].offset_value = external_entry_points[n].value;
 
 			print_mem(memory_reg, 1);
-
-			n++;
 		}
-
 	}
-	return 0;
+	return tmp;
 }
 
 int find_empty_ast_entry(struct ast_entry_s *ast_entry, int *entry)
@@ -2452,7 +2382,6 @@ int main(int argc, char *argv[])
 	int *memory_used;
 	struct label_redirect_s *label_redirect;
 	struct label_s *labels;
-	disassembler_ftype disassemble_fn;
 	struct relocation_s *relocations;
 	struct external_entry_point_s *external_entry_points;
 	struct control_flow_node_s *nodes;
@@ -2477,85 +2406,52 @@ int main(int argc, char *argv[])
 
 	expression = malloc(1000); /* Buffer for if expressions */
 
-	handle = bf_test_open_file(file);
-	if (!handle) {
+	handle_void = bf_test_open_file(file);
+	if (!handle_void) {
 		debug_print(DEBUG_MAIN, 1, "Failed to find or recognise file\n");
 		return 1;
 	}
-	tmp = bf_get_arch_mach(handle, &arch, &mach);
+	tmp = bf_get_arch_mach(handle_void, &arch, &mach);
 	if ((arch != 9) ||
 		(mach != 8)) {
 		debug_print(DEBUG_MAIN, 1, "File not the correct arch(0x%x) and mach(0x%"PRIx64")\n", arch, mach);
 		return 1;
 	}
 
-	debug_print(DEBUG_MAIN, 1, "symtab_size = %ld\n", handle->symtab_sz);
-	for (l = 0; l < handle->symtab_sz; l++) {
-		debug_print(DEBUG_MAIN, 1, "%d\n", l);
-		debug_print(DEBUG_MAIN, 1, "type:0x%02x\n", handle->symtab[l]->flags);
-		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->symtab[l]->name);
-		debug_print(DEBUG_MAIN, 1, "value=0x%02"PRIx64"\n", handle->symtab[l]->value);
-		debug_print(DEBUG_MAIN, 1, "section=%p\n", handle->symtab[l]->section);
-		debug_print(DEBUG_MAIN, 1, "section name=%s\n", handle->symtab[l]->section->name);
-		debug_print(DEBUG_MAIN, 1, "section flags=0x%02x\n", handle->symtab[l]->section->flags);
-		debug_print(DEBUG_MAIN, 1, "section index=0x%02"PRIx32"\n", handle->symtab[l]->section->index);
-		debug_print(DEBUG_MAIN, 1, "section id=0x%02"PRIx32"\n", handle->symtab[l]->section->id);
-	}
+	bf_print_symtab(handle_void);
 
-	section_number_mapping = calloc(handle->section_sz, sizeof(int));
-	handle->section_number_mapping = section_number_mapping;
-	for (l = 0; l < handle->section_sz; l++) {
-			const char *name = handle->section[l]->name;
-		if (!strncmp(".text", name, 5)) {
-			section_number_mapping[l] = 1;
-		}
-		if (!strncmp(".rodata", name, 7)) {
-			section_number_mapping[l] = 2;
-		}
-		if (!strncmp(".data", name, 5)) {
-			section_number_mapping[l] = 3;
-		}
-	}
+	bf_init_section_number_mapping(handle_void, &section_number_mapping);
 
-	debug_print(DEBUG_MAIN, 1, "sectiontab_size = %ld\n", handle->section_sz);
-	for (l = 0; l < handle->section_sz; l++) {
-		debug_print(DEBUG_MAIN, 1, "%d\n", l);
-		debug_print(DEBUG_MAIN, 1, "flags:0x%02x\n", handle->section[l]->flags);
-		debug_print(DEBUG_MAIN, 1, "name:%s\n", handle->section[l]->name);
-		debug_print(DEBUG_MAIN, 1, "index=0x%02"PRIx32"\n", handle->section[l]->index);
-		debug_print(DEBUG_MAIN, 1, "id=0x%02"PRIx32"\n", handle->section[l]->id);
-		debug_print(DEBUG_MAIN, 1, "sectio=%p\n", handle->section[l]);
-		debug_print(DEBUG_MAIN, 1, "section_number_mapping=0x%x\n", section_number_mapping[l]);
-	}
+	bf_print_sectiontab(handle_void);
 
 	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
-	inst_size = bf_get_code_size(handle);
+	inst_size = bf_get_code_size(handle_void);
 	inst = malloc(inst_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(inst, 0, inst_size);
-	bf_copy_code_section(handle, inst, inst_size);
+	bf_copy_code_section(handle_void, inst, inst_size);
 	debug_print(DEBUG_MAIN, 1, "dis:.text Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
 	for (n = 0; n < inst_size; n++) {
 		debug_print(DEBUG_MAIN, 1,  "0x%02x", inst[n]);
 	}
 	debug_print(DEBUG_MAIN, 1, "\n");
 
-	data_size = bf_get_data_size(handle);
+	data_size = bf_get_data_size(handle_void);
 	data = malloc(data_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(data, 0, data_size);
-	bf_copy_data_section(handle, data, data_size);
+	bf_copy_data_section(handle_void, data, data_size);
 	debug_print(DEBUG_MAIN, 1, "dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
 	for (n = 0; n < data_size; n++) {
 		debug_print(DEBUG_MAIN, 1,  "0x%02x", data[n]);
 	}
 	debug_print(DEBUG_MAIN, 1, "\n");
 
-	rodata_size = bf_get_rodata_size(handle);
+	rodata_size = bf_get_rodata_size(handle_void);
 	rodata = malloc(rodata_size);
 	/* valgrind does not know about bf_copy_data_section */
 	memset(rodata, 0, rodata_size);
-	bf_copy_rodata_section(handle, rodata, rodata_size);
+	bf_copy_rodata_section(handle_void, rodata, rodata_size);
 	debug_print(DEBUG_MAIN, 1, "dis:.rodata Data at %p, size=0x%"PRIx64"\n", rodata, rodata_size);
 	for (n = 0; n < rodata_size; n++) {
 		debug_print(DEBUG_MAIN, 1,  "0x%02x", rodata[n]);
@@ -2585,14 +2481,15 @@ int main(int argc, char *argv[])
 	
 	/* valgrind does not know about bf_copy_data_section */
 	memset(data, 0, data_size);
-	bf_copy_data_section(handle, data, data_size);
+	bf_copy_data_section(handle_void, data, data_size);
 	debug_print(DEBUG_MAIN, 1, "dis:.data Data at %p, size=0x%"PRIx64"\n", data, data_size);
 	for (n = 0; n < data_size; n++) {
 		debug_print(DEBUG_MAIN, 1, " 0x%02x", data[n]);
 	}
 	debug_print(DEBUG_MAIN, 1, "\n");
 
-	bf_get_reloc_table_code_section(handle);
+	bf_get_reloc_table_code_section(handle_void);
+#if 0
 	debug_print(DEBUG_MAIN, 1, "reloc_table_code_sz=0x%"PRIx64"\n", handle->reloc_table_code_sz);
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
 		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
@@ -2603,8 +2500,9 @@ int main(int argc, char *argv[])
 			handle->reloc_table_code[n].section_name,
 			handle->reloc_table_code[n].symbol_name);
 	}
-
-	bf_get_reloc_table_data_section(handle);
+#endif
+	bf_get_reloc_table_data_section(handle_void);
+#if 0
 	for (n = 0; n < handle->reloc_table_data_sz; n++) {
 		debug_print(DEBUG_MAIN, 1, "reloc_table_data:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_data[n].address,
@@ -2614,7 +2512,9 @@ int main(int argc, char *argv[])
 			handle->reloc_table_data[n].section_name,
 			handle->reloc_table_data[n].symbol_name);
 	}
-	bf_get_reloc_table_rodata_section(handle);
+#endif
+	bf_get_reloc_table_rodata_section(handle_void);
+#if 0
 	for (n = 0; n < handle->reloc_table_rodata_sz; n++) {
 		debug_print(DEBUG_MAIN, 1, "reloc_table_rodata:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_rodata[n].address,
@@ -2624,30 +2524,15 @@ int main(int argc, char *argv[])
 			handle->reloc_table_rodata[n].section_name,
 			handle->reloc_table_rodata[n].symbol_name);
 	}
-	
-	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
-	
-	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle);
-	init_disassemble_info(&disasm_info, stdout, (fprintf_ftype) disassemble_print_callback);
-	disasm_info.flavour = bfd_get_flavour(handle->bfd);
-	disasm_info.arch = bfd_get_arch(handle->bfd);
-	disasm_info.mach = bfd_get_mach(handle->bfd);
-	disasm_info.disassembler_options = "intel";
-	disasm_info.octets_per_byte = bfd_octets_per_byte(handle->bfd);
-	disasm_info.skip_zeroes = 8;
-	disasm_info.skip_zeroes_at_end = 3;
-	disasm_info.disassembler_needs_relocs = 0;
-	disasm_info.buffer_length = inst_size;
-	disasm_info.buffer = inst;
+#endif	
+	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
+	tmp = bf_disassemble_init(handle_void, inst_size, inst);
+	//tmp = bf_disassembler_set_options(handle_void, "att");
 
-	debug_print(DEBUG_MAIN, 1, "disassemble_fn\n");
-	disassemble_fn = disassembler(handle->bfd);
-	self->disassemble_fn = disassemble_fn;
-	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
 	dis_instructions.bytes_used = 0;
 	inst_exe = &inst_log_entry[0];
 
-	tmp = external_entry_points_init(external_entry_points, handle);
+	tmp = external_entry_points_init(external_entry_points, handle_void);
 	if (tmp) return 1;
 
 	debug_print(DEBUG_MAIN, 1, "Number of functions = %d\n", n);
@@ -2664,9 +2549,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	tmp = link_reloc_table_code_to_external_entry_point(handle, external_entry_points);
+	tmp = bf_link_reloc_table_code_to_external_entry_point(handle_void, external_entry_points);
 	if (tmp) return 1;
 
+#if 0
 	for (n = 0; n < handle->reloc_table_code_sz; n++) {
 		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", type = %d, function_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
 			handle->reloc_table_code[n].address,
@@ -2676,7 +2562,7 @@ int main(int argc, char *argv[])
 			handle->reloc_table_code[n].section_name,
 			handle->reloc_table_code[n].symbol_name);
 	}
-			
+#endif			
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid != 0) &&
 			(external_entry_points[l].type == 1)) {  /* 1 == Implemented in this .o file */
@@ -2723,7 +2609,7 @@ int main(int argc, char *argv[])
 						not_finished = 1;
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
-						err = process_block(self, process_state, handle, inst_log_prev, inst_size);
+						err = process_block(self, process_state, handle_void, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
 						entry_point[n].used = 0;
 						if (err) {
@@ -3812,7 +3698,7 @@ int main(int argc, char *argv[])
 				debug_print(DEBUG_MAIN, 1, "memory_data:0x%x: 0x%"PRIx64"\n", n, memory_data[n].valid);
 				if (memory_data[n].valid) {
 	
-					tmp = relocated_data(handle, memory_data[n].start_address, 4);
+					tmp = bf_relocated_data(handle_void, memory_data[n].start_address, 4);
 					if (tmp) {
 						debug_print(DEBUG_MAIN, 1, "int *data%04"PRIx64" = &data%04"PRIx64"\n",
 							memory_data[n].start_address,
@@ -3950,7 +3836,7 @@ int main(int argc, char *argv[])
 	}
 
 	fclose(fd);
-	bf_test_close_file(handle);
+	bf_test_close_file(handle_void);
 	print_mem(memory_reg, 1);
 	for (n = 0; n < inst_size; n++) {
 		debug_print(DEBUG_MAIN, 1, "0x%04x: %d\n", n, memory_used[n]);

@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libbeauty_input_bfd.la
 libbeauty_input_bfd_la_SOURCES = \
 	bfl.c
 
-libbeauty_input_bfd_la_LIBADD = -lbfd -liberty -lz -ldl
+libbeauty_input_bfd_la_LIBADD = -lbfd -liberty -lz -ldl -lopcodes
 #libinput_bfd_la_LIBADD = -lbfd -liberty -lz
 libbeauty_input_bfd_la_LDFLAGS = \
 	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)

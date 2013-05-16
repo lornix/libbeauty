@@ -19,7 +19,8 @@ noinst_PROGRAMS = dis64
 dis64_SOURCES = \
 	dis64.c
 
-dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lopcodes -liberty -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lbfd -lz -ldl
+#dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lopcodes -liberty -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lbfd -lz -ldl
+dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lz -ldl
 
 dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall
 
