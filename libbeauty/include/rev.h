@@ -28,7 +28,7 @@
 #define __REV__
 
 #include <inttypes.h>
-//#include <dis-asm.h>
+#include <global_struct.h>
 #include <opcodes.h>
 
 #define DEBUG_MAIN 1
@@ -41,18 +41,6 @@
 #define DEBUG_ANALYSE_PHI 8
 
 void debug_print(int module, int level, const char *format, ...);
-
-struct reloc_table_s {
-	int		type;
-	uint64_t	address;
-	uint64_t	size;
-	uint64_t	value;
-	uint64_t	external_functions_index;
-	uint64_t	section_index;
-	uint64_t	relocated_area;
-	const char	*section_name;
-	const char	*symbol_name;
-};
 
 #include <dis.h>
 #include <exe.h>
@@ -83,41 +71,6 @@ struct extension_call_s {
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
 
-struct process_state_s {
-	struct memory_s *memory_text;
-	struct memory_s *memory_stack;
-	struct memory_s *memory_reg;
-	struct memory_s *memory_data;
-	int *memory_used;
-};
-
-struct loop_s {
-	int head; /* The associated loop_head node */
-	int nest;
-	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
-	int size;
-	int *list;
-};
-
-#define PATH_TYPE_UNKNOWN 0
-#define PATH_TYPE_LOOP 1
-
-struct path_s {
-	int used;
-	int path_prev;
-	int path_prev_index;
-	int path_size;
-	int type; /* 0 = Unknown, 1 = Loop */
-	int loop_head; /* Index to the node that is the loop head for this path. */
-	int *path; /* The node within the path, FIXME: rename this to node */
-};
-
-struct node_mid_start_s {
-	int path_prev;
-	int path_prev_index;
-	int node;
-};
-
 /* AST: Abstract syntax tree 
  * Structures to build an AST.
  * An AST provides extra data over the CFG: Control Flow Graph, NODES,
@@ -143,24 +96,6 @@ struct ast_entry_s {
 	int node_end; // Node to end at.
 };
 
-/* Types: */
-#define AST_TYPE_EMPTY 0	// This entry has not been used yet or it is not used any more.
-#define AST_TYPE_NODE 1		// This points to the existing Node table.
-#define AST_TYPE_CONTAINER 2	// This points to the "container" table.
-#define AST_TYPE_IF_THEN_ELSE 3	// This points to the "if else" table.
-#define AST_TYPE_IF_THEN_GOTO 4	// This points to the "if goto" table.
-#define AST_TYPE_LOOP 5		// This points to the "loop" table.
-#define AST_TYPE_LOOP_THEN_ELSE 6	// This points to the "loop_then_else" table.
-#define AST_TYPE_LOOP_CONTAINER 7	// This points to the "loop_container" table.
-
-struct ast_type_index_s {
-/* Parent data will not be stored here.
- * The only case not handled is if the type is 1 for Node.
- * We will store the parent data in the Node table instead of here.
- */
-	int type; /* Object type. e.g. If, for, while. */
-	uint64_t index; /* index into the specific object table */
-};
 struct ast_type_parent_s {
 	int type; /* Object type. e.g. If, for, while. */
 	uint64_t index; /* index into the specific object table */
@@ -252,128 +187,6 @@ struct ast_s {
 	int loop_container_size;
 	int loop_then_else_size;
 	int entry_size;
-};
-
-/*	FIXME: the concept of link length. If you were looking at the .dot graph,
- *	would the link be a long line or a short one. This could have some baring
- *      in whether the link should be turned into a goto.
- *	It could also hold information regarding link elasticity.
- *	Link elasticity is the property whereby if you look at the .dot graph, there is room to increase
- *	the link lenght to the previous node, at the expense of decreasing the length of the link to
- *	the next node.
- */
-struct node_link_s {
-	int node;
-	int is_normal;
-	int is_loop_edge;
-	int is_loop_exit;
-	int is_loop_entry;
-	int length;
-	int elasticity;
-};
-
-struct node_used_register_s {
-	/* If SRC and DST in same instruction, set SRC first in seen. */
-	int seen; /* 0 = Not seen, 1 = SRC first, 2 = DST first */
-	int size; /* The size of the register seen */
-	int src;  /* Set when the register is used by the node */
-	int dst;  /* Set when the register is modified by the node */
-};
-
-struct path_node_s {
-	int path;
-	int first_prev_node;
-	int node;
-	int value_id; /* The SSA ID of the label attached to this phi instruction src. */
-};
-
-struct phi_s {
-	int reg; /* The CPU RTL register that this phi instruction refers to. */
-	int value_id; /* The SSA ID of the label attached to this phi instruction dst. */
-	int path_node_size;
-	struct path_node_s *path_node;
-	int looped_path_node_size;
-	struct path_node_s *looped_path_node;
-};
-
-#define NODE_TYPE_UNKNOWN 0
-#define NODE_TYPE_LOOP 1
-#define NODE_TYPE_IF_THEN_ELSE 2
-#define NODE_TYPE_IF_THEN_GOTO 3
-#define NODE_TYPE_NORMAL 4
-#define NODE_TYPE_LOOP_THEN_ELSE 5
-#define NODE_TYPE_JMPT 6
-
-struct control_flow_node_s {
-	int valid; /* 0 == invalid/un-used, 1 == valid/used */
-	int entry_point; /* Can use this to find the name on the node. */
-	int inst_start;
-	int inst_end;
-	int prev_size;
-	int *prev_node;
-	int *prev_link_index;
-	int next_size;
-	struct node_link_s *link_next;
-	int dominator; /* Node that dominates this node */
-	int type; /* 0 =  Normal, 1 =  Part of a loop, 2 = normal if statement */
-	int loop_head; /* 0 = Normal, 1 = Loop head */
-	int if_tail; /* 0 = no tail, > 0 points to the tail of the if...then...else */
-	int path_size; /* Number of path entries in the list */
-	int *path; /* The list of paths that touch this node */
-	int looped_path_size; /* Number of path entries in the list */
-	int *looped_path; /* The list of paths that touch this node */
-	int member_of_loop_size; /* Number of member_of_loop entries in the list */
-	int *member_of_loop; /* The list of member_of_loop entries. One entry for each loop this node belongs to */
-	struct ast_type_index_s parent; /* This is filled in once the AST is being built */
-	int depth; /* Where abouts in a graph does it go. 1 = Top of graph, 10 = 10th step down */
-	int multi_exit; /* 0 = unknown amount of exits, 1 = single exit, 2 = multi-exit loop */
-	struct node_used_register_s *used_register;
-	int phi_size;
-	struct phi_s *phi;
-};
-
-struct external_entry_point_s {
-	int valid;
-	int type; /* 1: Internal, 2: External */
-	int section_offset;
-	int section_id;
-	int section_index;
-	uint64_t value; /* pointer to original .text entry point */
-	uint64_t inst_log; /* Where the function starts in the inst_log */
-	uint64_t inst_log_end; /* Where the function ends in inst_log */
-	struct process_state_s process_state;
-	char *name;
-	/* FIXME: Handle variable amount of params */
-	int params_size;
-	int *params;
-	int *params_order;
-	int locals_size;
-	int *locals;
-	int *locals_order;
-	int start_node;
-	int paths_size;
-	struct path_s *paths;
-	int loops_size;
-	struct loop_s *loops;
-	int member_nodes_size; 
-	int *member_nodes; /* A list of all the nodes that are part of this function */
-	int start_ast_container;
-	/* FIXME: add function return type and param types */
-};
-
-struct self_s {
-	int *section_number_mapping;
-	size_t data_size;
-	uint8_t *data;
-	size_t rodata_size;
-	uint8_t *rodata;
-	struct inst_log_entry_s *inst_log_entry;
-	struct external_entry_point_s *external_entry_points;
-	struct relocation_s *relocations;
-	struct entry_point_s *entry_point; /* This is used to hold return values from process block */
-	uint64_t entry_point_list_length;  /* Number of entry_point entries allocated */
-	int local_counter;
-	int *search_back_seen;
 };
 
 extern int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);

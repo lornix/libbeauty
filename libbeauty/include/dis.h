@@ -45,61 +45,6 @@
 #define INST_LOG_ENTRY_SIZE 10000
 #define ENTRY_POINTS_SIZE 1000
 
-//typedef struct operand_s operand_t;
-struct operand_s {
-	/* 0 = immeadiate value. ( e.g. MOV AX,0x0),
-	 * 1 = register value. (e.g. MOV AX,BX),
-	 * 2 = immeadiate pointer. (if the immeadiate value is in the relocation table) 
-	 */
-	int store;
-	/* 0 = not relocated.
-	 * 1 = relocated. (if the immeadiate value is in the relocation table)
-	 */
-	int relocated;
-	/* The section to point to. e.g. .rodata
-	 * 0 = NULL
-	 * 1 = code
-	 * 2 = rodata
-	 * 3 = data
-	 * >3 is malloc sections
-	 */
-	int relocated_area;
-	/* The offset withing the section of point to */
-	int relocated_index;
-	/* 0 = direct, 1 = data_memory, 2 = stack_memory, 3 = in-out port */
-
-	/* For IF instruction, the value "indirect" contains
-         * 0 = relative
-         * 1 = absolute
-         */
-	int indirect;
-	/* number of bytes in the indirect value. */
-	int indirect_size;
-	/* value depends on store */
-	/* For IF srcA, this is the condition statement */
-	/* For IF dstA, this is the IP memory index. */
-	uint64_t index;
-	/* value depends on store */
-	/* For IF dstA, this is within this group's RTL index. */
-	uint64_t value;
-	/* number of bytes in value. */
-	/* For IF dstA, this will be a 4 bytes. */
-	int value_size;
-} ;
-
-/* A single RTL instruction */
-//typedef struct instruction_s instruction_t;
-
-struct instruction_s {
-	int opcode;
-	/* Set to 1 if this instruction should effect flags. */
-	int flags;
-	struct operand_s srcA; /* Used */
-	struct operand_s srcB; /* Not currently used */
-	struct operand_s dstA; /* Used */
-} ;
-
-//typedef struct dis_instructions_s instructions_t;
 struct dis_instructions_s {
 	int bytes_used;
 	uint8_t bytes[16];
