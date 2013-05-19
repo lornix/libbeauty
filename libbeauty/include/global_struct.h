@@ -356,6 +356,8 @@ struct self_s {
 	struct relocation_s *relocations;
 	struct entry_point_s *entry_point; /* This is used to hold return values from process block */
 	uint64_t entry_point_list_length;  /* Number of entry_point entries allocated */
+	int nodes_size;
+	struct control_flow_node_s *nodes;
 	int local_counter;
 	int *search_back_seen;
 };

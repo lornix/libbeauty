@@ -2477,6 +2477,8 @@ int main(int argc, char *argv[])
 
 	nodes = calloc(1000, sizeof(struct control_flow_node_s));
 	nodes_size = 0;
+	self->nodes = nodes;
+	self->nodes_size = nodes_size;
 	
 	/* valgrind does not know about bf_copy_data_section */
 	memset(data, 0, data_size);
@@ -2641,6 +2643,7 @@ int main(int argc, char *argv[])
 
 	tmp = tidy_inst_log(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
+	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 //	print_dis_instructions(self);
 //	exit(1);
