@@ -19,6 +19,22 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
+int find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node)
+{
+	int found = 1;
+	int n;
+
+	*member_node = 0;
+	for (n = 0; n < external_entry_point->member_nodes_size; n++) {
+		if (node_to_find == external_entry_point->member_nodes[n]) {
+			found = 0;
+			*member_node = n;
+			break;
+		}
+	}
+	return found;
+}
+
 extern "C" int llvm_export(struct self_s *self) {
 	LLVMContext Context;
 	const char *Path = "test_llvm_export.bc";
@@ -26,6 +42,7 @@ extern "C" int llvm_export(struct self_s *self) {
 	int n;
 	int m;
 	int l;
+	int tmp;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	struct control_flow_node_s *nodes = self->nodes;
 	int nodes_size = self->nodes_size;
@@ -65,13 +82,8 @@ extern "C" int llvm_export(struct self_s *self) {
 					int found = 0;
 					int branch_to_node = nodes[node].link_next[0].node;
 					printf("NEXT1 FOUND add ret2 branch_to_node = 0x%x\n", branch_to_node);
-					for (l = 0; l < external_entry_points[n].member_nodes_size; l++) {
-						if (branch_to_node == external_entry_points[n].member_nodes[l]) {
-							found = 1;
-							break;
-						}
-					}
-					if (found) {
+					tmp = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &l);
+					if (!tmp) {
 						printf("Branch1 create: l = 0x%x, m = 0x%x\n", l, m);
 						Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult2", bb[m]);
 						BranchInst::Create(bb[l], bb[m]);
@@ -85,28 +97,34 @@ extern "C" int llvm_export(struct self_s *self) {
 					int found2 = 0;
 					int branch_to_node;
 					branch_to_node = nodes[node].link_next[0].node;
-					for (l = 0; l < external_entry_points[n].member_nodes_size; l++) {
-						if (branch_to_node == external_entry_points[n].member_nodes[l]) {
-							found1 = 1;
-							node_false = l;
-							break;
-						}
-					}
+					found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_false);
 					branch_to_node = nodes[node].link_next[1].node;
-					for (l = 0; l < external_entry_points[n].member_nodes_size; l++) {
-						if (branch_to_node == external_entry_points[n].member_nodes[l]) {
-							found2 = 1;
-							node_true = l;
-							break;
-						}
-					}
-					if (found1 && found2) {
+					found2 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_true);
+					if ((!found1) && (!found2)) {
 						printf("Branch1 create: l = 0x%x, m = 0x%x\n", l, m);
 						printf("NEXT2 FOUND add ret1\n");
 						Value *cmpInst = BinaryOperator::CreateAdd(Two, Three, "addresult1", bb[m]);
 						BranchInst::Create(bb[node_false], bb[node_true], cmpInst, bb[m]);
 					} else {
 						printf("NEXT2 NOT FOUND\n");
+					}
+				} else {
+					int found1 = 0;
+					int branch_to_node;
+					int node_case;
+					branch_to_node = nodes[node].link_next[0].node;
+					printf("NEXT3+ HANDLED YET\n");
+					branch_to_node = nodes[node].link_next[0].node;
+					found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_case);
+					Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult", bb[1]);
+					Value *cmpInst = BinaryOperator::CreateAdd(Two, Three, "addresult1", bb[m]);
+					SwitchInst *switch_inst = SwitchInst::Create(cmpInst, bb[node_case], nodes[node].next_size, bb[m]);
+					for (l = 0; l < nodes[node].next_size; l++) {
+						branch_to_node = nodes[node].link_next[l].node;
+						found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_case);
+						const APInt ap_int1 = APInt::APInt(32, l, false);
+						ConstantInt *const_int1 = ConstantInt::get(Context, ap_int1);
+						switch_inst->addCase(const_int1, bb[node_case]);
 					}
 				}
 			}
