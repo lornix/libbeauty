@@ -112,6 +112,13 @@ struct path_node_s {
 	int value_id; /* The SSA ID of the label attached to this phi instruction src. */
 };
 
+struct phi_node_s {
+	int first_prev_node;
+	int node;
+	int path_count;
+	int value_id; /* The SSA ID of the label attached to this phi instruction src. */
+};
+
 struct phi_s {
 	int reg; /* The CPU RTL register that this phi instruction refers to. */
 	int value_id; /* The SSA ID of the label attached to this phi instruction dst. */
@@ -119,6 +126,8 @@ struct phi_s {
 	struct path_node_s *path_node;
 	int looped_path_node_size;
 	struct path_node_s *looped_path_node;
+	int phi_node_size;
+	struct phi_node_s *phi_node;
 };
 
 /* Types: */

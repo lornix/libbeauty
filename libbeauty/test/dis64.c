@@ -1401,6 +1401,12 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				tmp = fprintf(fd, "phi[%d] = REG0x%x:",
 					n, nodes[node].phi[n].reg);
+				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
+					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x, ",
+						nodes[node].phi[n].phi_node[m].first_prev_node,
+						nodes[node].phi[n].phi_node[m].node);
+				}
+#if 0
 				for (m = 0; m < nodes[node].path_size; m++) {
 					tmp = fprintf(fd, "P0x%x:FPN:0x%x:SN:0x%x, ",
 						nodes[node].phi[n].path_node[m].path,
@@ -1413,6 +1419,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 						nodes[node].phi[n].looped_path_node[m].first_prev_node,
 						nodes[node].phi[n].looped_path_node[m].node);
 				}
+#endif
 				tmp = fprintf(fd, "\\l");
 			}
 		}
@@ -2295,6 +2302,59 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	return 0;
 }
 
+int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, int node_size)
+{
+	int node;
+	int n;
+	int m;
+	int l;
+	printf("fill_phi: entered\n");
+
+	for (node = 1; node <= node_size; node++) {
+		printf("node = 0x%x\n", node);
+		if (nodes[node].phi_size > 0) {
+			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
+			for (n = 0; n < nodes[node].phi_size; n++) {
+				nodes[node].phi[n].phi_node = calloc(nodes[node].prev_size, sizeof(struct phi_node_s));
+				nodes[node].phi[n].phi_node_size = nodes[node].prev_size;
+				for (m = 0; m < nodes[node].prev_size; m++) {
+					printf("n = 0x%x, m = 0x%x\n", n, m);
+					nodes[node].phi[n].phi_node[m].first_prev_node = nodes[node].prev_node[m];
+					nodes[node].phi[n].phi_node[m].node = 0;
+					nodes[node].phi[n].phi_node[m].path_count = 0;
+					nodes[node].phi[n].phi_node[m].value_id = 0;
+					for (l = 0; l < nodes[node].phi[n].path_node_size; l++) {
+						if (nodes[node].phi[n].path_node[l].first_prev_node == nodes[node].phi[n].phi_node[m].first_prev_node) {
+							if ((nodes[node].phi[n].phi_node[m].path_count > 0) &&
+								(nodes[node].phi[n].phi_node[m].node != nodes[node].phi[n].path_node[l].node)) {
+								printf("FAILED at node 0x%x, phi_node = 0x%x, path_node = 0x%x\n",
+									node,
+									nodes[node].phi[n].phi_node[m].node,
+									nodes[node].phi[n].path_node[l].node);
+							}
+							nodes[node].phi[n].phi_node[m].node = 
+								nodes[node].phi[n].path_node[l].node;
+							nodes[node].phi[n].phi_node[m].path_count++;
+						}
+					}
+					for (l = 0; l < nodes[node].phi[n].looped_path_node_size; l++) {
+						if (nodes[node].phi[n].looped_path_node[l].first_prev_node == nodes[node].phi[n].phi_node[m].first_prev_node) {
+							nodes[node].phi[n].phi_node[m].node = 
+								nodes[node].phi[n].path_node[l].node;
+							nodes[node].phi[n].phi_node[m].path_count++;
+						}
+					}
+					printf("fill_phi: first_prev_node = 0x%x, node = 0x%x, path_count = 0x%x\n",
+						nodes[node].phi[n].phi_node[m].first_prev_node,
+						nodes[node].phi[n].phi_node[m].node,
+						nodes[node].phi[n].phi_node[m].path_count);
+				}
+			}
+		}
+	}
+	printf("fill_phi: exit\n");
+	return 0;
+}
 
 int build_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point, int nodes_size)
 {
@@ -2892,8 +2952,12 @@ int main(int argc, char *argv[])
 	 * return which base path it is on. Only process if not a previous path.
 	 ****************************************************************/
 
-	/* TODO */
 	tmp = fill_node_phi_src(self, nodes, nodes_size);
+	/* Scan each of the list of paths in the src, and reduce the list to
+	 * a list of immediately/first previous nodes with assocated node that assigned the register.
+         * Also do sanity checks on the path nodes lists based on first_prev_node. 
+	 * This reduces the PHI to a format similar to that used in LLVM */
+	tmp = fill_phi_node_list(self, nodes, nodes_size);
 
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
