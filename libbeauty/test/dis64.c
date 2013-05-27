@@ -2278,10 +2278,14 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 				if (nodes[node].path_size > 0) {
 					nodes[node].phi[n].path_node = calloc(nodes[node].path_size, sizeof(struct path_node_s));
 					nodes[node].phi[n].path_node_size = nodes[node].path_size;
+				} else {
+					nodes[node].phi[n].path_node_size = 0;
 				}
 				if (nodes[node].looped_path_size > 0) {
 					nodes[node].phi[n].looped_path_node = calloc(nodes[node].looped_path_size, sizeof(struct path_node_s));
 					nodes[node].phi[n].looped_path_node_size = nodes[node].looped_path_size;
+				} else {
+					nodes[node].phi[n].looped_path_node_size = 0;
 				}
 
 				for (m = 0; m < nodes[node].path_size; m++) {
