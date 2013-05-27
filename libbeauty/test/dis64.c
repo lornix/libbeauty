@@ -66,12 +66,12 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
-int debug_dis64 = 1;
-int debug_input_bfd = 1;
-int debug_input_dis = 1;
-int debug_exe = 1;
-int debug_analyse = 1;
-int debug_analyse_paths = 1;
+int debug_dis64 = 0;
+int debug_input_bfd = 0;
+int debug_input_dis = 0;
+int debug_exe = 0;
+int debug_analyse = 0;
+int debug_analyse_paths = 0;
 int debug_analyse_phi = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
@@ -2203,6 +2203,7 @@ int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes
 	int tmp_node;
 	int ret = 1;
 	int first = 1;
+	int n;
 	
 
 	*src_node = 0;
@@ -2218,6 +2219,7 @@ int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes
 			first = 0;
 		}
 		if (tmp == 0) {
+			/* Check used_registers of the prev_node */
 			tmp2 = nodes[tmp_node].used_register[reg].dst;
 			if (node <= 4) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:tmp = 0x%x, tmp2 = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, tmp2, prev_path, prev_step, prev_node);
@@ -2225,10 +2227,20 @@ int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes
 			if (tmp2 == 1) {
 				*src_node = tmp_node;
 				ret = 0; /* Found */
-				break;
+				goto exit_find_phi_src_node_reg;
+			}
+			/* Check phi of the prev_node */
+			for (n = 0; n < nodes[tmp_node].phi_size; n++) {
+				if (nodes[tmp_node].phi[n].reg == reg) {
+					*src_node = tmp_node;
+					ret = 0; /* Found */
+					debug_print(DEBUG_ANALYSE_PHI, 1, "FOUND PHI: node = 0x%x, src_node = 0x%x, reg = 0x%x\n", node, tmp_node, reg);
+					goto exit_find_phi_src_node_reg;
+				}
 			}
 		}
 	}
+exit_find_phi_src_node_reg:
 	return ret;
 }
 
@@ -2340,7 +2352,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 					for (l = 0; l < nodes[node].phi[n].looped_path_node_size; l++) {
 						if (nodes[node].phi[n].looped_path_node[l].first_prev_node == nodes[node].phi[n].phi_node[m].first_prev_node) {
 							nodes[node].phi[n].phi_node[m].node = 
-								nodes[node].phi[n].path_node[l].node;
+								nodes[node].phi[n].looped_path_node[l].node;
 							nodes[node].phi[n].phi_node[m].path_count++;
 						}
 					}
