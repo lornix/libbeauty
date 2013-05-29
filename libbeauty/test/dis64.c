@@ -2468,6 +2468,7 @@ int main(int argc, char *argv[])
 	int loops_size = 2000;
 	struct ast_s *ast;
 	int *section_number_mapping;
+	int variable_id = 0;
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 
@@ -2974,6 +2975,114 @@ int main(int argc, char *argv[])
          * Also do sanity checks on the path nodes lists based on first_prev_node. 
 	 * This reduces the PHI to a format similar to that used in LLVM */
 	tmp = fill_phi_node_list(self, nodes, nodes_size);
+	/************************************************************
+	 * This section deals with starting true SSA.
+	 * This bit sets the valid_id to 0 for both dst and src.
+	 ************************************************************/
+	for (n = 1; n <= inst_log; n++) {
+		inst_log1 =  &inst_log_entry[n];
+		inst_log1->value1.value_id = 0;
+		inst_log1->value1.indirect_value_id = 0;
+		inst_log1->value2.value_id = 0;
+		inst_log1->value2.indirect_value_id = 0;
+		inst_log1->value3.value_id = 0;
+		inst_log1->value3.indirect_value_id = 0;
+	}
+	
+	/************************************************************
+	 * This bit assigned a variable ID to each assignment (dst).
+	 ************************************************************/
+
+	label_redirect = calloc(10000, sizeof(struct label_redirect_s));
+	labels = calloc(10000, sizeof(struct label_s));
+	variable_id = 0x100;
+	/* n <= inst_log verified to be correct limit */
+	for (n = 1; n <= inst_log; n++) {
+		struct label_s label;
+		inst_log1 =  &inst_log_entry[n];
+		instruction =  &inst_log1->instruction;
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+				n,
+				instruction->srcA.indirect,
+				instruction->srcA.index,
+				instruction->srcA.relocated,
+				inst_log1->value1.value_scope,
+				inst_log1->value1.value_id,
+				inst_log1->value1.indirect_offset_value,
+				inst_log1->value1.indirect_value_id);
+
+		switch (instruction->opcode) {
+		case MOV:
+		case ADD:
+		case ADC:
+		case SUB:
+		case SBB:
+		case MUL:
+		case IMUL:
+		case OR:
+		case XOR:
+		case rAND:
+		case NOT:
+		case NEG:
+		case SHL:
+		case SHR:
+		case SAL:
+		case SAR:
+		case SEX:
+			if (IND_MEM == instruction->dstA.indirect) {
+				inst_log1->value3.indirect_value_id = variable_id;
+			} else {
+				inst_log1->value3.value_id = variable_id;
+			}
+			memset(&label, 0, sizeof(struct label_s));
+			tmp = log_to_label(instruction->dstA.store,
+				instruction->dstA.indirect,
+				instruction->dstA.index,
+				instruction->dstA.relocated,
+				inst_log1->value3.value_scope,
+				inst_log1->value3.value_id,
+				inst_log1->value3.indirect_offset_value,
+				inst_log1->value3.indirect_value_id,
+				&label);
+			if (tmp) {
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
+			}
+			if (!tmp) {
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = label.scope;
+				labels[variable_id].type = label.type;
+				labels[variable_id].lab_pointer += label.lab_pointer;
+				labels[variable_id].value = label.value;
+			}
+
+			break;
+
+		/* Specially handled because value3 is not assigned and writen to a destination. */
+		case TEST:
+		case CMP:
+			break;
+
+		case CALL:
+			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
+			if (IND_MEM == instruction->dstA.indirect) {
+				inst_log1->value3.indirect_value_id = variable_id;
+			} else {
+				inst_log1->value3.value_id = variable_id;
+			}
+			break;
+		case IF:
+		case RET:
+		case JMP:
+		case JMPT:
+			break;
+		default:
+			debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
+			return 1;
+			break;
+		}
+		variable_id++;
+	}
+
 
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
@@ -2981,12 +3090,13 @@ int main(int argc, char *argv[])
 	 ************************************************************/
 	debug_print(DEBUG_MAIN, 1, "Number of labels = 0x%x\n", self->local_counter);
 	/* FIXME: +1 added as a result of running valgrind, but need a proper fix */
-	label_redirect = calloc(self->local_counter + 1, sizeof(struct label_redirect_s));
-	labels = calloc(self->local_counter + 1, sizeof(struct label_s));
-	debug_print(DEBUG_MAIN, 1, "JCD6: self->local_counter=%d\n", self->local_counter);
+//	label_redirect = calloc(self->local_counter + 1, sizeof(struct label_redirect_s));
+//	labels = calloc(self->local_counter + 1, sizeof(struct label_s));
+//	debug_print(DEBUG_MAIN, 1, "JCD6: self->local_counter=%d\n", self->local_counter);
 	labels[0].lab_pointer = 1; /* EIP */
 	labels[1].lab_pointer = 1; /* ESP */
 	labels[2].lab_pointer = 1; /* EBP */
+#if 0	
 	/* n <= inst_log verified to be correct limit */
 	for (n = 1; n <= inst_log; n++) {
 		struct label_s label;
@@ -3434,6 +3544,7 @@ int main(int argc, char *argv[])
 		/* FIXME: TODO */
 		}
 	}
+#endif
 	/********************************************************
 	 * This section filters out duplicate param_reg entries.
          * from the labels table: FIXME: THIS IS NOT NEEDED NOW
