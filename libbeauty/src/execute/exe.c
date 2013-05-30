@@ -151,7 +151,7 @@ exit_add_new_store:
 
 static int source_equals_dest(struct operand_s *srcA, struct operand_s *dstA)
 {
-	int tmp, ret;
+	int ret;
 	/* Exclude value in comparison for XOR */
 	if ((srcA->store == dstA->store) &&
 		(srcA->indirect == dstA->indirect) &&
@@ -767,7 +767,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 0); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOP\n");
 		//put_value_RTL_instruction(self, process_state, inst);
@@ -777,7 +777,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 0); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "CMP\n");
 		//debug_print(DEBUG_EXE, 1, "value1 = 0x%x, value2 = 0x%x\n", inst->value1, inst->value2);
@@ -853,7 +853,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SEX\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -939,7 +939,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "ADD\n");
 		debug_print(DEBUG_EXE, 1, "ADD dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
@@ -978,7 +978,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "ADC\n");
 		put_value_RTL_instruction(self, process_state, inst);
@@ -988,7 +988,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "MUL\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1028,7 +1028,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SUB\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1067,7 +1067,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SUB\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1105,7 +1105,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "TEST \n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1145,7 +1145,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "AND \n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1184,7 +1184,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "OR \n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1227,11 +1227,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		    If tmp == 1, set scope to LOCAL in get_value_RTL_intruction.
 		    TODO: Change output .c code from "local1 ^= local1;" to "local1 = 0;"
 		 */
-		tmp = source_equals_dest(&(instruction->srcA), &(instruction->dstA));
+		tmp = source_equals_dest(&(instruction->srcA), &(instruction->srcB));
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), tmp); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "XOR\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1268,9 +1268,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		break;
 	case NEG:
 		/* Get value of srcA */
+		/* FIXME: There is no srcA value to work with */
+		/* Could be replaced with a SUB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOT\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1306,9 +1308,10 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		break;
 	case NOT:
 		/* Get value of srcA */
+		/* FIXME: There is no srcA value to work with */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOT\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1347,7 +1350,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SHL\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1387,7 +1390,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SHR\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1427,7 +1430,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SAL\n");
 		inst->value3.start_address = inst->value2.start_address;
@@ -1468,7 +1471,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 0); 
+		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SAR\n");
 		inst->value3.start_address = inst->value2.start_address;
