@@ -1399,8 +1399,8 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		}
 		if (nodes[node].phi_size) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
-				tmp = fprintf(fd, "phi[%d] = REG0x%x:",
-					n, nodes[node].phi[n].reg);
+				tmp = fprintf(fd, "phi[%d] = REG0x%x:0x%x ",
+					n, nodes[node].phi[n].reg, nodes[node].phi[n].value_id);
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
 					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x, ",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
@@ -3083,6 +3083,176 @@ int main(int argc, char *argv[])
 		variable_id++;
 	}
 
+	/* Assign labels to PHI instructions */
+
+	for (n = 1; n <= nodes_size; n++) {
+			printf("JCD: scanning node phi 0x%x\n", n);
+		if (nodes[n].phi_size) {
+			printf("JCD: phi insts found at node 0x%x\n", n);
+			for (m = 0; m < nodes[n].phi_size; m++) {
+				nodes[n].phi[m].value_id = variable_id;
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = 3;
+				labels[variable_id].type = 1;
+				labels[variable_id].lab_pointer = 1;
+				labels[variable_id].value = variable_id;
+				variable_id++;
+			}
+		}
+	}
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		int inst;
+		if (external_entry_points[l].valid &&
+			external_entry_points[l].type == 1) {
+			int node;
+			struct label_s label;
+			node = external_entry_points[l].start_node;
+			inst = nodes[node].inst_start;
+			inst_log1 =  &inst_log_entry[inst];
+			instruction =  &inst_log1->instruction;
+			switch (instruction->opcode) {
+			case MOV:
+				switch (instruction->srcA.store) {
+				case STORE_DIRECT:
+					memset(&label, 0, sizeof(struct label_s));
+					if (instruction->srcA.indirect == IND_MEM) {
+						label.scope = 3;
+						label.type = 1;
+						label.lab_pointer = 1;
+						label.value = instruction->dstA.index;
+					} else if (instruction->srcA.relocated) {
+						label.scope = 3;
+						label.type = 2;
+						label.lab_pointer = 0;
+						label.value = instruction->dstA.index;
+					} else {
+						label.scope = 3;
+						label.type = 3;
+						label.lab_pointer = 0;
+						label.value = instruction->srcA.index;
+					}
+					
+					inst_log1->value1.value_id = variable_id;
+					label_redirect[variable_id].redirect = variable_id;
+					labels[variable_id].scope = label.scope;
+					labels[variable_id].type = label.type;
+					labels[variable_id].lab_pointer += label.lab_pointer;
+					labels[variable_id].value = label.value;
+					variable_id++;
+					break;
+				case STORE_REG:
+					/* FIXME: TODO*/
+					break;
+				}
+				break;
+			case ADD:
+			case ADC:
+			case SUB:
+			case SBB:
+			case MUL:
+			case IMUL:
+			case OR:
+			case XOR:
+			case rAND:
+			case NOT:
+			case NEG:
+			case SHL:
+			case SHR:
+			case SAL:
+			case SAR:
+			case SEX:
+				switch (instruction->srcA.store) {
+				case STORE_DIRECT:
+					memset(&label, 0, sizeof(struct label_s));
+					if (instruction->srcA.indirect == IND_MEM) {
+						label.scope = 3;
+						label.type = 1;
+						label.lab_pointer = 1;
+						label.value = instruction->srcA.index;
+					} else if (instruction->srcA.relocated) {
+						label.scope = 3;
+						label.type = 2;
+						label.lab_pointer = 0;
+						label.value = instruction->srcA.index;
+					} else {
+						printf("srcA.index = 0x%"PRIx64"\n", instruction->srcA.index);
+						label.scope = 3;
+						label.type = 3;
+						label.lab_pointer = 0;
+						label.value = instruction->srcA.index;
+					}
+					
+					inst_log1->value1.value_id = variable_id;
+					label_redirect[variable_id].redirect = variable_id;
+					labels[variable_id].scope = label.scope;
+					labels[variable_id].type = label.type;
+					labels[variable_id].lab_pointer += label.lab_pointer;
+					labels[variable_id].value = label.value;
+					variable_id++;
+					break;
+				case STORE_REG:
+					/* FIXME: TODO*/
+					break;
+				}
+				switch (instruction->srcB.store) {
+				case STORE_DIRECT:
+					memset(&label, 0, sizeof(struct label_s));
+					if (instruction->srcB.indirect == IND_MEM) {
+						label.scope = 3;
+						label.type = 1;
+						label.lab_pointer = 1;
+						label.value = instruction->srcB.index;
+					} else if (instruction->srcB.relocated) {
+						label.scope = 3;
+						label.type = 2;
+						label.lab_pointer = 0;
+						label.value = instruction->srcB.index;
+					} else {
+						label.scope = 3;
+						label.type = 3;
+						label.lab_pointer = 0;
+						label.value = instruction->srcB.index;
+					}
+					
+					inst_log1->value1.value_id = variable_id;
+					label_redirect[variable_id].redirect = variable_id;
+					labels[variable_id].scope = label.scope;
+					labels[variable_id].type = label.type;
+					labels[variable_id].lab_pointer += label.lab_pointer;
+					labels[variable_id].value = label.value;
+					variable_id++;
+					break;
+				case STORE_REG:
+					/* FIXME: TODO*/
+					break;
+				}
+				break;
+
+				break;
+
+			/* Specially handled because value3 is not assigned and writen to a destination. */
+			case TEST:
+			case CMP:
+				/* FIXME: TODO*/
+				break;
+
+			case CALL:
+				/* FIXME: TODO*/
+				break;
+			case IF:
+			case RET:
+			case JMP:
+			case JMPT:
+				/* FIXME: TODO*/
+				break;
+			default:
+				debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
+				return 1;
+				break;
+			}
+		}
+	}
 
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
