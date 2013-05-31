@@ -2422,6 +2422,20 @@ int print_entry_point_node_members(struct self_s *self, struct external_entry_po
 	printf("\n");
 	return 0;
 }
+
+/* FIXME: Implement */
+int search_back_for_register(struct self_s *self, int l, int node, int inst, int source,
+						struct label_s *label, int *new_label) {
+	/* 1) search back from this instruction until the beginning of the node */
+	/* 2) search the PHI instructions for the register. */
+	/* 3) search for a previous node. This is only needed is special cases, i.e. only one previous node.
+		The step (2) PHI should have taken care of the more than one previous node.
+		This step (3) is unlikely to occur. */
+	/* 4) reached the beginning of the function. Previous nodes == 0. label it as a param.
+	
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -3083,7 +3097,7 @@ int main(int argc, char *argv[])
 		variable_id++;
 	}
 
-	/* Assign labels to PHI instructions */
+	/* Assign labels to PHI instructions dst */
 
 	for (n = 1; n <= nodes_size; n++) {
 			printf("JCD: scanning node phi 0x%x\n", n);
@@ -3107,6 +3121,7 @@ int main(int argc, char *argv[])
 			external_entry_points[l].type == 1) {
 			int node;
 			struct label_s label;
+			int new_label = 0;
 			node = external_entry_points[l].start_node;
 			inst = nodes[node].inst_start;
 			inst_log1 =  &inst_log_entry[inst];
@@ -3193,6 +3208,9 @@ int main(int argc, char *argv[])
 					break;
 				case STORE_REG:
 					/* FIXME: TODO*/
+					/* srcA */
+					tmp = search_back_for_register(self, l, node, inst, 0,
+						&label, &new_label);
 					break;
 				}
 				switch (instruction->srcB.store) {
@@ -3225,6 +3243,9 @@ int main(int argc, char *argv[])
 					break;
 				case STORE_REG:
 					/* FIXME: TODO*/
+					/* srcB */
+					search_back_for_register(self, l, node, inst, 1,
+						&label, &new_label);
 					break;
 				}
 				break;
