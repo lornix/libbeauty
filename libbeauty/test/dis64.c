@@ -2431,7 +2431,7 @@ int search_back_for_register(struct self_s *self, int l, int node, int inst, int
 	/* 3) search for a previous node. This is only needed is special cases, i.e. only one previous node.
 		The step (2) PHI should have taken care of the more than one previous node.
 		This step (3) is unlikely to occur. */
-	/* 4) reached the beginning of the function. Previous nodes == 0. label it as a param.
+	/* 4) reached the beginning of the function. Previous nodes == 0. label it as a param. */
 	
 	return 0;
 }
