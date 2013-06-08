@@ -1867,7 +1867,6 @@ int init_node_used_register_table(struct self_s *self, struct control_flow_node_
 
 int fill_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
-	int tmp;
 	int node;
 	int inst;
 	struct inst_log_entry_s *inst_log1;
@@ -1876,9 +1875,9 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 
 	for (node = 1; node <= *node_size; node++) {
 		inst = nodes[node].inst_start;
-		inst_log1 = &inst_log_entry[inst];
 		do {
 			debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
+			inst_log1 = &inst_log_entry[inst];
 			instruction =  &inst_log1->instruction;
 			switch (instruction->opcode) {
 			/* DSTA, SRCA, SRCB == nothing */
@@ -1889,7 +1888,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->dstA.index].seen = 2;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					}
-					nodes[node].used_register[instruction->dstA.index].dst = 1;
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* If SRC and DST in same instruction, let SRC dominate. */
@@ -1899,7 +1898,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 					}
-					nodes[node].used_register[instruction->srcA.index].src = 1;
+					nodes[node].used_register[instruction->srcA.index].src = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -1926,7 +1925,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->dstA.index].seen = 1;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					}
-					nodes[node].used_register[instruction->dstA.index].dst = 1;
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
@@ -1936,7 +1935,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 					}
-					nodes[node].used_register[instruction->srcA.index].src = 1;
+					nodes[node].used_register[instruction->srcA.index].src = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -1953,7 +1952,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					}
 					/* CMP and TEST do not have a dst */
-					nodes[node].used_register[instruction->dstA.index].src = 1;
+					nodes[node].used_register[instruction->dstA.index].src = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
 				}
 				/* DST does not exist, let DSTA be the SRC dominate. */
@@ -1963,7 +1962,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 					}
-					nodes[node].used_register[instruction->srcA.index].src = 1;
+					nodes[node].used_register[instruction->srcA.index].src = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -1976,7 +1975,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->dstA.index].seen = 1;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 					}
-					nodes[node].used_register[instruction->dstA.index].dst = 1;
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
 					debug_print(DEBUG_MAIN, 1, "CALL Seen1:0x%x, DST\n", instruction->dstA.index);
 				}
 				/* FIXME: TODO params */
@@ -1993,7 +1992,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 					}
-					nodes[node].used_register[instruction->srcA.index].src = 1;
+					nodes[node].used_register[instruction->srcA.index].src = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
@@ -2017,8 +2016,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				break;
 			}
 		if (!inst_log1->node_end) {
-			tmp = inst_log1->next[0];
-			inst_log1 = &inst_log_entry[tmp];
+			inst = inst_log1->next[0];
 		}
 
         	} while (!(inst_log1->node_end));
@@ -2219,12 +2217,12 @@ int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes
 			first = 0;
 		}
 		if (tmp == 0) {
-			/* Check used_registers of the prev_node */
+			/* Check used_registers of the prev_node. tmp2 points to the last instruction in the node/block */
 			tmp2 = nodes[tmp_node].used_register[reg].dst;
 			if (node <= 4) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:tmp = 0x%x, tmp2 = 0x%x, prev_path = 0x%x, prev_step = 0x%x, prev_node = 0x%x\n", tmp, tmp2, prev_path, prev_step, prev_node);
 				}
-			if (tmp2 == 1) {
+			if (tmp2) {
 				*src_node = tmp_node;
 				ret = 0; /* Found */
 				goto exit_find_phi_src_node_reg;

@@ -101,8 +101,10 @@ struct node_used_register_s {
 	/* If SRC and DST in same instruction, set SRC first in seen. */
 	int seen; /* 0 = Not seen, 1 = SRC first, 2 = DST first */
 	int size; /* The size of the register seen */
-	int src;  /* Set when the register is used by the node */
-	int dst;  /* Set when the register is modified by the node */
+	/* Points to last src in the block */
+	int src;  /* Set when the register is used by the node. Points to instruction */
+	/* Points to last dst in the block */
+	int dst;  /* Set when the register is modified by the node. Points to instruction */
 };
 
 struct path_node_s {
