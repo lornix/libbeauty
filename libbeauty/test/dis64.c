@@ -1320,6 +1320,86 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 	return 0;
 }
 
+/* Search the used register table for the value ID to use. */
+int get_value_id_from_node_reg(struct self_s *self, int node, int reg, int *value_id)
+{
+	struct control_flow_node_s *nodes =  self->nodes;
+	int inst;
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct instruction_s *instruction;
+	int ret = 0;
+
+	*value_id = 0;
+	if (node < 1) {
+		return 1;
+	}
+	printf("node:0x%x, reg:0x%x\n", node, reg);
+	inst = nodes[node].used_register[reg].dst;
+	printf("inst:0x%x\n", inst);
+	inst_log1 = &inst_log_entry[inst];
+	instruction =  &inst_log1->instruction;
+	switch (instruction->opcode) {
+	case MOV:
+	case ADD:
+	case ADC:
+	case SUB:
+	case SBB:
+	case MUL:
+	case IMUL:
+	case OR:
+	case XOR:
+	case rAND:
+	case NOT:
+	case NEG:
+	case SHL:
+	case SHR:
+	case SAL:
+	case SAR:
+	case SEX:
+		if ((instruction->dstA.store == STORE_REG) &&
+			(instruction->dstA.indirect == IND_DIRECT)) {
+			*value_id = inst_log1->value3.value_id;
+			}
+		break;
+	/* DSTA = nothing, SRCA, SRCB == DSTA */
+	case TEST:
+	/* DSTA = nothing, SRCA, SRCB == DSTA */
+	case CMP:
+		ret = 1;
+		break;
+	/* DSTA = EAX, SRCN = parameters */
+	case CALL:
+		if ((instruction->dstA.store == STORE_REG) &&
+			(instruction->dstA.indirect == IND_DIRECT)) {
+			*value_id = inst_log1->value3.value_id;
+			}
+		break;
+	case IF:
+		/* This does nothing to the table */
+		ret = 1;
+		break;
+	/* DSTA = nothing, SRCA, SRCB = nothing */
+	case RET:
+		ret = 1;
+		break;
+	/* DSTA = nothing, SRCN = nothing */
+	case JMP:
+		ret = 1;
+		break;
+	/* DSTA = nothing, SRCA = table index , but not known yet. = Pointer + 8 * index.
+	 * Eventually it will be the label for the index */
+	case JMPT:
+		ret = 1;
+		break;
+	default:
+		debug_print(DEBUG_MAIN, 1, "FIXME: get_value_id: unknown instruction OP 0x%x\n", instruction->opcode);
+		ret = 1;
+		break;
+	}
+	return ret;
+}
+
 int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size,
                          struct label_redirect_s *label_redirect, struct label_s *labels, int entry_point)
 {
@@ -1340,6 +1420,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
+	int value_id;
 
 	if (external_entry_points[entry_point].member_nodes_size == 0) {
 		debug_print(DEBUG_MAIN, 1, "external_entry_point 0x%x empty\n", entry_point);
@@ -1402,9 +1483,11 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 				tmp = fprintf(fd, "phi[%d] = REG0x%x:0x%x ",
 					n, nodes[node].phi[n].reg, nodes[node].phi[n].value_id);
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
-					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x, ",
+					tmp = get_value_id_from_node_reg(self, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
+					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x:L:0x%x, ",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
-						nodes[node].phi[n].phi_node[m].node);
+						nodes[node].phi[n].phi_node[m].node,
+						value_id);
 				}
 #if 0
 				for (m = 0; m < nodes[node].path_size; m++) {
