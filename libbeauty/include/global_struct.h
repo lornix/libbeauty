@@ -105,6 +105,18 @@ struct node_used_register_s {
 	int src;  /* Set when the register is used by the node. Points to instruction */
 	/* Points to last dst in the block */
 	int dst;  /* Set when the register is modified by the node. Points to instruction */
+	/* Points to the first src in the block */
+	int src_first;
+	/* If seen == 1, then label depends on phi, previous nodes, or a param. */
+	int src_first_value_id;
+	/* Node where this label is defined */
+	int src_first_node;
+	/* 0 = not found yet.
+	   1 = phi.
+	   2 = previous node.
+	   3 = param.
+	 */
+	int src_first_label;
 };
 
 struct path_node_s {

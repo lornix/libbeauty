@@ -66,7 +66,7 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
-int debug_dis64 = 0;
+int debug_dis64 = 1;
 int debug_input_bfd = 0;
 int debug_input_dis = 0;
 int debug_exe = 0;
@@ -1958,31 +1958,35 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 
 	for (node = 1; node <= *node_size; node++) {
 		inst = nodes[node].inst_start;
+		debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
 		do {
-			debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
+			debug_print(DEBUG_MAIN, 1, "inst:0x%x\n", inst);
 			inst_log1 = &inst_log_entry[inst];
 			instruction =  &inst_log1->instruction;
 			switch (instruction->opcode) {
 			/* DSTA, SRCA, SRCB == nothing */
 			case MOV:
-				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT)) {
-					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
-						nodes[node].used_register[instruction->dstA.index].seen = 2;
-						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
-					}
-					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
-				}
 				/* If SRC and DST in same instruction, let SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
 					}
-					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 2;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						debug_print(DEBUG_MAIN, 1, "Set2\n");
+					}
 				}
 				break;
 			/* DSTA, SRCA, SRCB == DSTA */
@@ -2002,24 +2006,37 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case SAL:
 			case SAR:
 			case SEX:
-				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT)) {
-					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
-						nodes[node].used_register[instruction->dstA.index].seen = 1;
-						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
-					}
-					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, DST\n", instruction->dstA.index);
-				}
-				/* As SRCB == DSTA, don't need to deal with 2, as the 1 dominates. */
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcA.index].dst = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
 					}
-					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				if ((instruction->srcB.store == STORE_REG) &&
+					(instruction->srcB.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcB.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x SRC\n", instruction->srcB.index);
+					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
+						nodes[node].used_register[instruction->srcB.index].seen = 1;
+						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
+						nodes[node].used_register[instruction->srcB.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
+					}
+				}
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 2;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						debug_print(DEBUG_MAIN, 1, "Set2\n");
+					}
 				}
 				break;
 
@@ -2028,40 +2045,44 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case TEST:
 			/* DSTA = nothing, SRCA, SRCB == DSTA */
 			case CMP:
-				if ((instruction->dstA.store == STORE_REG) &&
-					(instruction->dstA.indirect == IND_DIRECT)) {
-					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
-						nodes[node].used_register[instruction->dstA.index].seen = 1;
-						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
-					}
-					/* CMP and TEST do not have a dst */
-					nodes[node].used_register[instruction->dstA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->dstA.index);
-				}
-				/* DST does not exist, let DSTA be the SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
+					/* CMP and TEST do not have a dst */
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
 					}
-					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+				}
+				if ((instruction->srcB.store == STORE_REG) &&
+					(instruction->srcB.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcB.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcB.index);
+					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
+						nodes[node].used_register[instruction->srcB.index].seen = 1;
+						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
+						nodes[node].used_register[instruction->srcB.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
+					}
 				}
 				break;
 
 			/* DSTA = EAX, SRCN = parameters */
 			case CALL:
+				/* FIXME: TODO params */
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
-					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
-						nodes[node].used_register[instruction->dstA.index].seen = 1;
-						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
-					}
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
 					debug_print(DEBUG_MAIN, 1, "CALL Seen1:0x%x, DST\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 2;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						debug_print(DEBUG_MAIN, 1, "Set2\n");
+					}
 				}
-				/* FIXME: TODO params */
 				break;
 
 			case IF:
@@ -2071,12 +2092,14 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case RET:
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
 					}
-					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
 				}
 				break;
 			/* DSTA = nothing, SRCN = nothing */
@@ -2087,10 +2110,11 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT) &&
 					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
+					/* TODO: Add register src index here */
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x SET\n", instruction->srcA.index);
 					nodes[node].used_register[instruction->srcA.index].seen = 1;
 					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
-					/* TODO: Add register src index here */
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+					nodes[node].used_register[instruction->srcA.index].src_first = inst;
 				}
 				break;
 			default:

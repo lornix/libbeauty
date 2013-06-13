@@ -877,6 +877,12 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		instruction->srcA.index = reg_table[reg_mem].offset;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = size;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 8;
+		instruction->srcB.index = reg_table[reg_mem].offset;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = size;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 8;
@@ -2164,6 +2170,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.value_size = width;
 		/* FIXME: !half bad */
 		if (!half) {
+			debug_print(DEBUG_INPUT_DIS, 1, "!half\n");
     			instruction->dstA.indirect = IND_MEM;
 			instruction->dstA.indirect_size = 8;
 			instruction->dstA.store = STORE_REG;
@@ -3440,6 +3447,9 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.index = 0x%"PRIx64"\n", n, instruction->srcA.index);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.relocated = 0x%x\n", n, instruction->srcA.relocated);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.value_size = 0x%x\n", n, instruction->srcA.value_size);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcB.index = 0x%"PRIx64"\n", n, instruction->srcB.index);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcB.relocated = 0x%x\n", n, instruction->srcB.relocated);
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcB.value_size = 0x%x\n", n, instruction->srcB.value_size);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.store = 0x%x\n", n, instruction->dstA.store);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.index = 0x%"PRIx64"\n", n, instruction->dstA.index);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.value_size = 0x%x\n", n, instruction->dstA.value_size);
