@@ -3109,7 +3109,7 @@ int main(int argc, char *argv[])
 	}
 	
 	/************************************************************
-	 * This bit assigned a variable ID to each assignment (dst).
+	 * This bit assigned a variable ID and label to each assignment (dst).
 	 ************************************************************/
 
 	label_redirect = calloc(10000, sizeof(struct label_redirect_s));
@@ -3220,6 +3220,23 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* TODO: add code to process the used_registers to identify registers
+	 * that are assigned dst in a previous node or function param
+	 */
+
+	/* Print out the reg depenpendancy table */
+	for (n = 1; n <= nodes_size; n++) {
+		for (m = 0; m < 0xa0; m++) {
+			if (1 == nodes[n].used_register[m].seen) {
+				debug_print(DEBUG_MAIN, 1, "Node 0x%x: Reg Used src:0x%x\n", n, m);
+			}
+		}
+	}
+
+
+
+	/* Assign labels to instructions src */
+	/* TODO: WIP: Work in progress */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		int inst;
 		if (external_entry_points[l].valid &&
