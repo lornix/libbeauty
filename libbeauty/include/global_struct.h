@@ -214,6 +214,7 @@ struct external_entry_point_s {
 	int params_size;
 	int *params;
 	int *params_order;
+	int param_reg_label[0xa0];
 	int locals_size;
 	int *locals;
 	int *locals_order;

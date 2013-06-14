@@ -2477,6 +2477,22 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	return 0;
 }
 
+int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes, int node_size, int node, int reg, int *value_id)
+{
+	int n;
+	int ret = 1;
+
+	*value_id = 0;
+	for (n = 0; n < nodes[node].phi_size; n++) {
+		if (nodes[node].phi[n].reg == reg) {
+			ret = 0;
+			*value_id = nodes[node].phi[n].value_id;
+			break;
+		}
+	}
+	return ret;
+}
+
 int build_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point, int nodes_size)
 {
 	int *nodes;
@@ -3224,16 +3240,56 @@ int main(int argc, char *argv[])
 	 * that are assigned dst in a previous node or function param
 	 */
 
-	/* Print out the reg depenpendancy table */
+	/* Fill in the reg depenpendancy table */
 	for (n = 1; n <= nodes_size; n++) {
 		for (m = 0; m < 0xa0; m++) {
+			int value_id;
 			if (1 == nodes[n].used_register[m].seen) {
+				int entry_point = 0;
 				debug_print(DEBUG_MAIN, 1, "Node 0x%x: Reg Used src:0x%x\n", n, m);
+				tmp = find_reg_in_phi_list(self, nodes, nodes_size, n, m, &value_id);
+				if (!tmp) {
+					debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in phi. value_id = 0x%x\n", m, value_id);
+					continue;
+				}
+				/* Start searching previous nodes for used_register and phi */
+				/* TODO */
+
+				/* All other searches failed, must be a param */
+				/* Build the param to label pointer tables, and use it to not duplicate param labels. */
+				entry_point = nodes[n].entry_point;
+				tmp = self->external_entry_points[entry_point].param_reg_label[m];
+				if (0 == tmp) {
+					nodes[n].used_register[m].src_first_value_id = variable_id;
+					nodes[n].used_register[m].src_first_node = 0;
+					nodes[n].used_register[m].src_first_label = 3;
+					label_redirect[variable_id].redirect = variable_id;
+					labels[variable_id].scope = 2;
+					labels[variable_id].type = 1;
+					labels[variable_id].lab_pointer = 1;
+					labels[variable_id].value = m;
+					self->external_entry_points[entry_point].param_reg_label[m] = variable_id;
+					debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in param, label_id = 0x%x\n", m, variable_id);
+					variable_id++;
+				} else {
+					nodes[n].used_register[m].src_first_value_id = tmp;
+					nodes[n].used_register[m].src_first_node = 0;
+					nodes[n].used_register[m].src_first_label = 3;
+					debug_print(DEBUG_MAIN, 1, "Found duplicate reg 0x%x in param, label_id = 0x%x\n", m, tmp);
+				}
 			}
 		}
 	}
 
-
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		for (m = 0; m < 0xa0; m++) {
+			if (self->external_entry_points[l].param_reg_label[m]) {
+				debug_print(DEBUG_MAIN, 1, "Entry Point 0x%x: Found reg 0x%x in param\n", l, m);
+			}
+		}
+	}
+	/* Enter value id/label id of param into phi with src node 0. */
+	/* TODO */
 
 	/* Assign labels to instructions src */
 	/* TODO: WIP: Work in progress */
