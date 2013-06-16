@@ -1321,7 +1321,7 @@ int print_ast(struct self_s *self, struct ast_s *ast) {
 }
 
 /* Search the used register table for the value ID to use. */
-int get_value_id_from_node_reg(struct self_s *self, int node, int reg, int *value_id)
+int get_value_id_from_node_reg(struct self_s *self, int entry_point, int node, int reg, int *value_id)
 {
 	struct control_flow_node_s *nodes =  self->nodes;
 	int inst;
@@ -1331,10 +1331,12 @@ int get_value_id_from_node_reg(struct self_s *self, int node, int reg, int *valu
 	int ret = 0;
 
 	*value_id = 0;
+	printf("get_value:node:0x%x, reg:0x%x\n", node, reg);
 	if (node < 1) {
-		return 1;
+		*value_id = self->external_entry_points[entry_point].param_reg_label[reg];
+		printf("get_value:value_id:0x%x\n", *value_id);
+		return 0;
 	}
-	printf("node:0x%x, reg:0x%x\n", node, reg);
 	inst = nodes[node].used_register[reg].dst;
 	printf("inst:0x%x\n", inst);
 	inst_log1 = &inst_log_entry[inst];
@@ -1483,7 +1485,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 				tmp = fprintf(fd, "phi[%d] = REG0x%x:0x%x ",
 					n, nodes[node].phi[n].reg, nodes[node].phi[n].value_id);
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
-					tmp = get_value_id_from_node_reg(self, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
+					tmp = get_value_id_from_node_reg(self, nodes[node].entry_point, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
 					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x:L:0x%x, ",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
 						nodes[node].phi[n].phi_node[m].node,
@@ -3050,7 +3052,6 @@ int main(int argc, char *argv[])
 
 #if 1
 
-	print_dis_instructions(self);
 
 	if (self->entry_point_list_length > 0) {
 		for (n = 0; n < self->entry_point_list_length; n++ ) {
@@ -3240,20 +3241,52 @@ int main(int argc, char *argv[])
 	 * that are assigned dst in a previous node or function param
 	 */
 
-	/* Fill in the reg depenpendancy table */
+	/* Fill in the reg dependency table */
 	for (n = 1; n <= nodes_size; n++) {
 		for (m = 0; m < 0xa0; m++) {
 			int value_id;
 			if (1 == nodes[n].used_register[m].seen) {
+				int node;
 				int entry_point = 0;
 				debug_print(DEBUG_MAIN, 1, "Node 0x%x: Reg Used src:0x%x\n", n, m);
 				tmp = find_reg_in_phi_list(self, nodes, nodes_size, n, m, &value_id);
 				if (!tmp) {
+					nodes[n].used_register[m].src_first_value_id = value_id;
+					nodes[n].used_register[m].src_first_node = n;
+					nodes[n].used_register[m].src_first_label = 1;
 					debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in phi. value_id = 0x%x\n", m, value_id);
 					continue;
 				}
 				/* Start searching previous nodes for used_register and phi */
-				/* TODO */
+				node = n;
+				debug_print(DEBUG_MAIN, 1, "Previous size 0x%x\n", nodes[node].prev_size);
+				if (nodes[node].prev_size > 0) {
+					debug_print(DEBUG_MAIN, 1, "Previous node 0x%x\n", nodes[node].prev_node[0]);
+				}
+				while ((nodes[node].prev_size > 0) && (nodes[node].prev_node[0] != 0)) {
+					node = nodes[node].prev_node[0];
+					debug_print(DEBUG_MAIN, 1, "Previous nodes 0x%x\n", node);
+					if (nodes[node].used_register[m].dst) {
+						inst_log1 =  &inst_log_entry[nodes[node].used_register[m].dst];
+						instruction =  &inst_log1->instruction;
+						/* FIXME: Handle indirect */
+						tmp = inst_log1->value3.value_id;
+						nodes[node].used_register[m].src_first_value_id = tmp;
+						nodes[node].used_register[m].src_first_node = node;
+						nodes[node].used_register[m].src_first_label = 2;
+						debug_print(DEBUG_MAIN, 1, "Reg DST found 0x%x\n", nodes[node].used_register[m].dst);
+						continue;
+					}
+					tmp = find_reg_in_phi_list(self, nodes, nodes_size, node, m, &value_id);
+					if (!tmp) {
+						nodes[n].used_register[m].src_first_value_id = value_id;
+						nodes[n].used_register[m].src_first_node = node;
+						nodes[n].used_register[m].src_first_label = 1;
+						debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in previous 0x%x phi. value_id = 0x%x\n", m, node, value_id);
+						continue;
+					}
+				}
+					
 
 				/* All other searches failed, must be a param */
 				/* Build the param to label pointer tables, and use it to not duplicate param labels. */
@@ -3281,10 +3314,32 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	for (n = 1; n <= nodes_size; n++) {
+		for (m = 0; m < 0xa0; m++) {
+			if (nodes[n].used_register[m].seen) {
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].seen = 0x%x\n", n, m, 
+					nodes[n].used_register[m].seen);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].size = 0x%x\n", n, m, 
+					nodes[n].used_register[m].size);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].src = 0x%x\n", n, m, 
+					nodes[n].used_register[m].src);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].dst = 0x%x\n", n, m, 
+					nodes[n].used_register[m].dst);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].src_fist_value_id = 0x%x\n", n, m, 
+					nodes[n].used_register[m].src_first_value_id);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].src_fist_node = 0x%x\n", n, m, 
+					nodes[n].used_register[m].src_first_node);
+				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].src_fist_label = 0x%x\n", n, m, 
+					nodes[n].used_register[m].src_first_label);
+			}
+		}
+	}
+	/* Enter value id/label id of param into phi with src node 0. */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		for (m = 0; m < 0xa0; m++) {
 			if (self->external_entry_points[l].param_reg_label[m]) {
-				debug_print(DEBUG_MAIN, 1, "Entry Point 0x%x: Found reg 0x%x in param\n", l, m);
+				debug_print(DEBUG_MAIN, 1, "Entry Point 0x%x: Found reg 0x%x as param label 0x%x\n", l, m,
+					self->external_entry_points[l].param_reg_label[m]);
 			}
 		}
 	}
@@ -3453,6 +3508,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	print_dis_instructions(self);
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
 	 * This bit creates the labels table, ready for the next step.
