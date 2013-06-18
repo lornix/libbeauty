@@ -3583,10 +3583,17 @@ int main(int argc, char *argv[])
 						inst_log1->value2.value_id); 
 					break;
 				}
+				switch (instruction->dstA.store) {
+				case STORE_DIRECT:
+					break;
+				case STORE_REG:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%x given value_id = 0x%x\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id); 
+					break;
+				}
 				break;
-
-				break;
-
 			/* Specially handled because value3 is not assigned and writen to a destination. */
 			case TEST:
 			case CMP:
@@ -3597,8 +3604,15 @@ int main(int argc, char *argv[])
 				/* FIXME: TODO*/
 				break;
 			case IF:
+				break;
 			case RET:
+				inst_log1->value1.value_id = 
+					reg_tracker[instruction->srcA.index];
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+					inst_log1->value1.value_id); 
+				break;
 			case JMP:
+				break;
 			case JMPT:
 				/* FIXME: TODO*/
 				break;
