@@ -1516,6 +1516,11 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 			instruction =  &inst_log1->instruction;
 			//tmp = write_inst(self, fd, instruction, n, NULL);
 			//tmp = fprintf(fd, "\\l");
+			printf("output_cfg:Inst 0x%x: label1 = 0x%"PRIx64", label2 = 0x%"PRIx64", label3 = 0x%"PRIx64"\n",
+				n,
+				inst_log1->value1.value_id,
+				inst_log1->value2.value_id,
+				inst_log1->value3.value_id);
 			tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\l");
 			//tmp = fprintf(fd, "\\l\n");
 			if (inst_log1->node_end || !(inst_log1->next_size)) {
@@ -3410,7 +3415,19 @@ int main(int argc, char *argv[])
 		struct label_s label;
 		int new_label = 0;
 		int found = 0;
+		int reg_tracker[0xa0];
 		node = n;
+		/* Initialise the reg_tracker at each node */
+		for (m = 0; m < 0xa0; m++) {
+			if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
+				reg_tracker[m] = nodes[node].used_register[m].src_first_value_id;
+				debug_print(DEBUG_MAIN, 1, "reg 0x%x given value_id = 0x%x\n", m,
+					reg_tracker[m]);
+			} else {
+				reg_tracker[m] = 0;
+			}
+		}
+
 		inst = nodes[node].inst_start;
 		do {
 			inst_log1 =  &inst_log_entry[inst];
@@ -3443,16 +3460,26 @@ int main(int argc, char *argv[])
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
 				case STORE_REG:
 					/* FIXME: TODO*/
-					if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
-						inst_log1->value1.value_id = 
-							nodes[node].used_register[instruction->srcA.index].src_first_value_id;
-						debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
-							inst_log1->value1.value_id); 
-					};
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
+					break;
+				}
+				switch (instruction->dstA.store) {
+				case STORE_DIRECT:
+					break;
+				case STORE_REG:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%x given value_id = 0x%x\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id); 
 					break;
 				}
 				break;
@@ -3499,6 +3526,8 @@ int main(int argc, char *argv[])
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
 				case STORE_REG:
@@ -3506,10 +3535,10 @@ int main(int argc, char *argv[])
 					/* srcA */
 					//tmp = search_back_for_register(self, l, node, inst, 0,
 					//	&label, &new_label);
-					if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
-						inst_log1->value1.value_id = 
-							nodes[node].used_register[instruction->srcA.index].src_first_value_id;
-					};
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
 					break;
 				}
 				switch (instruction->srcB.store) {
@@ -3532,12 +3561,14 @@ int main(int argc, char *argv[])
 						label.value = instruction->srcB.index;
 					}
 					
-					inst_log1->value1.value_id = variable_id;
+					inst_log1->value2.value_id = variable_id;
 					label_redirect[variable_id].redirect = variable_id;
 					labels[variable_id].scope = label.scope;
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%x\n", inst,
+						inst_log1->value2.value_id); 
 					variable_id++;
 					break;
 				case STORE_REG:
@@ -3545,10 +3576,10 @@ int main(int argc, char *argv[])
 					/* srcB */
 					//search_back_for_register(self, l, node, inst, 1,
 					//	&label, &new_label);
-					if (nodes[node].used_register[instruction->srcB.index].seen == 1) {
-						inst_log1->value2.value_id = 
-							nodes[node].used_register[instruction->srcB.index].src_first_value_id;
-					};
+					inst_log1->value2.value_id = 
+						reg_tracker[instruction->srcB.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%x\n", inst,
+						inst_log1->value2.value_id); 
 					break;
 				}
 				break;
@@ -3586,6 +3617,8 @@ int main(int argc, char *argv[])
 			}
 		} while (!found);
 	}
+
+	self->local_counter = variable_id;
 
 	print_dis_instructions(self);
 	for (n = 0x100; n < 0x130; n++) {
@@ -4184,7 +4217,7 @@ int main(int argc, char *argv[])
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		value_id1 = inst_log1->value1.value_id;
-		
+
 		if (value_id1 > self->local_counter) {
 			debug_print(DEBUG_MAIN, 1, "PARAM Failed at inst_log 0x%x\n", n);
 			return 1;
