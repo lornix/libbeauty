@@ -3183,6 +3183,10 @@ int main(int argc, char *argv[])
 			} else {
 				inst_log1->value3.value_id = variable_id;
 			}
+			/* Override the EXE setting for now */
+			if (inst_log1->value3.value_scope == 1) {
+				inst_log1->value3.value_scope = 2;
+			}
 			memset(&label, 0, sizeof(struct label_s));
 			tmp = log_to_label(instruction->dstA.store,
 				instruction->dstA.indirect,
@@ -3230,6 +3234,15 @@ int main(int argc, char *argv[])
 			break;
 		}
 		variable_id++;
+	}
+
+	for (n = 0x100; n < 0x130; n++) {
+		struct label_s *label;
+		tmp = label_redirect[n].redirect;
+		label = &labels[tmp];
+		printf("Label 0x%x:", n);
+		tmp = output_label(label, stdout);
+		printf("\n");
 	}
 
 	/* Assign labels to PHI instructions dst */
@@ -3391,15 +3404,15 @@ int main(int argc, char *argv[])
 
 	/* Assign labels to instructions src */
 	/* TODO: WIP: Work in progress */
-	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+	for (n = 1; n <= nodes_size; n++) {
 		int inst;
-		if (external_entry_points[l].valid &&
-			external_entry_points[l].type == 1) {
-			int node;
-			struct label_s label;
-			int new_label = 0;
-			node = external_entry_points[l].start_node;
-			inst = nodes[node].inst_start;
+		int node;
+		struct label_s label;
+		int new_label = 0;
+		int found = 0;
+		node = n;
+		inst = nodes[node].inst_start;
+		do {
 			inst_log1 =  &inst_log_entry[inst];
 			instruction =  &inst_log1->instruction;
 			switch (instruction->opcode) {
@@ -3434,6 +3447,12 @@ int main(int argc, char *argv[])
 					break;
 				case STORE_REG:
 					/* FIXME: TODO*/
+					if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
+						inst_log1->value1.value_id = 
+							nodes[node].used_register[instruction->srcA.index].src_first_value_id;
+						debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+							inst_log1->value1.value_id); 
+					};
 					break;
 				}
 				break;
@@ -3485,8 +3504,12 @@ int main(int argc, char *argv[])
 				case STORE_REG:
 					/* FIXME: TODO*/
 					/* srcA */
-					tmp = search_back_for_register(self, l, node, inst, 0,
-						&label, &new_label);
+					//tmp = search_back_for_register(self, l, node, inst, 0,
+					//	&label, &new_label);
+					if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
+						inst_log1->value1.value_id = 
+							nodes[node].used_register[instruction->srcA.index].src_first_value_id;
+					};
 					break;
 				}
 				switch (instruction->srcB.store) {
@@ -3520,8 +3543,12 @@ int main(int argc, char *argv[])
 				case STORE_REG:
 					/* FIXME: TODO*/
 					/* srcB */
-					search_back_for_register(self, l, node, inst, 1,
-						&label, &new_label);
+					//search_back_for_register(self, l, node, inst, 1,
+					//	&label, &new_label);
+					if (nodes[node].used_register[instruction->srcB.index].seen == 1) {
+						inst_log1->value2.value_id = 
+							nodes[node].used_register[instruction->srcB.index].src_first_value_id;
+					};
 					break;
 				}
 				break;
@@ -3548,10 +3575,28 @@ int main(int argc, char *argv[])
 				return 1;
 				break;
 			}
-		}
+			if (inst == nodes[node].inst_end) {
+				found = 1;
+			}
+			if (inst_log1->next_size > 0) {
+				inst = inst_log1->next[0];
+			} else {
+				/* Exit here */
+				found = 1;
+			}
+		} while (!found);
 	}
 
 	print_dis_instructions(self);
+	for (n = 0x100; n < 0x130; n++) {
+		struct label_s *label;
+		tmp = label_redirect[n].redirect;
+		label = &labels[tmp];
+		printf("Label 0x%x:", n);
+		tmp = output_label(label, stdout);
+		printf("\n");
+	}
+
 	/************************************************************
 	 * This section deals with correcting SSA for branches/joins.
 	 * This bit creates the labels table, ready for the next step.
