@@ -3419,12 +3419,13 @@ int main(int argc, char *argv[])
 		node = n;
 		/* Initialise the reg_tracker at each node */
 		for (m = 0; m < 0xa0; m++) {
-			if (nodes[node].used_register[instruction->srcA.index].seen == 1) {
+			if (nodes[node].used_register[m].seen == 1) {
 				reg_tracker[m] = nodes[node].used_register[m].src_first_value_id;
-				debug_print(DEBUG_MAIN, 1, "reg 0x%x given value_id = 0x%x\n", m,
+				debug_print(DEBUG_MAIN, 1, "Node 0x%x: reg 0x%x given value_id = 0x%x\n", node, m,
 					reg_tracker[m]);
 			} else {
 				reg_tracker[m] = 0;
+				//debug_print(DEBUG_MAIN, 1, "Node 0x%x: reg 0x%x given value_id no value\n", node, m);
 			}
 		}
 
