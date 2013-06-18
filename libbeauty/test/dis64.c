@@ -3254,9 +3254,9 @@ int main(int argc, char *argv[])
 			for (m = 0; m < nodes[n].phi_size; m++) {
 				nodes[n].phi[m].value_id = variable_id;
 				label_redirect[variable_id].redirect = variable_id;
-				labels[variable_id].scope = 3;
+				labels[variable_id].scope = 1;
 				labels[variable_id].type = 1;
-				labels[variable_id].lab_pointer = 1;
+				labels[variable_id].lab_pointer = 0;
 				labels[variable_id].value = variable_id;
 				variable_id++;
 			}
