@@ -384,6 +384,9 @@ struct self_s {
 	struct control_flow_node_s *nodes;
 	int local_counter;
 	int *search_back_seen;
+	struct label_redirect_s *label_redirect;
+	struct label_s *labels;
+	
 };
 
 #endif /* __GLOBAL_STRUCT__ */
