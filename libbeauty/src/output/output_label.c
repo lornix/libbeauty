@@ -540,11 +540,20 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = fprintf(fd, "\t");
 			/* FIXME: Check limits */
-			if (1 == instruction->dstA.indirect) {
+			switch (instruction->dstA.indirect) {
+			case IND_MEM:
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
-			} else {
+				break;
+			case IND_STACK:
+				value_id = inst_log1->value3.indirect_value_id;
+				break;
+			case IND_IO:
+				value_id = inst_log1->value3.indirect_value_id;
+				break;
+			case IND_DIRECT:
 				value_id = inst_log1->value3.value_id;
+				break;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
@@ -553,11 +562,21 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
 			tmp = fprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			if (1 == instruction->srcA.indirect) {
+			switch (instruction->srcA.indirect) {
+			case IND_MEM:
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
-			} else {
+				break;
+			case IND_STACK:
+				tmp = fprintf(fd, "stack_");
+				value_id = inst_log1->value1.indirect_value_id;
+				break;
+			case IND_IO:
+				value_id = inst_log1->value1.indirect_value_id;
+				break;
+			case IND_DIRECT:
 				value_id = inst_log1->value1.value_id;
+				break;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];

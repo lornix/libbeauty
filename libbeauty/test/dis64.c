@@ -3183,7 +3183,10 @@ int main(int argc, char *argv[])
 		case SAL:
 		case SAR:
 		case SEX:
-			if (IND_MEM == instruction->dstA.indirect) {
+			/* If dstA.indirect, assign the dst label to indirect_value_id
+			   In the indirect case the value_id is a SRC and not a DST */
+			/* If not dstA.indirect, assign the dst label to value_id. */
+			if (IND_DIRECT != instruction->dstA.indirect) {
 				inst_log1->value3.indirect_value_id = variable_id;
 			} else {
 				inst_log1->value3.value_id = variable_id;
@@ -3222,7 +3225,7 @@ int main(int argc, char *argv[])
 
 		case CALL:
 			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
-			if (IND_MEM == instruction->dstA.indirect) {
+			if (IND_DIRECT != instruction->dstA.indirect) {
 				inst_log1->value3.indirect_value_id = variable_id;
 			} else {
 				inst_log1->value3.value_id = variable_id;
