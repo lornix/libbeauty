@@ -1981,6 +1981,19 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					}
 				}
 				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect != IND_DIRECT)) {
+					/* This is a special case, where the dst register is indirect, so actually a src. */
+					nodes[node].used_register[instruction->dstA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1D:0x%x\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 1;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						nodes[node].used_register[instruction->dstA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1D\n");
+					}
+				}
+
+				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
 					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
@@ -2011,23 +2024,23 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x, SRC\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x, SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 						nodes[node].used_register[instruction->srcA.index].src_first = inst;
-						debug_print(DEBUG_MAIN, 1, "Set1\n");
+						debug_print(DEBUG_MAIN, 1, "Set1A\n");
 					}
 				}
 				if ((instruction->srcB.store == STORE_REG) &&
 					(instruction->srcB.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcB.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x SRC\n", instruction->srcB.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%x SRC\n", instruction->srcB.index);
 					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
 						nodes[node].used_register[instruction->srcB.index].seen = 1;
 						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
 						nodes[node].used_register[instruction->srcB.index].src_first = inst;
-						debug_print(DEBUG_MAIN, 1, "Set1\n");
+						debug_print(DEBUG_MAIN, 1, "Set1B\n");
 					}
 				}
 				if ((instruction->dstA.store == STORE_REG) &&
@@ -2051,23 +2064,23 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					/* CMP and TEST do not have a dst */
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 						nodes[node].used_register[instruction->srcA.index].src_first = inst;
-						debug_print(DEBUG_MAIN, 1, "Set1\n");
+						debug_print(DEBUG_MAIN, 1, "Set1A\n");
 					}
 				}
 				if ((instruction->srcB.store == STORE_REG) &&
 					(instruction->srcB.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcB.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcB.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%x\n", instruction->srcB.index);
 					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
 						nodes[node].used_register[instruction->srcB.index].seen = 1;
 						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
 						nodes[node].used_register[instruction->srcB.index].src_first = inst;
-						debug_print(DEBUG_MAIN, 1, "Set1\n");
+						debug_print(DEBUG_MAIN, 1, "Set1B\n");
 					}
 				}
 				break;
@@ -2078,7 +2091,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "CALL Seen1:0x%x, DST\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "CALL Seen2:0x%x, DST\n", instruction->dstA.index);
 					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
 						nodes[node].used_register[instruction->dstA.index].seen = 2;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
@@ -3248,6 +3261,7 @@ int main(int argc, char *argv[])
 			if (1 == nodes[n].used_register[m].seen) {
 				int node;
 				int entry_point = 0;
+				int found = 0;
 				debug_print(DEBUG_MAIN, 1, "Node 0x%x: Reg Used src:0x%x\n", n, m);
 				tmp = find_reg_in_phi_list(self, nodes, nodes_size, n, m, &value_id);
 				if (!tmp) {
@@ -3270,12 +3284,26 @@ int main(int argc, char *argv[])
 						inst_log1 =  &inst_log_entry[nodes[node].used_register[m].dst];
 						instruction =  &inst_log1->instruction;
 						/* FIXME: Handle indirect */
-						tmp = inst_log1->value3.value_id;
-						nodes[node].used_register[m].src_first_value_id = tmp;
-						nodes[node].used_register[m].src_first_node = node;
-						nodes[node].used_register[m].src_first_label = 2;
+						/* Indirect should never happen for registers */
+						if ((instruction->dstA.store == STORE_REG) &&
+							(instruction->dstA.indirect == IND_DIRECT)) {
+							tmp = inst_log1->value3.value_id;
+						} else {
+							printf("BAD DST\n");
+							exit(1);
+						}
+						nodes[n].used_register[m].src_first_value_id = tmp;
+						nodes[n].used_register[m].src_first_node = node;
+						nodes[n].used_register[m].src_first_label = 2;
 						debug_print(DEBUG_MAIN, 1, "Reg DST found 0x%x\n", nodes[node].used_register[m].dst);
-						continue;
+						debug_print(DEBUG_MAIN, 1, "node 0x%x, m 0x%x\n", node, m);
+						debug_print(DEBUG_MAIN, 1, "value_id = 0x%x, node = 0x%x, label = 0x%x\n",
+							nodes[n].used_register[m].src_first_value_id,
+							nodes[n].used_register[m].src_first_node,
+							nodes[n].used_register[m].src_first_label);
+
+						found = 1;
+						break;
 					}
 					tmp = find_reg_in_phi_list(self, nodes, nodes_size, node, m, &value_id);
 					if (!tmp) {
@@ -3283,32 +3311,47 @@ int main(int argc, char *argv[])
 						nodes[n].used_register[m].src_first_node = node;
 						nodes[n].used_register[m].src_first_label = 1;
 						debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in previous 0x%x phi. value_id = 0x%x\n", m, node, value_id);
-						continue;
+						debug_print(DEBUG_MAIN, 1, "value_id = 0x%x, node = 0x%x, label = 0x%x\n",
+							nodes[n].used_register[m].src_first_value_id,
+							nodes[n].used_register[m].src_first_node,
+							nodes[n].used_register[m].src_first_label);
+						found = 1;
+						break;
 					}
 				}
 					
 
-				/* All other searches failed, must be a param */
-				/* Build the param to label pointer tables, and use it to not duplicate param labels. */
-				entry_point = nodes[n].entry_point;
-				tmp = self->external_entry_points[entry_point].param_reg_label[m];
-				if (0 == tmp) {
-					nodes[n].used_register[m].src_first_value_id = variable_id;
-					nodes[n].used_register[m].src_first_node = 0;
-					nodes[n].used_register[m].src_first_label = 3;
-					label_redirect[variable_id].redirect = variable_id;
-					labels[variable_id].scope = 2;
-					labels[variable_id].type = 1;
-					labels[variable_id].lab_pointer = 1;
-					labels[variable_id].value = m;
-					self->external_entry_points[entry_point].param_reg_label[m] = variable_id;
-					debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in param, label_id = 0x%x\n", m, variable_id);
-					variable_id++;
-				} else {
-					nodes[n].used_register[m].src_first_value_id = tmp;
-					nodes[n].used_register[m].src_first_node = 0;
-					nodes[n].used_register[m].src_first_label = 3;
-					debug_print(DEBUG_MAIN, 1, "Found duplicate reg 0x%x in param, label_id = 0x%x\n", m, tmp);
+				if (!found) {
+					/* All other searches failed, must be a param */
+					/* Build the param to label pointer tables, and use it to not duplicate param labels. */
+					entry_point = nodes[n].entry_point;
+					tmp = self->external_entry_points[entry_point].param_reg_label[m];
+					if (0 == tmp) {
+						nodes[n].used_register[m].src_first_value_id = variable_id;
+						nodes[n].used_register[m].src_first_node = 0;
+						nodes[n].used_register[m].src_first_label = 3;
+						label_redirect[variable_id].redirect = variable_id;
+						labels[variable_id].scope = 2;
+						labels[variable_id].type = 1;
+						labels[variable_id].lab_pointer = 1;
+						labels[variable_id].value = m;
+						self->external_entry_points[entry_point].param_reg_label[m] = variable_id;
+						debug_print(DEBUG_MAIN, 1, "Found reg 0x%x in param, label_id = 0x%x\n", m, variable_id);
+						debug_print(DEBUG_MAIN, 1, "value_id = 0x%x, node = 0x%x, label = 0x%x\n",
+							nodes[n].used_register[m].src_first_value_id,
+							nodes[n].used_register[m].src_first_node,
+							nodes[n].used_register[m].src_first_label);
+						variable_id++;
+					} else {
+						nodes[n].used_register[m].src_first_value_id = tmp;
+						nodes[n].used_register[m].src_first_node = 0;
+						nodes[n].used_register[m].src_first_label = 3;
+						debug_print(DEBUG_MAIN, 1, "Found duplicate reg 0x%x in param, label_id = 0x%x\n", m, tmp);
+						debug_print(DEBUG_MAIN, 1, "value_id = 0x%x, node = 0x%x, label = 0x%x\n",
+							nodes[n].used_register[m].src_first_value_id,
+							nodes[n].used_register[m].src_first_node,
+							nodes[n].used_register[m].src_first_label);
+					}
 				}
 			}
 		}
