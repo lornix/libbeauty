@@ -45,9 +45,11 @@
 #include <rev.h>
 
 
-uint64_t read_data(struct self_s *self, uint64_t offset, int size) {
+uint64_t read_data(struct self_s *self, uint64_t offset, int size_bits) {
 	uint64_t tmp, tmp2, tmp3, limit;
 	int n;
+	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
+	int size = (size_bits + 7) << 3;
 
 	tmp = 0;
 	debug_print(DEBUG_EXE, 1, "read_data:offset = 0x%"PRIx64", size = %d\n", offset, size);
@@ -71,7 +73,7 @@ uint64_t read_data(struct self_s *self, uint64_t offset, int size) {
 	
 	
 struct memory_s *search_store(
-	struct memory_s *memory, uint64_t index, int size)
+	struct memory_s *memory, uint64_t index, int size_bits)
 {
 	int n = 0;
 	uint64_t start = index;
@@ -79,6 +81,8 @@ struct memory_s *search_store(
 	uint64_t memory_start;
 	//uint64_t memory_end;
 	struct memory_s *result = NULL;
+	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
+	int size = (size_bits + 7) << 3;
 
 	debug_print(DEBUG_EXE, 1, "memory=%p, index=%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
@@ -100,7 +104,7 @@ struct memory_s *search_store(
 }
 
 struct memory_s *add_new_store(
-	struct memory_s *memory, uint64_t index, int size)
+	struct memory_s *memory, uint64_t index, int size_bits)
 {
 	int n = 0;
 	uint64_t start = index;
@@ -108,6 +112,8 @@ struct memory_s *add_new_store(
 	uint64_t memory_start;
 	//uint64_t memory_end;
 	struct memory_s *result = NULL;
+	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
+	int size = (size_bits + 7) << 3;
 
 	debug_print(DEBUG_EXE, 1, "add_new_store: memory=%p, index=0x%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
@@ -331,7 +337,7 @@ static int get_value_RTL_instruction(
 			value_data = add_new_store(memory_data,
 				data_index,
 				source->value_size);
-			value_data->init_value = read_data(self, data_index, 4); 
+			value_data->init_value = read_data(self, data_index, 32); 
 			debug_print(DEBUG_EXE, 1, "EXE3 value_data=%p, %p\n", value_data, &value_data);
 			debug_print(DEBUG_EXE, 1, "EXE3 value_data->init_value=%"PRIx64"\n", value_data->init_value);
 			/* Data */

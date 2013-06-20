@@ -134,7 +134,6 @@ extern int shift2_table[];
 extern int grp3_table[];
 
 extern char *store_table[];
-extern char *size_table[];
 extern char *indirect_table[];
 
 /*

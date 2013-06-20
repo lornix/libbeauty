@@ -147,17 +147,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				instruction->flags = 0;
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 				/* Skip * 1 */
 				if (mul > 0) {
@@ -166,16 +166,16 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 					instruction->flags = 0;
 					instruction->srcA.store = STORE_DIRECT;
 					instruction->srcA.indirect = IND_DIRECT;
-					instruction->srcA.indirect_size = 8;
+					instruction->srcA.indirect_size = 64;
 					instruction->srcA.index = 1 << mul;
 					instruction->srcA.relocated = 0;
 					instruction->srcA.value_size = size;
 					instruction->dstA.store = STORE_REG;
 					instruction->dstA.indirect = IND_DIRECT;
-					instruction->dstA.indirect_size = 8;
+					instruction->dstA.indirect_size = 64;
 					instruction->dstA.index = REG_TMP1;
 					instruction->dstA.relocated = 0;
-					instruction->dstA.value_size = 8;
+					instruction->dstA.value_size = 64;
 					dis_instructions->instruction_number++;
 				}
 			}
@@ -195,16 +195,16 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = REG_BP;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = size;
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 #endif
 
@@ -218,10 +218,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_DIRECT;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				/* mod 1 */
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-				instruction->srcA.value_size = 8;
+				instruction->srcA.value_size = 64;
 				instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 				instruction->srcA.relocated = 0;
 				tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -245,17 +245,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				dis_instructions->bytes_used+=4;
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			} else {
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here: base != 5\n");
@@ -269,24 +269,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			}
 
@@ -302,10 +302,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* mod 1 */
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -328,17 +328,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			dis_instructions->bytes_used+=4;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 
 			result = 1;
@@ -355,25 +355,25 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = reg_table[reg_mem].offset;
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 
 			result = 1;
@@ -393,17 +393,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				instruction->flags = 0;
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 				/* Skip * 1 */
 				if (mul > 0) {
@@ -412,24 +412,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 					instruction->flags = 0;
 					instruction->srcA.store = STORE_DIRECT;
 					instruction->srcA.indirect = IND_DIRECT;
-					instruction->srcA.indirect_size = 8;
+					instruction->srcA.indirect_size = 64;
 					instruction->srcA.index = 1 << mul;
 					instruction->srcA.relocated = 0;
 					instruction->srcA.value_size = size;
 
 					instruction->srcB.store = STORE_REG;
 					instruction->srcB.indirect = IND_DIRECT;
-					instruction->srcB.indirect_size = 8;
+					instruction->srcB.indirect_size = 64;
 					instruction->srcB.index = REG_TMP1;
 					instruction->srcB.relocated = 0;
-					instruction->srcB.value_size = 8;
+					instruction->srcB.value_size = 64;
 
 					instruction->dstA.store = STORE_REG;
 					instruction->dstA.indirect = IND_DIRECT;
-					instruction->dstA.indirect_size = 8;
+					instruction->dstA.indirect_size = 64;
 					instruction->dstA.index = REG_TMP1;
 					instruction->dstA.relocated = 0;
-					instruction->dstA.value_size = 8;
+					instruction->dstA.value_size = 64;
 					dis_instructions->instruction_number++;
 				}
 			}
@@ -445,24 +445,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = REG_BP;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = size;
 
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			} else {
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -475,24 +475,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			}
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -505,10 +505,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* mod 1 */
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
@@ -524,17 +524,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 			result = 1;
 		} else {
@@ -550,25 +550,25 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = reg_table[reg_mem].offset;
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
@@ -580,10 +580,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* mod 1 */
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
@@ -598,17 +598,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			dis_instructions->bytes_used++;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 
 			result = 1;
@@ -628,17 +628,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				instruction->flags = 0;
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 				/* Skip * 1 */
 				if (mul > 0) {
@@ -647,24 +647,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 					instruction->flags = 0;
 					instruction->srcA.store = STORE_DIRECT;
 					instruction->srcA.indirect = IND_DIRECT;
-					instruction->srcA.indirect_size = 8;
+					instruction->srcA.indirect_size = 64;
 					instruction->srcA.index = 1 << mul;
 					instruction->srcA.relocated = 0;
 					instruction->srcA.value_size = size;
 
 					instruction->srcB.store = STORE_REG;
 					instruction->srcB.indirect = IND_DIRECT;
-					instruction->srcB.indirect_size = 8;
+					instruction->srcB.indirect_size = 64;
 					instruction->srcB.index = REG_TMP1;
 					instruction->srcB.relocated = 0;
-					instruction->srcB.value_size = 8;
+					instruction->srcB.value_size = 64;
 
 					instruction->dstA.store = STORE_REG;
 					instruction->dstA.indirect = IND_DIRECT;
-					instruction->dstA.indirect_size = 8;
+					instruction->dstA.indirect_size = 64;
 					instruction->dstA.index = REG_TMP1;
 					instruction->dstA.relocated = 0;
-					instruction->dstA.value_size = 8;
+					instruction->dstA.value_size = 64;
 					dis_instructions->instruction_number++;
 				}
 			}
@@ -680,24 +680,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = REG_BP;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = size;
 
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			} else {
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -710,24 +710,24 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				}
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[base].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[base].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_DIRECT;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 8;
+				instruction->srcB.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			}
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -740,10 +740,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* mod 1 */
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -766,17 +766,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			dis_instructions->bytes_used+=4;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 
 			result = 1;
@@ -793,25 +793,25 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = reg_table[reg_mem].offset;
 			instruction->srcA.relocated = 0;
 			//instruction->srcA.value_size = reg_table[reg_mem].size;
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			if (dis_instructions->instruction_number > number) {
@@ -823,10 +823,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* mod 1 */
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -849,17 +849,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			dis_instructions->bytes_used+=4;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 8;
+			instruction->srcB.value_size = 64;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 
 			result = 1;
@@ -873,19 +873,19 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = reg_table[reg_mem].offset;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = size;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = reg_table[reg_mem].offset;
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = size;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = reg_table[reg_mem].offset;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = size;
@@ -907,17 +907,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				instruction->flags = 0;
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = reg_table[index].offset;
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = reg_table[index].size;
 				debug_print(DEBUG_INPUT_DIS, 1, "Got here1\n");
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 				/* Skip * 1 */
 				if (mul > 0) {
@@ -926,16 +926,16 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 					instruction->flags = 0;
 					instruction->srcA.store = STORE_DIRECT;
 					instruction->srcA.indirect = IND_DIRECT;
-					instruction->srcA.indirect_size = 8;
+					instruction->srcA.indirect_size = 64;
 					instruction->srcA.index = 1 << mul;
 					instruction->srcA.relocated = 0;
 					instruction->srcA.value_size = size;
 					instruction->dstA.store = STORE_REG;
 					instruction->dstA.indirect = IND_DIRECT;
-					instruction->dstA.indirect_size = 8;
+					instruction->dstA.indirect_size = 64;
 					instruction->dstA.index = REG_TMP1;
 					instruction->dstA.relocated = 0;
-					instruction->dstA.value_size = 8;
+					instruction->dstA.value_size = 64;
 					dis_instructions->instruction_number++;
 				}
 			}
@@ -953,7 +953,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			if (mod==0) {
 				instruction->srcA.store = STORE_DIRECT;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 				instruction->srcA.relocated = 0;
 				tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -961,20 +961,20 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 					instruction->srcA.relocated = 1;
 				}
 				dis_instructions->bytes_used+=4;
-				instruction->srcA.value_size = 4;
+				instruction->srcA.value_size = 32;
 */
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = REG_BP;
 			instruction->srcA.relocated = 0;
 			instruction->srcA.value_size = size;
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 		} else {
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -987,17 +987,17 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			}
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = reg_table[base].offset;
 			instruction->srcA.relocated = 0;
 			instruction->srcA.value_size = reg_table[base].size;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here2\n");
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 			dis_instructions->instruction_number++;
 		}
 	} else if ((reg_mem == 5) && (mod == 0)) {
@@ -1012,7 +1012,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		}
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -1028,10 +1028,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		instruction->srcA.value_size = size;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 	} else {
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -1044,18 +1044,18 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		}
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = reg_table[reg_mem].offset;
 		instruction->srcA.relocated = 0;
 		//instruction->srcA.value_size = reg_table[reg_mem].size;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		debug_print(DEBUG_INPUT_DIS, 1, "Got here3 size = %d\n", instruction->srcA.value_size);
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 	}
 	if (mod > 0) {
@@ -1069,10 +1069,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		}
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		if (mod == 1) {
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 size = 1\n");
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 			instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 			instruction->srcA.relocated = 0;
 			debug_print(DEBUG_INPUT_DIS, 1, "Got here4 byte = 0x%"PRIx64"\n", instruction->srcA.index);
@@ -1099,10 +1099,10 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		}
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 	}
 	return 0;
@@ -1128,23 +1128,23 @@ int dis_Ex_Gx(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	}
 	instruction->srcA.store = STORE_REG;
 	instruction->srcA.indirect = IND_DIRECT;
-	instruction->srcA.indirect_size = 8;
+	instruction->srcA.indirect_size = 64;
 	instruction->srcA.index = reg_table[*reg].offset;
 	instruction->srcA.relocated = 0;
 	instruction->srcA.value_size = size;
 	if (!half) {
 		instruction->dstA.indirect = IND_MEM;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->srcB.indirect = IND_MEM;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.store = STORE_REG;
 		if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 		    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 			instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 		}
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
@@ -1174,25 +1174,25 @@ int dis_Gx_Ex(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	}
 	instruction->dstA.store = STORE_REG;
 	instruction->dstA.indirect = IND_DIRECT;
-	instruction->dstA.indirect_size = 8;
+	instruction->dstA.indirect_size = 64;
 	instruction->dstA.index = reg_table[*reg].offset;
 	instruction->dstA.relocated = 0;
 	instruction->dstA.value_size = size;
 	instruction->srcB.store = STORE_REG;
 	instruction->srcB.indirect = IND_DIRECT;
-	instruction->srcB.indirect_size = 8;
+	instruction->srcB.indirect_size = 64;
 	instruction->srcB.index = reg_table[*reg].offset;
 	instruction->srcB.relocated = 0;
 	instruction->srcB.value_size = size;
 	if (!half) {
 		debug_print(DEBUG_INPUT_DIS, 1, "!half\n");
 		instruction->srcA.indirect = IND_MEM;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.store = STORE_REG;
 		if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 		    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 			instruction->srcA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 		}
 		instruction->srcA.index = REG_TMP1;
 		instruction->srcA.relocated = 0;
@@ -1220,7 +1220,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	}
 	instruction->srcA.store = STORE_DIRECT;
 	instruction->srcA.indirect = IND_DIRECT;
-	instruction->srcA.indirect_size = 8;
+	instruction->srcA.indirect_size = 64;
 	if (4 == size || 8 == size) {
 		// Means get from rest of instruction
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used);
@@ -1261,17 +1261,17 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	instruction->srcA.value_size = size;
 	if (!half) {
 		instruction->dstA.indirect = IND_MEM;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->srcB.indirect = IND_MEM;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.store = STORE_REG;
 		if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			(dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 			instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 		}
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
@@ -1302,7 +1302,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 		instruction->opcode = table[reg]; /* FIXME is this reg right */
 		instruction->flags = 1;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		if (0 == reg) {  /* Only the TEST instruction uses Ix */
 			instruction->srcA.store = STORE_DIRECT;
 			if (4 == size || 8 == size) {
@@ -1350,13 +1350,13 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 		instruction->srcA.value_size = size;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = reg_table[reg_mem].offset;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = size;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = reg_table[reg_mem].offset;
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = size;
@@ -1383,7 +1383,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	int32_t rel32;
 	int64_t rel64;
 	struct reloc_table_s *reloc_table_entry;
-	uint64_t width = 4;
+	uint64_t width = 32;
 	uint8_t rex = 0;
 	//uint8_t p66 = 0;
 	uint8_t repz = 0;
@@ -1418,7 +1418,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	if (byte == 0x66) {
 		/* Detect Operand length prefix. */
 		//p66 = 1;
-		width = 2;
+		width = 16;
 		byte = getbyte(base_address, offset + dis_instructions->bytes_used);
 		dis_instructions->bytes_used++;
 		debug_print(DEBUG_INPUT_DIS, 1, "BYTE=%02x\n", byte);
@@ -1440,7 +1440,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	}
 
 	if (rex & 0x8) {
-		width = 8;
+		width = 64;
 	}
 
 	switch(byte) {
@@ -1462,7 +1462,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -1472,19 +1472,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 1;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 1;
+		instruction->dstA.value_size = 8;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_AX;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 1;
+		instruction->srcB.value_size = 8;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1494,7 +1494,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -1504,19 +1504,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_AX;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1596,7 +1596,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 1;
+		instruction->srcA.indirect_size = 8;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
@@ -1606,17 +1606,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 1;
+		instruction->dstA.indirect_size = 8;
 		instruction->dstA.index = REG_AX;
-		instruction->dstA.value_size = 1;
+		instruction->dstA.value_size = 8;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 1;
+		instruction->srcB.indirect_size = 8;
 		instruction->srcB.index = REG_AX;
-		instruction->srcB.value_size = 1;
+		instruction->srcB.value_size = 8;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1646,7 +1646,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -1656,19 +1656,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_AX;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1713,7 +1713,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 1;
+		instruction->srcA.indirect_size = 8;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
@@ -1723,17 +1723,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 1;
+		instruction->dstA.indirect_size = 8;
 		instruction->dstA.index = REG_AX;
-		instruction->dstA.value_size = 1;
+		instruction->dstA.value_size = 8;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 1;
+		instruction->srcB.indirect_size = 8;
 		instruction->srcB.index = REG_AX;
-		instruction->srcB.value_size = 1;
+		instruction->srcB.value_size = 8;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1744,7 +1744,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 4;
+		instruction->srcA.indirect_size = 32;
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -1754,17 +1754,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 4;
+		instruction->dstA.indirect_size = 32;
 		instruction->dstA.index = REG_AX;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 4;
+		instruction->srcB.indirect_size = 32;
 		instruction->srcB.index = REG_AX;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1804,22 +1804,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0; /* Do not effect flags */
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 8;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 8;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -1827,7 +1827,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		tmp = 0;
 		if ((rex & 0x3) == 1) {
 			tmp = 0x8;
@@ -1835,19 +1835,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		//debug_print(DEBUG_INPUT_DIS, 1, "PUSH rex=0x%x, offset = 0x%"PRIx64", dis = 0x%x, base_address[offset + dis - 1] = 0x%x\n", rex, offset, dis_instructions->bytes_used, base_address[offset + dis_instructions->bytes_used - 1]);
 		instruction->srcA.index = reg_table[(byte & 0x7) | tmp].offset;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_STACK;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_STACK;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 8;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1866,20 +1866,20 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		tmp = 0;
 		if ((rex & 0x3) == 1) {
 			tmp = 0x8;
 		}
 		instruction->dstA.index = reg_table[(byte & 0x7) | tmp].offset;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_STACK;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -1887,22 +1887,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 4;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -1942,23 +1942,23 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->opcode = MOV;
 		instruction->flags = 0;
     		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.store = STORE_REG;
 		if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 		    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 			instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 		}
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
 		instruction->opcode = IMUL;
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		/* FIXME: This may sometimes be a word and not dword */
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
@@ -1972,17 +1972,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		dis_instructions->bytes_used += 4;
 		instruction->srcA.value_size = width;
     		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
     		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.index = REG_TMP1;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
@@ -1990,17 +1990,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_TMP1;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = width;
     		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.store = STORE_REG;
 		if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 		    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 			instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 		}
 		instruction->dstA.index = reg;
 		instruction->dstA.relocated = 0;
@@ -2042,21 +2042,21 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_DIRECT;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		/* Means get from rest of instruction */
 		relative = getbyte(base_address, offset + dis_instructions->bytes_used);
 		/* extends byte to int64_t */
 		instruction->dstA.index = relative;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->dstA.relocated = 0;
 		dis_instructions->bytes_used+=1;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = byte & 0xf; /* CONDITION */
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -2071,7 +2071,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		/* FIXME: This may sometimes be a word and not dword */
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
@@ -2082,20 +2082,20 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used += 1;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		/* FIXME: !half bad */
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 1;
+			instruction->dstA.value_size = 8;
 		}
 		dis_instructions->instruction_number++;
 		result = 1;
@@ -2111,7 +2111,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		/* FIXME: This may sometimes be a word and not dword */
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
@@ -2126,24 +2126,24 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		/* FIXME: !half bad */
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
     			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 4;
+			instruction->srcB.value_size = 32;
 		}
 		dis_instructions->instruction_number++;
 		result = 1;
@@ -2161,7 +2161,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		relative = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		long_signed = relative;
 		instruction->srcA.index = long_signed;
@@ -2172,17 +2172,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!half) {
 			debug_print(DEBUG_INPUT_DIS, 1, "!half\n");
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
     			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
@@ -2235,7 +2235,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = reg_table[reg].offset;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = width;
@@ -2244,12 +2244,12 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			debug_print(DEBUG_INPUT_DIS, 1, "inst[0].srcA.index = %"PRIx64"\n",
 				dis_instructions->instruction[0].srcA.index);
 			instruction->srcA.indirect = IND_MEM;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->srcA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 			}
 			instruction->srcA.index = REG_TMP1;
 			instruction->srcA.value_size = width;
@@ -2258,7 +2258,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		//	instruction->srcA.store = STORE_REG;
 		//	instruction->srcA.indirect = IND_DIRECT;
 		//	instruction->srcA.index = REG_TMP1;
-		//	instruction->srcA.value_size = 4;
+		//	instruction->srcA.value_size = 32;
 		//}
 		dis_instructions->instruction_number++;
 		result = 1;
@@ -2277,17 +2277,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = reg_table[reg].offset;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = width;
 		if (!half) {
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = REG_TMP1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 8;
+			instruction->srcA.value_size = 64;
 		}
 		dis_instructions->instruction_number++;
 		result = 1;
@@ -2320,19 +2320,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_AX;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = width / 2;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = width;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_AX;
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = width;
@@ -2362,7 +2362,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_MEM;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
@@ -2373,13 +2373,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated = 0;
 		}
 		dis_instructions->bytes_used+=4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -2391,13 +2391,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_AX;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_DIRECT;
 		instruction->dstA.indirect = IND_MEM;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = getdword(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->dstA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
@@ -2407,7 +2407,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -2422,22 +2422,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 1;
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = REG_CX;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_DIRECT;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = 0;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcB.store = STORE_DIRECT;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = 0;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 4;
+			instruction->srcB.value_size = 32;
 			dis_instructions->instruction_number++;
 
 			/* IF: JZ next instruction */
@@ -2446,17 +2446,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0;
 			instruction->dstA.store = STORE_DIRECT;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			/* Should be to next amd64 instruction. */
 			instruction->dstA.index = 0;  /* 0 is next instruction */
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = 4; /* CONDITION JZ */
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			dis_instructions->instruction_number++;
 
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
@@ -2465,22 +2465,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0;
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = 1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_CX;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_CX;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 4;
+			instruction->srcB.value_size = 32;
 			dis_instructions->instruction_number++;
 
 			repz_handled = 1;
@@ -2490,16 +2490,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_MEM;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SI;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_MEM;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_DI;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		/* FIXME: Need to use direction flag */
 
@@ -2508,22 +2508,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 4;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SI;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SI;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2531,22 +2531,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 4;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_DI;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_DI;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 4;
+		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
 
 		if (repz) {
@@ -2555,17 +2555,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0;
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			/* JMP back to beginning of this amd64 instruction and also the rep byte */
 			instruction->srcA.index = -(dis_instructions->bytes_used); 
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_IP;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			dis_instructions->instruction_number++;
 		}
 		result = 1;
@@ -2580,7 +2580,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 1;
+		instruction->srcA.indirect_size = 8;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 1, &reloc_table_entry);
@@ -2590,17 +2590,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=1;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 1;
+		instruction->dstA.indirect_size = 8;
 		instruction->dstA.index = REG_AX;
-		instruction->dstA.value_size = 1;
+		instruction->dstA.value_size = 8;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 1;
+		instruction->srcB.indirect_size = 8;
 		instruction->srcB.index = REG_AX;
-		instruction->srcB.value_size = 1;
+		instruction->srcB.value_size = 8;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -2673,19 +2673,19 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		dis_instructions->bytes_used++;
 		instruction->srcA.value_size = width;
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
@@ -2705,24 +2705,24 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.relocated = 0;
 		dis_instructions->bytes_used++;
 		instruction->srcA.value_size = width;
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
     			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
@@ -2743,16 +2743,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_STACK;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2760,22 +2760,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 8;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 8;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2783,16 +2783,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_AX;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2800,16 +2800,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_IP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_TMP1;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		result = 1;
@@ -2835,16 +2835,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_BP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
@@ -2852,16 +2852,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_BP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_STACK;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
@@ -2869,22 +2869,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = 8;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 8;
+		instruction->srcA.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		instruction->srcB.store = STORE_REG;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = 8;
+		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 8;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -2913,23 +2913,23 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 1;
+		instruction->srcA.indirect_size = 8;
 		instruction->srcA.index = 1;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
     			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
@@ -2954,23 +2954,23 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 1;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 1;
+		instruction->srcA.indirect_size = 8;
 		instruction->srcA.index = REG_CX;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 1;
+		instruction->srcA.value_size = 8;
 		if (!half) {
     			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.store = STORE_REG;
     			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				instruction->dstA.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK; /* SP and BP use STACK memory and not DATA memory. */
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
@@ -3031,12 +3031,12 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.index = 4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -3045,12 +3045,12 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.index = REG_IP;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_STACK;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		/* Fall through to JMP */
 #endif
@@ -3059,7 +3059,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		// Means get from rest of instruction
 		/* Adjust from REL to ABS value */
 		rel32 = getdword(base_address, offset + dis_instructions->bytes_used);
@@ -3081,13 +3081,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		}
 
 		dis_instructions->bytes_used+=4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 8;
+		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3097,7 +3097,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		// Means get from rest of instruction
 		rel32 = getdword(base_address, offset + dis_instructions->bytes_used);
 		rel64 = rel32;
@@ -3114,13 +3114,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated = 0;
 		}
 		dis_instructions->bytes_used+=4;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_IP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3132,18 +3132,18 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		relative = getbyte(base_address, offset + dis_instructions->bytes_used); // Means get from rest of instruction
 		instruction->srcA.index = relative;
 		instruction->srcA.relocated = 0;
 		dis_instructions->bytes_used+=1;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_IP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3155,16 +3155,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_MEM;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_DX;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_AX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3176,16 +3176,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->flags = 0;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
-		instruction->srcA.indirect_size = 8;
+		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_AX;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 4;
+		instruction->srcA.value_size = 32;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_MEM;
-		instruction->dstA.indirect_size = 8;
+		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_DX;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 4;
+		instruction->dstA.value_size = 32;
 		dis_instructions->instruction_number++;
 		result = 1;
 		break;
@@ -3228,22 +3228,22 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0; /* Do not effect flags */
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = 4;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_SP;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_DIRECT;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			instruction->srcB.index = REG_SP;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 4;
+			instruction->srcB.value_size = 32;
 			dis_instructions->instruction_number++;
 
 		}
@@ -3261,31 +3261,31 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 1;
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = 1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			if (!half) {
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_MEM;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.store = STORE_REG;
 				instruction->srcB.indirect = IND_MEM;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 				if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 				    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 					/* SP and BP use STACK memory and not DATA memory. */
 					instruction->dstA.indirect = IND_STACK;
-					instruction->dstA.indirect_size = 8;
+					instruction->dstA.indirect_size = 64;
 					instruction->srcB.indirect = IND_STACK;
-					instruction->srcB.indirect_size = 8;
+					instruction->srcB.indirect_size = 64;
 				}
 				instruction->dstA.index = REG_TMP1;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 4;
+				instruction->dstA.value_size = 32;
 				instruction->srcB.index = REG_TMP1;
 				instruction->srcB.relocated = 0;
-				instruction->srcB.value_size = 4;
+				instruction->srcB.value_size = 32;
 			}
 			dis_instructions->instruction_number++;
 			result = 1;
@@ -3295,30 +3295,30 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 1;
 			instruction->srcA.store = STORE_DIRECT;
 			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = 1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_MEM;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->srcB.store = STORE_REG;
 			instruction->srcB.indirect = IND_MEM;
-			instruction->srcB.indirect_size = 8;
+			instruction->srcB.indirect_size = 64;
 			if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 			    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 				/* SP and BP use STACK memory and not DATA memory. */
 				instruction->dstA.indirect = IND_STACK;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->srcB.indirect = IND_STACK;
-				instruction->srcB.indirect_size = 8;
+				instruction->srcB.indirect_size = 64;
 			}
 			instruction->dstA.index = REG_TMP1;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			instruction->srcB.index = REG_TMP1;
 			instruction->srcB.relocated = 0;
-			instruction->srcB.value_size = 4;
+			instruction->srcB.value_size = 32;
 			dis_instructions->instruction_number++;
 			result = 1;
 			break;
@@ -3327,17 +3327,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0;
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_MEM;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = REG_TMP1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 
 			instruction->dstA.store = STORE_REG;
 			instruction->dstA.indirect = IND_DIRECT;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_AX;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 8;
+			instruction->dstA.value_size = 64;
 
 			dis_instructions->instruction_number++;
 			result = 1;
@@ -3357,16 +3357,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 				/* srcA does in rmb() */
 //				instruction->srcA.store = STORE_DIRECT;
 //				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 //				instruction->srcA.index = 0;
-				instruction->srcA.value_size = 8;
+				instruction->srcA.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_IP;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			} else {
 				debug_print(DEBUG_INPUT_DIS, 1, "JMP NOT HALF\n");
@@ -3374,29 +3374,29 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 				instruction->flags = 0;
 //				instruction->srcA.store = STORE_REG;
 //				instruction->srcA.indirect = IND_MEM;
-//				instruction->srcA.indirect_size = 8;
+//				instruction->srcA.indirect_size = 64;
 //				instruction->srcA.index = 1;
-//				instruction->srcA.value_size = 4;
+//				instruction->srcA.value_size = 32;
 
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_MEM;
-				instruction->srcA.indirect_size = 8;
+				instruction->srcA.indirect_size = 64;
 				if ((dis_instructions->instruction[0].srcA.index >= REG_SP) && 
 				    (dis_instructions->instruction[0].srcA.index <= REG_BP) ) {
 					/* SP and BP use STACK memory and not DATA memory. */
 					instruction->srcA.indirect = IND_STACK;
-					instruction->srcA.indirect_size = 8;
+					instruction->srcA.indirect_size = 64;
 				}
 				instruction->srcA.index = REG_TMP1;
 				instruction->srcA.relocated = 0;
-				instruction->srcA.value_size = 8;
+				instruction->srcA.value_size = 64;
 
 				instruction->dstA.store = STORE_REG;
 				instruction->dstA.indirect = IND_DIRECT;
-				instruction->dstA.indirect_size = 8;
+				instruction->dstA.indirect_size = 64;
 				instruction->dstA.index = REG_IP;
 				instruction->dstA.relocated = 0;
-				instruction->dstA.value_size = 8;
+				instruction->dstA.value_size = 64;
 				dis_instructions->instruction_number++;
 			}
 			result = 1;
@@ -3416,20 +3416,20 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->flags = 0;
 			instruction->srcA.store = STORE_REG;
 			instruction->srcA.indirect = IND_MEM;
-			instruction->srcA.indirect_size = 8;
+			instruction->srcA.indirect_size = 64;
 			instruction->srcA.index = REG_TMP1;
 			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 4;
+			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			/* due to special PUSH case, with added
 			 * instruction before rmb
 			 */
 			/* SP and BP use STACK memory and not DATA memory. */
 			instruction->dstA.indirect = IND_STACK;
-			instruction->dstA.indirect_size = 8;
+			instruction->dstA.indirect_size = 64;
 			instruction->dstA.index = REG_SP;
 			instruction->dstA.relocated = 0;
-			instruction->dstA.value_size = 4;
+			instruction->dstA.value_size = 32;
 			dis_instructions->instruction_number++;
 			result = 1;
 			break;

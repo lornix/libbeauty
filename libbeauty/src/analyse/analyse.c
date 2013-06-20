@@ -1562,14 +1562,14 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 int get_value_from_index(struct operand_s *operand, uint64_t *index)
 {
 	if (operand->indirect) {
-		debug_print(DEBUG_ANALYSE, 1, " %s%s[%s0x%"PRIx64"],",
-			size_table[operand->value_size],
+		debug_print(DEBUG_ANALYSE, 1, " /%d%s[%s0x%"PRIx64"],",
+			operand->value_size,
 			indirect_table[operand->indirect],
 			store_table[operand->store],
 			operand->index);
 	} else {
-		debug_print(DEBUG_ANALYSE, 1, " %s%s0x%"PRIx64",",
-		size_table[operand->value_size],
+		debug_print(DEBUG_ANALYSE, 1, " /%d%s0x%"PRIx64",",
+		operand->value_size,
 		store_table[operand->store],
 		operand->index);
 	}

@@ -30,22 +30,22 @@
 #include "internal.h"
 
 reg_t reg_table[] = {
-    { REG_AX,8 },
-    { REG_CX,8 },
-    { REG_DX,8 },
-    { REG_BX,8 },
-    { REG_SP,8 },
-    { REG_BP,8 },
-    { REG_SI,8 },
-    { REG_DI,8 },
-    { REG_08,8 },
-    { REG_09,8 },
-    { REG_10,8 },
-    { REG_11,8 },
-    { REG_12,8 },
-    { REG_13,8 },
-    { REG_14,8 },
-    { REG_15,8 }
+    { REG_AX,64 },
+    { REG_CX,64 },
+    { REG_DX,64 },
+    { REG_BX,64 },
+    { REG_SP,64 },
+    { REG_BP,64 },
+    { REG_SI,64 },
+    { REG_DI,64 },
+    { REG_08,64 },
+    { REG_09,64 },
+    { REG_10,64 },
+    { REG_11,64 },
+    { REG_12,64 },
+    { REG_13,64 },
+    { REG_14,64 },
+    { REG_15,64 }
 };
 
 int immed_table[] = {

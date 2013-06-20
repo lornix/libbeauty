@@ -330,7 +330,7 @@ struct operand_s {
          * 1 = absolute
          */
 	int indirect;
-	/* number of bytes in the indirect value. */
+	/* number of bits in the indirect value. */
 	int indirect_size;
 	/* value depends on store */
 	/* For IF srcA, this is the condition statement */
@@ -339,8 +339,8 @@ struct operand_s {
 	/* value depends on store */
 	/* For IF dstA, this is within this group's RTL index. */
 	uint64_t value;
-	/* number of bytes in value. */
-	/* For IF dstA, this will be a 4 bytes. */
+	/* number of bits in value. */
+	/* For IF dstA, this will be a 32 bits. */
 	int value_size;
 } ;
 
