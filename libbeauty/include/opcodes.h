@@ -78,6 +78,8 @@ enum {
 #define JMPT 0x20 /* Jump Table */
 #define CALLT 0x21 /* Call jump table */
 #define PHI 0x22 /* A PHI point */
+#define ICMP 0x23 /* ICMP. Similar to LLVM ICMP */
+#define BC 0x24 /* Branch Conditional. Similar to LLVM ICMP */
 
 #define OVERFLOW 0
 #define NOT_OVERFLOW 1
@@ -118,6 +120,23 @@ extern char * opcode_table[];
 #define REG_15 0x88
 #define REG_TMP1 0x90
 #define REG_TMP2 0x98
+#define REG_OVERFLOW 0xa0
+#define REG_NOT_OVERFLOW 0xa1
+#define REG_BELOW 0xa2
+#define REG_NOT_BELOW 0xa3
+#define REG_EQUAL 0xa4
+#define REG_NOT_EQUAL 0xa5
+#define REG_BELOW_EQUAL 0xa6
+#define REG_ABOVE 0xa7
+#define REG_SIGNED 0xa8
+#define REG_NO_SIGNED 0xa9
+#define REG_PARITY 0xaa
+#define REG_NOT_PARITY 0xab
+#define REG_LESS 0xac
+#define REG_GREATER_EQUAL 0xad
+#define REG_LESS_EQUAL 0xae
+#define REG_GREATER 0xaf
+#define MAX_REG 0xb0
 
 typedef struct reg_s reg_t;
 

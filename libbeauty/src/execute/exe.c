@@ -771,9 +771,9 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	switch (instruction->opcode) {
 	case NOP:
 		/* Get value of srcA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
+		//ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
+		//ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOP\n");
 		//put_value_RTL_instruction(self, process_state, inst);
@@ -873,11 +873,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.length = instruction->dstA.value_size;
 		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
 		inst->value3.init_value_type = inst->value1.init_value_type;
-		if (8 == inst->value3.length) {
+		if (64 == inst->value3.length) {
 			tmp32s = inst->value1.init_value;
 			tmp64s = tmp32s;
 			tmp64u = tmp64s;
-		} else if (4 == inst->value3.length) {
+		} else if (32 == inst->value3.length) {
 			tmp16s = inst->value1.init_value;
 			tmp32s = tmp16s;
 			tmp64u = tmp32s;
@@ -886,11 +886,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			return 1;
 		}
 		inst->value3.init_value =tmp64u;
-		if (8 == inst->value3.length) {
+		if (64 == inst->value3.length) {
 			tmp32s = inst->value1.offset_value;
 			tmp64s = tmp32s;
 			tmp64u = tmp64s;
-		} else if (4 == inst->value3.length) {
+		} else if (32 == inst->value3.length) {
 			tmp16s = inst->value1.offset_value;
 			tmp32s = tmp16s;
 			tmp64u = tmp32s;

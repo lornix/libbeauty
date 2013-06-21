@@ -68,10 +68,10 @@ struct self_s *self = NULL;
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
 int debug_input_bfd = 0;
-int debug_input_dis = 0;
-int debug_exe = 0;
-int debug_analyse = 0;
-int debug_analyse_paths = 0;
+int debug_input_dis = 1;
+int debug_exe = 1;
+int debug_analyse = 1;
+int debug_analyse_paths = 1;
 int debug_analyse_phi = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
@@ -1949,8 +1949,7 @@ int init_node_used_register_table(struct self_s *self, struct control_flow_node_
 {
 	int node;
 	for (node = 1; node <= *node_size; node++) {
-		/* FIXME: Set 0xa0 to a #define value */
-		nodes[node].used_register = calloc(0xa0, sizeof(struct node_used_register_s));
+		nodes[node].used_register = calloc(MAX_REG, sizeof(struct node_used_register_s));
 	}
 	return 0;
 }
@@ -2307,7 +2306,7 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 			/* No previous join node found */
 			continue;
 		}
-		for (n = 0; n < 0xa0; n++) {
+		for (n = 0; n < MAX_REG; n++) {
 			if (nodes[node].used_register[n].seen == 1) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "Adding register 0x%x to phi_node 0x%x\n", n, phi_node);
 				tmp = add_phi_to_node(&(nodes[phi_node]), n);
@@ -2597,10 +2596,10 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 		struct label_s label;
 		int new_label = 0;
 		int found = 0;
-		int reg_tracker[0xa0];
+		int reg_tracker[MAX_REG];
 		node = n;
 		/* Initialise the reg_tracker at each node */
-		for (m = 0; m < 0xa0; m++) {
+		for (m = 0; m < MAX_REG; m++) {
 			if (nodes[node].used_register[m].seen == 1) {
 				reg_tracker[m] = nodes[node].used_register[m].src_first_value_id;
 				debug_print(DEBUG_MAIN, 1, "Node 0x%x: reg 0x%x given value_id = 0x%x\n", node, m,
@@ -2900,7 +2899,85 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 	return 0;
 }
 
+int build_flag_dependancy_table(struct self_s *self)
+{
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log1_flags;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct instruction_s *instruction;
+	int flagged[inst_log + 1];
+	int l,m,n;
+	int found;
+	int tmp;
 
+	for (n = 1; n <= inst_log; n++) {
+		flagged[n] = 0;
+	}
+
+	for (n = 1; n <= inst_log; n++) {
+		inst_log1 =  &inst_log_entry[n];
+		instruction =  &inst_log1->instruction;
+		switch (instruction->opcode) {
+		case ADC:
+		case SBB:
+		case IF:
+			debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
+			found = 0;
+			tmp = 30; /* Limit the scan backwards */
+			inst_log1_flags =  inst_log1;
+			do {
+				if (inst_log1_flags->prev > 0) {
+					l = inst_log1_flags->prev[0];
+				} else {
+					break;
+				}
+				tmp--;
+				inst_log1_flags =  &inst_log_entry[l];
+				debug_print(DEBUG_MAIN, 1, "Previous opcode 0x%x\n", inst_log1_flags->instruction.opcode);
+				debug_print(DEBUG_MAIN, 1, "Previous flags 0x%x\n", inst_log1_flags->instruction.flags);
+				if (1 == inst_log1_flags->instruction.flags) {
+					found = 1;
+				}
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction size 0x%x\n", inst_log1_flags->prev_size);
+				tmp--;
+			} while ((0 == found) && (0 < tmp) && (0 != l));
+			if (found == 0) {
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction not found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
+				return 1;
+			} else {
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
+				self->flag_dependancy[n] = l;
+				flagged[l]++;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	found = 0;
+	for (n = 1; n <= inst_log; n++) {
+		if (flagged[n] > 1) {
+			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, flagged[n]);
+			found = 1;
+		}
+	}
+	if (found) {
+		exit(1);
+	}
+	
+	return 0;
+}
+
+int print_flag_dependancy_table(struct self_s *self)
+{
+	int n;
+	for (n = 1; n <= inst_log; n++) {
+		if (self->flag_dependancy[n]) {
+			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x\n", n, self->flag_dependancy[n]);
+		}
+	}
+	return 0;
+}	
 
 
 int main(int argc, char *argv[])
@@ -3170,11 +3247,11 @@ int main(int argc, char *argv[])
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
 						err = process_block(self, process_state, handle_void, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
-						entry_point[n].used = 0;
 						if (err) {
 							debug_print(DEBUG_MAIN, 1, "process_block failed\n");
 							return err;
 						}
+						entry_point[n].used = 0;
 					}
 				}
 			} while (not_finished);	
@@ -3200,6 +3277,9 @@ int main(int argc, char *argv[])
 	inst_log--;
 
 	tmp = tidy_inst_log(self);
+	self->flag_dependancy = calloc(inst_log + 1, sizeof(int));
+	tmp = build_flag_dependancy_table(self);
+	tmp = print_flag_dependancy_table(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
@@ -3605,7 +3685,7 @@ int main(int argc, char *argv[])
 
 	/* Fill in the reg dependency table */
 	for (n = 1; n <= nodes_size; n++) {
-		for (m = 0; m < 0xa0; m++) {
+		for (m = 0; m < MAX_REG; m++) {
 			int value_id;
 			if (1 == nodes[n].used_register[m].seen) {
 				int node;
@@ -3707,7 +3787,7 @@ int main(int argc, char *argv[])
 	}
 
 	for (n = 1; n <= nodes_size; n++) {
-		for (m = 0; m < 0xa0; m++) {
+		for (m = 0; m < MAX_REG; m++) {
 			if (nodes[n].used_register[m].seen) {
 				debug_print(DEBUG_MAIN, 1, "node[0x%x].user_register[0x%x].seen = 0x%x\n", n, m, 
 					nodes[n].used_register[m].seen);
@@ -3728,7 +3808,7 @@ int main(int argc, char *argv[])
 	}
 	/* Enter value id/label id of param into phi with src node 0. */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-		for (m = 0; m < 0xa0; m++) {
+		for (m = 0; m < MAX_REG; m++) {
 			if (self->external_entry_points[l].param_reg_label[m]) {
 				debug_print(DEBUG_MAIN, 1, "Entry Point 0x%x: Found reg 0x%x as param label 0x%x\n", l, m,
 					self->external_entry_points[l].param_reg_label[m]);

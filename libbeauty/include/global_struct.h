@@ -349,6 +349,7 @@ struct instruction_s {
 	int opcode;
 	/* Set to 1 if this instruction should effect flags. */
 	int flags;
+	int predicate;
 	struct operand_s srcA; /* Used */
 	struct operand_s srcB; /* Not currently used */
 	struct operand_s dstA; /* Used */
@@ -386,6 +387,7 @@ struct self_s {
 	int *search_back_seen;
 	struct label_redirect_s *label_redirect;
 	struct label_s *labels;
+	int *flag_dependancy;
 	
 };
 

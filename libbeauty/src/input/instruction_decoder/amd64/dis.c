@@ -1221,7 +1221,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	instruction->srcA.store = STORE_DIRECT;
 	instruction->srcA.indirect = IND_DIRECT;
 	instruction->srcA.indirect_size = 64;
-	if (4 == size || 8 == size) {
+	if (32 == size || 64 == size) {
 		// Means get from rest of instruction
 		instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used);
 		instruction->srcA.relocated = 0;
@@ -1232,7 +1232,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=4;
-	} else if (2 == size) {
+	} else if (16 == size) {
 		// Means get from rest of instruction
 		instruction->srcA.index = getword(base_address, offset + dis_instructions->bytes_used);
 		instruction->srcA.relocated = 0;
@@ -1243,7 +1243,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
 		dis_instructions->bytes_used+=2;
-	} else if (1 == size) {
+	} else if (8 == size) {
 		// Means get from rest of instruction
 		instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used);
 		instruction->srcA.relocated = 0;
@@ -1305,7 +1305,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 		instruction->srcA.indirect_size = 64;
 		if (0 == reg) {  /* Only the TEST instruction uses Ix */
 			instruction->srcA.store = STORE_DIRECT;
-			if (4 == size || 8 == size) {
+			if (32 == size || 64 == size) {
 				// Means get from rest of instruction
 				instruction->srcA.index = getdword(base_address, offset + dis_instructions->bytes_used);
 				instruction->srcA.relocated = 0;
@@ -1316,7 +1316,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 					instruction->srcA.relocated_index = reloc_table_entry->value;
 				}
 				dis_instructions->bytes_used+=4;
-			} else if (2 == size) {
+			} else if (16 == size) {
 				// Means get from rest of instruction
 				instruction->srcA.index = getword(base_address, offset + dis_instructions->bytes_used);
 				instruction->srcA.relocated = 0;
@@ -1327,7 +1327,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 					instruction->srcA.relocated_index = reloc_table_entry->value;
 				}
 				dis_instructions->bytes_used+=2;
-			} else if (1 == size) {
+			} else if (8 == size) {
 				// Means get from rest of instruction
 				instruction->srcA.index = getbyte(base_address, offset + dis_instructions->bytes_used);
 				instruction->srcA.relocated = 0;
@@ -1445,13 +1445,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 
 	switch(byte) {
 	case 0x00:												/* ADD Eb,Gb */
-		result = dis_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x01:												/* ADD Ev,Gv */
 		result = dis_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x02:												/* ADD Gb,Eb */
-		result = dis_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x03:												/* ADD Gv,Ev */
 		result = dis_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
@@ -1527,17 +1527,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
                 /* POP -> ES=[SP]; SP=SP+4 (+2 for word); */
 		break;
 	case 0x08:												/* OR Eb,Gb */
-		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x09:												/* OR Ev,Gv */
-		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 4);
+		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x0a:												/* OR Gb,Eb */
-		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
 		result = 1;
 		break;
 	case 0x0b:												/* OR Gv,Ev */
-		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 4);
+		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x0c:												/* OR AL,Ib */
 		break;
@@ -1627,16 +1627,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x27:												/* DAA */
 		break;
 	case 0x28:												/* SUB Eb,Gb */
-		result = dis_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x29:												/* SUB Ev,Gv */
 		result = dis_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x2a:												/* SUB Gb,Eb */
-		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x2b:												/* SUB Gv,Ev */
-		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 4);
+		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x2c:												/* SUB AL,Ib */
 		break;
@@ -1682,7 +1682,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = dis_Ex_Gx(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x32:												/* XOR Gb,Eb */
-		result = dis_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x33:												/* XOR Gv,Ev */
 		result = dis_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
@@ -1696,13 +1696,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x37:												/* AAA */
 		break;
 	case 0x38:												/* CMP Eb,Gb */
-		result = dis_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x39:												/* CMP Ev,Gv */
 		result = dis_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x3a:												/* CMP Gb,Eb */
-		result = dis_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x3b:												/* CMP Gv,Ev */
 		result = dis_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
@@ -2121,7 +2121,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
 			instruction->srcA.relocated_index = reloc_table_entry->value;
 		}
-		dis_instructions->bytes_used += width;
+		dis_instructions->bytes_used += (width / 8);
 		instruction->srcA.value_size = width;
 		/* FIXME: !half bad */
 		if (!half) {
@@ -2195,7 +2195,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0x84:												/* TEST Eb,Gb */
-		result = dis_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x85:												/* TEST Ev,Gv */
 		result = dis_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, width);
@@ -2205,7 +2205,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x87:												/* XCHG Ev,Gv */
 		break;
 	case 0x88:												/* MOV Eb,Gb */
-		result = dis_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x89:												/* MOV Ev,Gv */
 		/* FIXME: Cannot handle 89 16 */
@@ -2214,7 +2214,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = dis_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x8a:												/* MOV Gb,Eb */
-		result = dis_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x8b:
 		/* MOV Gv,Ev */
@@ -2819,7 +2819,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xc5:												/* LDS */
 		break;
 	case 0xc6:												/* MOV Eb,Ib */
-		result = dis_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 1);
+		result = dis_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0xc7:												/* MOV EW,Iv */
 		/* JCD: Work in progress */
@@ -3200,7 +3200,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xf5:												/* CMC */
 		break;
 	case 0xf6:												/* GRP3 Eb ,Ib: */
-		result = dis_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, 1);
+		result = dis_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, 8);
 		break;
 	case 0xf7:												/* GRP3 Ev ,Iv: */
 		result = dis_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, width);
