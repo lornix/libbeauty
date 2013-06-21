@@ -1182,6 +1182,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1->instruction.flags);
 			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "\t 0x%"PRIx64":%s", instruction->srcA.index, condition_table[instruction->srcA.index]);
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 
 		case TEST:
