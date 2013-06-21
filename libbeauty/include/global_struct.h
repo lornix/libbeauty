@@ -388,6 +388,7 @@ struct self_s {
 	struct label_redirect_s *label_redirect;
 	struct label_s *labels;
 	int *flag_dependancy;
+	int *flag_dependancy_opcode;
 	
 };
 

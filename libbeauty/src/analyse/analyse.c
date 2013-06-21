@@ -1855,6 +1855,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			case SHR:
 			case SAL:
 			case SAR:
+			case ICMP:
 				if (IND_MEM == instruction->dstA.indirect) {
 					value_id = inst_log1->value3.indirect_value_id;
 				} else {
@@ -1889,7 +1890,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case CMP:
 			case TEST:
-				if (IND_MEM == instruction->dstA.indirect) {
+				if (IND_MEM == instruction->srcB.indirect) {
 					value_id = inst_log1->value2.indirect_value_id;
 				} else {
 					value_id = inst_log1->value2.value_id;
@@ -1907,6 +1908,10 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 
 			case IF:
 				debug_print(DEBUG_ANALYSE, 1, "IF: This might give signed or unsigned info to labels\n");
+				break;
+
+			case BC:
+				debug_print(DEBUG_ANALYSE, 1, "BC: TODO\n");
 				break;
 
 			case NOP:

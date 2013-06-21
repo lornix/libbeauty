@@ -248,6 +248,7 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 
 	switch (opcode) {
 	case CMP:
+	case ICMP:
 		switch (condition) {
 		case LESS_EQUAL:
 		case BELOW_EQUAL:   /* Unsigned */
@@ -1158,6 +1159,31 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = fprintf(fd, ";%s",cr);
 			break;
 
+		case ICMP:
+			if (print_inst(self, instruction, inst_number, labels))
+				return 1;
+			debug_print(DEBUG_OUTPUT, 1, "\t");
+			tmp = fprintf(fd, "\t");
+			if (1 == instruction->dstA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value3.indirect_value_id;
+			} else {
+				value_id = inst_log1->value3.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			//tmp = fprintf(fd, "0x%x:", tmp);
+			tmp = output_label(label, fd);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = fprintf(fd, " = ");
+			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
+			debug_print(DEBUG_OUTPUT, 1, "icmp ");
+			err = if_expression( instruction->srcA.index, inst_log1, label_redirect, labels, fd);
+			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1->instruction.flags);
+			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1->instruction.opcode);
+			debug_print(DEBUG_OUTPUT, 1, "\t 0x%"PRIx64":%s", instruction->srcA.index, condition_table[instruction->srcA.index]);
+			break;
+
 		case TEST:
 			/* Don't do anything for this instruction. */
 			/* only does anything if combined with a branch instruction */
@@ -1229,6 +1255,34 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
 			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "\t 0x%"PRIx64":%s", instruction->srcA.index, condition_table[instruction->srcA.index]);
+			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
+			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
+			if (err) {
+				debug_print(DEBUG_OUTPUT, 1, "IF CONDITION unknown\n");
+				return 1;
+			}
+			tmp = fprintf(fd, "IF goto ");
+//			for (l = 0; l < inst_log1->next_size; l++) {
+//				tmp = fprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
+//			}
+			tmp = fprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
+			tmp = fprintf(fd, "%s", cr);
+			tmp = fprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
+
+			break;
+
+		case BC:
+			/* FIXME: Never gets here, why? */
+			/* Don't do anything for this instruction. */
+			/* only does anything if combined with a branch instruction */
+			if (print_inst(self, instruction, inst_number, labels))
+				return 1;
+			debug_print(DEBUG_OUTPUT, 1, "\t");
+			tmp = fprintf(fd, "\t");
+			debug_print(DEBUG_OUTPUT, 1, "if ");
+			tmp = fprintf(fd, "if ");
+			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
+			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
 			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
 			if (err) {

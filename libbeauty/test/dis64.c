@@ -68,11 +68,12 @@ struct self_s *self = NULL;
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
 int debug_input_bfd = 0;
-int debug_input_dis = 1;
-int debug_exe = 1;
-int debug_analyse = 1;
-int debug_analyse_paths = 1;
-int debug_analyse_phi = 1;
+int debug_input_dis = 0;
+int debug_exe = 0;
+int debug_analyse = 0;
+int debug_analyse_paths = 0;
+int debug_analyse_phi = 0;
+int debug_output = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
 	va_list ap;
@@ -119,6 +120,16 @@ void debug_print(int module, int level, const char *format, ...) {
 			fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x:", level);
 			vfprintf(stderr, format, ap);
 		}
+		break;
+	case DEBUG_OUTPUT:
+		if (level <= debug_output) {
+			fprintf(stderr, "DEBUG_OUTPUT,0x%x:", level);
+			vfprintf(stderr, format, ap);
+		}
+		break;
+	default:
+		printf("DEBUG Failed: Module 0x%x\n", module);
+		exit(1);
 		break;
 	}
 	va_end(ap);
@@ -2025,6 +2036,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case SAL:
 			case SAR:
 			case SEX:
+			case ICMP:
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].dst = inst;
@@ -2107,6 +2119,20 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			case IF:
 				/* This does nothing to the table */
 				break;
+			case BC:
+				/* Branch Conditional */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					/* CMP and TEST do not have a dst */
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x\n", instruction->srcA.index);
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1A\n");
+					}
+				}
 			/* DSTA = nothing, SRCA, SRCB = nothing */
 			case RET:
 				if ((instruction->srcA.store == STORE_REG) &&
@@ -2947,6 +2973,7 @@ int build_flag_dependancy_table(struct self_s *self)
 			} else {
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
 				self->flag_dependancy[n] = l;
+				self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
 				flagged[l]++;
 			}
 			break;
@@ -2968,12 +2995,69 @@ int build_flag_dependancy_table(struct self_s *self)
 	return 0;
 }
 
+int fix_flag_dependancy_instructions(struct self_s *self)
+{
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log1_flags;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct instruction_s *instruction;
+	int l,m,n;
+	int tmp;
+
+	for (n = 1; n <= inst_log; n++) {
+		if (!self->flag_dependancy[n]) {
+			/* Go round loop again */
+			continue;
+		}
+		inst_log1 =  &inst_log_entry[n];
+		instruction =  &inst_log1->instruction;
+		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
+		switch (instruction->opcode) {
+		case ADC:
+			break;
+		case SBB:
+			break;
+		case IF:
+			debug_print(DEBUG_MAIN, 1, "flag IF inst 0x%x OP:0x%x\n", n, instruction->opcode);
+			inst_log1_flags =  &inst_log_entry[self->flag_dependancy[n]];
+			if (inst_log1_flags->instruction.opcode != self->flag_dependancy_opcode[n]) {
+				return 1;
+			}
+			switch (inst_log1_flags->instruction.opcode) {
+			case CMP:
+				inst_log1_flags->instruction.opcode = ICMP;
+				inst_log1_flags->instruction.predicate = inst_log1->instruction.srcA.index;
+				inst_log1_flags->instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				inst_log1_flags->instruction.dstA.store = STORE_REG;
+				inst_log1_flags->instruction.dstA.indirect = IND_DIRECT;
+				inst_log1_flags->instruction.dstA.value_size = 8;
+				/* FIXME: fill in rest of instruction dstA and then its value3 */
+				inst_log1->instruction.opcode = BC;
+				inst_log1->instruction.srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				instruction->srcA.store = STORE_REG;
+				instruction->srcA.indirect = IND_DIRECT;
+				instruction->srcA.value_size = 8;
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				break;
+			default:
+				exit (1);
+				break;
+			}
+			break;
+		default:
+			exit(1);
+			break;
+		}
+	}
+	return 0;
+}
+
 int print_flag_dependancy_table(struct self_s *self)
 {
 	int n;
 	for (n = 1; n <= inst_log; n++) {
 		if (self->flag_dependancy[n]) {
-			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x\n", n, self->flag_dependancy[n]);
+			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x:0x%x\n", n, self->flag_dependancy[n], self->flag_dependancy_opcode[n]);
 		}
 	}
 	return 0;
@@ -3278,8 +3362,10 @@ int main(int argc, char *argv[])
 
 	tmp = tidy_inst_log(self);
 	self->flag_dependancy = calloc(inst_log + 1, sizeof(int));
+	self->flag_dependancy_opcode = calloc(inst_log + 1, sizeof(int));
 	tmp = build_flag_dependancy_table(self);
 	tmp = print_flag_dependancy_table(self);
+	tmp = fix_flag_dependancy_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
@@ -3591,6 +3677,7 @@ int main(int argc, char *argv[])
 		case SAL:
 		case SAR:
 		case SEX:
+		case ICMP:
 			/* If dstA.indirect, assign the dst label to indirect_value_id
 			   In the indirect case the value_id is a SRC and not a DST */
 			/* If not dstA.indirect, assign the dst label to value_id. */
@@ -3640,6 +3727,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case IF:
+		case BC:
 		case RET:
 		case JMP:
 		case JMPT:
