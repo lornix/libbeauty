@@ -3155,6 +3155,49 @@ int insert_nop_before(struct self_s *self, int inst)
 	return 0;
 }
 
+int insert_nop_after(struct self_s *self, int inst)
+{
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
+	struct inst_log_entry_s *inst_log1_next;
+	struct inst_log_entry_s *inst_log1_new;
+	struct instruction_s *instruction;
+	int l,m,n;
+	int tmp;
+	int inst_new;
+
+	inst_new = inst_log;
+	if (inst_log1->next_size > 1) {
+		debug_print(DEBUG_MAIN, 1, "insert_nop_after: FAILED Inst 0x%x\n", inst);
+		return 1;
+	}
+	inst_log1_new = &inst_log_entry[inst_log];
+	inst_log++;
+
+	inst_log1_new->instruction.opcode = NOP;
+        inst_log1_new->instruction.flags = 0;
+	if (inst_log1->next_size) {
+		inst_log1_new->next = calloc(inst_log1->next_size, sizeof(int));
+		inst_log1_new->next_size = inst_log1->next_size;
+		for (n = 0; n < inst_log1->next_size; n++) {
+			inst_log1_new->next[n] = inst_log1->next[n];
+			inst_log1_next = &inst_log_entry[inst_log1->next[n]];
+			for (m = 0; m < inst_log1_next->prev_size; m++) {
+				if (inst_log1_next->prev[m] == inst) {
+					inst_log1_next->prev[m] = inst_new;
+				}
+			}
+		}
+	}
+	inst_log1_new->prev = calloc(1, sizeof(int));
+	inst_log1_new->prev_size = 1;
+	inst_log1_new->prev[0] = inst;
+	inst_log1->next_size = 1;
+	inst_log1->next[0] = inst_new;
+	return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -3458,7 +3501,7 @@ int main(int argc, char *argv[])
 	tmp = print_flag_dependancy_table(self);
 	tmp = fix_flag_dependancy_instructions(self);
 	print_dis_instructions(self);
-	tmp = insert_nop_before(self, 5);
+	tmp = insert_nop_after(self, 4);
 	print_dis_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
