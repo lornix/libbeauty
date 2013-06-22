@@ -3036,7 +3036,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				inst_log1->instruction.srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
 				instruction->srcA.store = STORE_REG;
 				instruction->srcA.indirect = IND_DIRECT;
-				instruction->srcA.value_size = 8;
+				instruction->srcA.value_size = 1;
 				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
 				break;
 			default:
