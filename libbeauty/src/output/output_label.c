@@ -1280,17 +1280,24 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = fprintf(fd, "\t");
-			debug_print(DEBUG_OUTPUT, 1, "if ");
-			tmp = fprintf(fd, "if ");
+			debug_print(DEBUG_OUTPUT, 1, "if (");
+			tmp = fprintf(fd, "if (");
 			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
 			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
 			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
-			if (err) {
-				debug_print(DEBUG_OUTPUT, 1, "IF CONDITION unknown\n");
-				return 1;
+			if (1 == instruction->srcA.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value1.indirect_value_id;
+			} else {
+				value_id = inst_log1->value1.value_id;
 			}
-			tmp = fprintf(fd, "IF goto ");
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			tmp = fprintf(fd, ")");
+			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
+			tmp = fprintf(fd, " goto ");
 //			for (l = 0; l < inst_log1->next_size; l++) {
 //				tmp = fprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
 //			}
