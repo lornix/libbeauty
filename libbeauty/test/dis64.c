@@ -3030,7 +3030,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				inst_log1_flags->instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
 				inst_log1_flags->instruction.dstA.store = STORE_REG;
 				inst_log1_flags->instruction.dstA.indirect = IND_DIRECT;
-				inst_log1_flags->instruction.dstA.value_size = 8;
+				inst_log1_flags->instruction.dstA.value_size = 1;
 				/* FIXME: fill in rest of instruction dstA and then its value3 */
 				inst_log1->instruction.opcode = BC;
 				inst_log1->instruction.srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
