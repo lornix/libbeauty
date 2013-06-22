@@ -3066,6 +3066,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 			switch (inst_log1_flags->instruction.opcode) {
 			case CMP:
 				inst_log1_flags->instruction.opcode = ICMP;
+				inst_log1_flags->instruction.flags = 0;
 				inst_log1_flags->instruction.predicate = inst_log1->instruction.srcA.index;
 				inst_log1_flags->instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
 				inst_log1_flags->instruction.dstA.store = STORE_REG;
