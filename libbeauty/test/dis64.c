@@ -169,7 +169,7 @@ int print_dis_instructions(struct self_s *self)
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 
 	debug_print(DEBUG_MAIN, 1, "print_dis_instructions:\n");
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		if (print_inst(self, instruction, n, NULL))
@@ -1981,6 +1981,9 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 			inst_log1 = &inst_log_entry[inst];
 			instruction =  &inst_log1->instruction;
 			switch (instruction->opcode) {
+			case NOP:
+				/* Nothing to do */
+				break;
 			/* DSTA, SRCA, SRCB == nothing */
 			case MOV:
 				/* If SRC and DST in same instruction, let SRC dominate. */
@@ -2641,6 +2644,8 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 			inst_log1 =  &inst_log_entry[inst];
 			instruction =  &inst_log1->instruction;
 			switch (instruction->opcode) {
+			case NOP:
+				break;
 			case MOV:
 				switch (instruction->srcA.store) {
 				case STORE_DIRECT:
@@ -2976,11 +2981,11 @@ int build_flag_dependancy_table(struct self_s *self)
 	int found;
 	int tmp;
 
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		flagged[n] = 0;
 	}
 
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		switch (instruction->opcode) {
@@ -3022,7 +3027,7 @@ int build_flag_dependancy_table(struct self_s *self)
 		}
 	}
 	found = 0;
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		if (flagged[n] > 1) {
 			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, flagged[n]);
 			found = 1;
@@ -3044,7 +3049,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 	int l,m,n;
 	int tmp;
 
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		if (!self->flag_dependancy[n]) {
 			/* Go round loop again */
 			continue;
@@ -3054,8 +3059,12 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
 		switch (instruction->opcode) {
 		case ADC:
+			debug_print(DEBUG_MAIN, 1, "flag: ADC not handled yet\n");
+			exit(1);
 			break;
 		case SBB:
+			debug_print(DEBUG_MAIN, 1, "flag: SBB not handled yet\n");
+			exit(1);
 			break;
 		case IF:
 			debug_print(DEBUG_MAIN, 1, "flag IF inst 0x%x OP:0x%x\n", n, instruction->opcode);
@@ -3100,7 +3109,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 int print_flag_dependancy_table(struct self_s *self)
 {
 	int n;
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		if (self->flag_dependancy[n]) {
 			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x:0x%x\n", n, self->flag_dependancy[n], self->flag_dependancy_opcode[n]);
 		}
@@ -3108,6 +3117,43 @@ int print_flag_dependancy_table(struct self_s *self)
 	return 0;
 }	
 
+int insert_nop_before(struct self_s *self, int inst)
+{
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
+	struct inst_log_entry_s *inst_log1_previous;
+	struct inst_log_entry_s *inst_log1_new;
+	struct instruction_s *instruction;
+	int l,m,n;
+	int tmp;
+	int inst_new;
+
+	inst_new = inst_log;
+	inst_log1_new = &inst_log_entry[inst_log];
+	inst_log++;
+
+	inst_log1_new->instruction.opcode = NOP;
+        inst_log1_new->instruction.flags = 0;
+	if (inst_log1->prev_size) {
+		inst_log1_new->prev = calloc(inst_log1->prev_size, sizeof(int));
+		inst_log1_new->prev_size = inst_log1->prev_size;
+		for (n = 0; n < inst_log1->prev_size; n++) {
+			inst_log1_new->prev[n] = inst_log1->prev[n];
+			inst_log1_previous = &inst_log_entry[inst_log1->prev[n]];
+			for (m = 0; m < inst_log1_previous->next_size; m++) {
+				if (inst_log1_previous->next[m] == inst) {
+					inst_log1_previous->next[m] = inst_new;
+				}
+			}
+		}
+	}
+	inst_log1_new->next = calloc(1, sizeof(int));
+	inst_log1_new->next_size = 1;
+	inst_log1_new->next[0] = inst;
+	inst_log1->prev_size = 1;
+	inst_log1->prev[0] = inst_new;
+	return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -3403,14 +3449,17 @@ int main(int argc, char *argv[])
 		self->entry_point_list_length);
 
 	/* Correct inst_log to identify how many dis_instructions there have been */
-	inst_log--;
+	//inst_log--;
 
 	tmp = tidy_inst_log(self);
-	self->flag_dependancy = calloc(inst_log + 1, sizeof(int));
-	self->flag_dependancy_opcode = calloc(inst_log + 1, sizeof(int));
+	self->flag_dependancy = calloc(inst_log, sizeof(int));
+	self->flag_dependancy_opcode = calloc(inst_log, sizeof(int));
 	tmp = build_flag_dependancy_table(self);
 	tmp = print_flag_dependancy_table(self);
 	tmp = fix_flag_dependancy_instructions(self);
+	print_dis_instructions(self);
+	tmp = insert_nop_before(self, 5);
+	print_dis_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
@@ -3670,7 +3719,7 @@ int main(int argc, char *argv[])
 	 * This section deals with starting true SSA.
 	 * This bit sets the valid_id to 0 for both dst and src.
 	 ************************************************************/
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		inst_log1->value1.value_id = 0;
 		inst_log1->value1.indirect_value_id = 0;
@@ -3689,8 +3738,8 @@ int main(int argc, char *argv[])
 	labels = calloc(10000, sizeof(struct label_s));
 	self->labels = labels;
 	variable_id = 0x100;
-	/* n <= inst_log verified to be correct limit */
-	for (n = 1; n <= inst_log; n++) {
+	/* n < inst_log verified to be correct limit */
+	for (n = 1; n < inst_log; n++) {
 		struct label_s label;
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
@@ -3705,6 +3754,8 @@ int main(int argc, char *argv[])
 				inst_log1->value1.indirect_value_id);
 
 		switch (instruction->opcode) {
+		case NOP:
+			break;
 		case MOV:
 		case ADD:
 		case ADC:
@@ -4654,7 +4705,7 @@ int main(int argc, char *argv[])
 	 * Problem with iterations, is that it could suffer from bistable flips
 	 * causing the iteration to never exit.
 	 **************************************************/
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		uint64_t value_id;
 		uint64_t value_id3;
 
