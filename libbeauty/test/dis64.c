@@ -2707,6 +2707,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 			case SAL:
 			case SAR:
 			case SEX:
+			case ICMP:
 				switch (instruction->srcA.store) {
 				case STORE_DIRECT:
 					memset(&label, 0, sizeof(struct label_s));
@@ -2894,6 +2895,45 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 				break;
 			case IF:
 				break;
+			case BC:
+				switch (instruction->srcA.store) {
+				case STORE_DIRECT:
+					memset(&label, 0, sizeof(struct label_s));
+					if (instruction->srcA.indirect == IND_MEM) {
+						label.scope = 3;
+						label.type = 1;
+						label.lab_pointer = 1;
+						label.value = instruction->dstA.index;
+					} else if (instruction->srcA.relocated) {
+						label.scope = 3;
+						label.type = 2;
+						label.lab_pointer = 0;
+						label.value = instruction->dstA.index;
+					} else {
+						label.scope = 3;
+						label.type = 3;
+						label.lab_pointer = 0;
+						label.value = instruction->srcA.index;
+					}
+					
+					inst_log1->value1.value_id = variable_id;
+					label_redirect[variable_id].redirect = variable_id;
+					labels[variable_id].scope = label.scope;
+					labels[variable_id].type = label.type;
+					labels[variable_id].lab_pointer += label.lab_pointer;
+					labels[variable_id].value = label.value;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
+					variable_id++;
+					break;
+				case STORE_REG:
+					/* FIXME: TODO*/
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+						inst_log1->value1.value_id); 
+					break;
+				}
 			case RET:
 				inst_log1->value1.value_id = 
 					reg_tracker[instruction->srcA.index];
