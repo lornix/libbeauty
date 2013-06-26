@@ -1092,7 +1092,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int tmp;
 
 	debug_print(DEBUG_ANALYSE, 1, "build_control_flow_nodes:\n");	
-	inst_log_entry[inst_start].node_start = 1;
+	//inst_log_entry[inst_start].node_start = 1;
 	debug_print(DEBUG_ANALYSE, 1, "f_node_start = inst 0x%x\n", inst_start);	
 	/* Start by scanning all the inst_log for node_start and node_end. */
 	for (n = 1; n < inst_log; n++) {
@@ -1121,9 +1121,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			}
 		}
 		if ((inst_log1->prev_size > 1) ||
-			(inst_log1->prev_size == 0) ||
-			((inst_log1->prev_size == 1) && (inst_log1->prev[0] == 0))) {
-			/* FIXME: The above prev_size == 1 and prev[0] == 0 should be fixed to be prev_size == 0. */
+			(inst_log1->prev_size == 0)) {
 			inst_start = n;
 			inst_log_entry[inst_start].node_start = 1;
 			debug_print(DEBUG_ANALYSE, 1, "p_node_start = inst 0x%x\n", inst_start);	
