@@ -3604,7 +3604,18 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
 			tmp = find_node_from_inst(self, nodes, &nodes_size, external_entry_points[l].inst_log);
+			if (tmp == 0) {
+				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x]:start inst = 0x%x, start node = 0x%x\n",
+					l,
+					external_entry_points[l].inst_log,
+					external_entry_points[l].start_node);
+				exit(1);
+			}
 			external_entry_points[l].start_node = tmp;
+			debug_print(DEBUG_MAIN, 1, "entry[0x%x]:start inst = 0x%x, start node = 0x%x\n",
+				l,
+				external_entry_points[l].inst_log,
+				external_entry_points[l].start_node);
 		}
 	}
 

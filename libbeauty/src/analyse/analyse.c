@@ -101,16 +101,23 @@ int tidy_inst_log(struct self_s *self)
 
 int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int inst)
 {
-/* FIXME: this needs fixing to use next and prev instructions, instead of linear n */
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct inst_log_entry_s *inst_log1;
 	int n;
 	int found = 0;
-	for (n = 1; n <= *node_size; n++) {
-		if ((nodes[n].inst_start <= inst) &&
-			(nodes[n].inst_end >= inst)) {
-			found = n;
+
+	do {
+		inst_log1 = &inst_log_entry[inst];
+		if (inst_log1->node_start) {
+			found = inst_log1->node_member;
 			break;
 		}
-	}
+		if (0 == inst_log1->prev_size) {
+			break;
+		}
+		inst = inst_log1->prev[0];
+	} while (inst);
+
 	return found;
 }
 
