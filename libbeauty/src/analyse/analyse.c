@@ -37,7 +37,7 @@ int tidy_inst_log(struct self_s *self)
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	int l,m,n;
 
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		if (inst_log1->next_size > 1) {
 			if (inst_log1->next_size > 2) {
@@ -90,7 +90,11 @@ int tidy_inst_log(struct self_s *self)
 				}
 			}
 		}
-
+		if ((1 == inst_log1->prev_size) && (0 == inst_log1->prev[0])) {
+			inst_log1->prev_size = 0;
+			free(inst_log1->prev);
+			inst_log1->prev = 0;
+		}
 	}
 	return 0;
 }
@@ -1091,7 +1095,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	inst_log_entry[inst_start].node_start = 1;
 	debug_print(DEBUG_ANALYSE, 1, "f_node_start = inst 0x%x\n", inst_start);	
 	/* Start by scanning all the inst_log for node_start and node_end. */
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 = &inst_log_entry[n];
 		debug_print(DEBUG_ANALYSE, 1, "inst 0x%x prev_size = %d, next_size = %d\n", n, inst_log1->prev_size, inst_log1->next_size);	
 		if (inst_log1->prev_size > 0) {
@@ -1138,7 +1142,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		}
 	}
 	node = 1;
-	for (n = 1; n <= inst_log; n++) {
+	for (n = 1; n < inst_log; n++) {
 		inst_log1 = &inst_log_entry[n];
 		if (inst_log1->node_start) {
 			inst_start = n;

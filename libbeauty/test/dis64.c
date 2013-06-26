@@ -67,12 +67,12 @@ struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
-int debug_input_bfd = 0;
-int debug_input_dis = 0;
-int debug_exe = 0;
-int debug_analyse = 0;
-int debug_analyse_paths = 0;
-int debug_analyse_phi = 0;
+int debug_input_bfd = 1;
+int debug_input_dis = 1;
+int debug_exe = 1;
+int debug_analyse = 1;
+int debug_analyse_paths = 1;
+int debug_analyse_phi = 1;
 int debug_output = 1;
 
 void debug_print(int module, int level, const char *format, ...) {
@@ -2970,6 +2970,56 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 	return 0;
 }
 
+int insert_nop_before(struct self_s *self, int inst, int *new_inst);
+int insert_nop_after(struct self_s *self, int inst, int *new_inst);
+
+int substitute_inst(struct self_s *self, int inst, int new_inst)
+{
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	inst_log_entry[new_inst].instruction.opcode =
+		inst_log_entry[inst].instruction.opcode;
+	inst_log_entry[new_inst].instruction.flags =
+		inst_log_entry[inst].instruction.flags;
+	inst_log_entry[new_inst].instruction.srcA.store =
+		inst_log_entry[inst].instruction.srcA.store;
+	inst_log_entry[new_inst].instruction.srcA.indirect =
+		inst_log_entry[inst].instruction.srcA.indirect;
+	inst_log_entry[new_inst].instruction.srcA.indirect_size =
+		inst_log_entry[inst].instruction.srcA.indirect_size;
+	inst_log_entry[new_inst].instruction.srcA.index =
+		inst_log_entry[inst].instruction.srcA.index;
+	inst_log_entry[new_inst].instruction.srcA.relocated =
+		inst_log_entry[inst].instruction.srcA.relocated;
+	inst_log_entry[new_inst].instruction.srcA.value_size =
+		inst_log_entry[inst].instruction.srcA.value_size;
+	inst_log_entry[new_inst].instruction.srcB.store =
+		inst_log_entry[inst].instruction.srcB.store;
+	inst_log_entry[new_inst].instruction.srcB.indirect =
+		inst_log_entry[inst].instruction.srcB.indirect;
+	inst_log_entry[new_inst].instruction.srcB.indirect_size =
+		inst_log_entry[inst].instruction.srcB.indirect_size;
+	inst_log_entry[new_inst].instruction.srcB.index =
+		inst_log_entry[inst].instruction.srcB.index;
+	inst_log_entry[new_inst].instruction.srcB.relocated =
+		inst_log_entry[inst].instruction.srcB.relocated;
+	inst_log_entry[new_inst].instruction.srcB.value_size =
+		inst_log_entry[inst].instruction.srcB.value_size;
+	inst_log_entry[new_inst].instruction.dstA.store =
+		inst_log_entry[inst].instruction.dstA.store;
+	inst_log_entry[new_inst].instruction.dstA.indirect =
+		inst_log_entry[inst].instruction.dstA.indirect;
+	inst_log_entry[new_inst].instruction.dstA.indirect_size =
+		inst_log_entry[inst].instruction.dstA.indirect_size;
+	inst_log_entry[new_inst].instruction.dstA.index =
+		inst_log_entry[inst].instruction.dstA.index;
+	inst_log_entry[new_inst].instruction.dstA.relocated =
+		inst_log_entry[inst].instruction.dstA.relocated;
+	inst_log_entry[new_inst].instruction.dstA.value_size =
+		inst_log_entry[inst].instruction.dstA.value_size;
+	return 0;
+}
+
+
 int build_flag_dependancy_table(struct self_s *self)
 {
 	struct inst_log_entry_s *inst_log1;
@@ -2980,8 +3030,10 @@ int build_flag_dependancy_table(struct self_s *self)
 	int l,m,n;
 	int found;
 	int tmp;
+	int new_inst;
+	int inst_max = inst_log;
 
-	for (n = 1; n < inst_log; n++) {
+	for (n = 1; n < inst_max; n++) {
 		flagged[n] = 0;
 	}
 
@@ -3016,10 +3068,20 @@ int build_flag_dependancy_table(struct self_s *self)
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction not found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
 				return 1;
 			} else {
-				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
-				self->flag_dependancy[n] = l;
-				self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
-				flagged[l]++;
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
+				if (flagged[l] > 0) {
+					/* Use "before" because after will cause a race condition */
+					tmp = insert_nop_before(self, l, &new_inst);
+					/* copy CMP into it */
+					tmp = substitute_inst(self, l, new_inst);
+					self->flag_dependancy[n] = new_inst;
+					self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
+					//flagged[new_inst]++;
+				} else {		
+					self->flag_dependancy[n] = l;
+					self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
+					flagged[l]++;
+				}
 			}
 			break;
 		default:
@@ -3027,13 +3089,14 @@ int build_flag_dependancy_table(struct self_s *self)
 		}
 	}
 	found = 0;
-	for (n = 1; n < inst_log; n++) {
+	for (n = 1; n < inst_max; n++) {
 		if (flagged[n] > 1) {
 			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, flagged[n]);
 			found = 1;
 		}
 	}
 	if (found) {
+		printf("build_flag_dependancy_table: Exiting\n");
 		exit(1);
 	}
 	
@@ -3094,11 +3157,13 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
 				break;
 			default:
+				debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
 				exit (1);
 				break;
 			}
 			break;
 		default:
+			debug_print(DEBUG_MAIN, 1, "flag: UNKNOWNN:0x%x not handled yet\n", instruction->opcode);
 			exit(1);
 			break;
 		}
@@ -3117,7 +3182,7 @@ int print_flag_dependancy_table(struct self_s *self)
 	return 0;
 }	
 
-int insert_nop_before(struct self_s *self, int inst)
+int insert_nop_before(struct self_s *self, int inst, int *new_inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
@@ -3129,7 +3194,7 @@ int insert_nop_before(struct self_s *self, int inst)
 	int inst_new;
 
 	inst_new = inst_log;
-	inst_log1_new = &inst_log_entry[inst_log];
+	inst_log1_new = &inst_log_entry[inst_new];
 	inst_log++;
 
 	inst_log1_new->instruction.opcode = NOP;
@@ -3139,6 +3204,11 @@ int insert_nop_before(struct self_s *self, int inst)
 		inst_log1_new->prev_size = inst_log1->prev_size;
 		for (n = 0; n < inst_log1->prev_size; n++) {
 			inst_log1_new->prev[n] = inst_log1->prev[n];
+			if (inst_log1->prev[n] == 0) {
+				debug_print(DEBUG_MAIN, 1, "ERROR: Insert nop before first instruction not yet supported. Case 0\n");
+				/* Move the entry point. Should never get here */
+				exit(1);
+			}
 			inst_log1_previous = &inst_log_entry[inst_log1->prev[n]];
 			for (m = 0; m < inst_log1_previous->next_size; m++) {
 				if (inst_log1_previous->next[m] == inst) {
@@ -3146,16 +3216,31 @@ int insert_nop_before(struct self_s *self, int inst)
 				}
 			}
 		}
+	} else {
+		for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+			if ((self->external_entry_points[l].valid != 0) &&
+				(self->external_entry_points[l].type == 1) &&
+				(self->external_entry_points[l].inst_log == inst)) {
+					self->external_entry_points[l].inst_log = inst_new;
+				debug_print(DEBUG_MAIN, 1, "fixing entry point[0x%x] from 0x%x to 0x%x\n",
+					l, inst, inst_new);
+			}
+		}
 	}
 	inst_log1_new->next = calloc(1, sizeof(int));
 	inst_log1_new->next_size = 1;
 	inst_log1_new->next[0] = inst;
+	if (0 == inst_log1->prev_size) {
+		inst_log1->prev = calloc(1, sizeof(int));
+	}
 	inst_log1->prev_size = 1;
 	inst_log1->prev[0] = inst_new;
+	*new_inst = inst_new;
+
 	return 0;
 }
 
-int insert_nop_after(struct self_s *self, int inst)
+int insert_nop_after(struct self_s *self, int inst, int *new_inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
@@ -3194,6 +3279,8 @@ int insert_nop_after(struct self_s *self, int inst)
 	inst_log1_new->prev[0] = inst;
 	inst_log1->next_size = 1;
 	inst_log1->next[0] = inst_new;
+	*new_inst = inst_new;
+
 	return 0;
 }
 
@@ -3494,20 +3581,25 @@ int main(int argc, char *argv[])
 	/* Correct inst_log to identify how many dis_instructions there have been */
 	//inst_log--;
 
+	print_dis_instructions(self);
+	debug_print(DEBUG_MAIN, 1, "start tidy\n");
 	tmp = tidy_inst_log(self);
+	print_dis_instructions(self);
 	self->flag_dependancy = calloc(inst_log, sizeof(int));
 	self->flag_dependancy_opcode = calloc(inst_log, sizeof(int));
+	debug_print(DEBUG_MAIN, 1, "start build_flag_dependancy_table\n");
 	tmp = build_flag_dependancy_table(self);
+	debug_print(DEBUG_MAIN, 1, "start print_flag_dependancy_table\n");
 	tmp = print_flag_dependancy_table(self);
 	tmp = fix_flag_dependancy_instructions(self);
-	print_dis_instructions(self);
-	tmp = insert_nop_after(self, 4);
+	//tmp = insert_nop_after(self, 4);
 	print_dis_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 //	print_dis_instructions(self);
 //	exit(1);
+	debug_print(DEBUG_MAIN, 1, "got here 1\n");
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
@@ -3628,6 +3720,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	debug_print(DEBUG_MAIN, 1, "got here 2\n");
 	/* Node specific processing */
 	tmp = build_node_dominance(self, nodes, &nodes_size);
 	tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
@@ -3641,8 +3734,11 @@ int main(int argc, char *argv[])
 				external_entry_points[l].loops, external_entry_points[l].loops_size);
 		}
 	}
+	debug_print(DEBUG_MAIN, 1, "got here 3 nodes_size = 0%x\n", nodes_size);
 
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	debug_print(DEBUG_MAIN, 1, "got here 4\n");
+
 
 	tmp = build_node_if_tail(self, nodes, &nodes_size);
 	for (n = 0; n < nodes_size; n++) {

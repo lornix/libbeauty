@@ -457,7 +457,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	uint64_t value_id;
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1 = NULL;
-	struct inst_log_entry_s *inst_log1_prev;
+//	struct inst_log_entry_s *inst_log1_prev;
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
@@ -468,11 +468,11 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		debug_print(DEBUG_OUTPUT, 1, "output_function_body:Invalid inst_log1[0x%x]\n", inst_number);
 		return 1;
 	}
-	inst_log1_prev =  &inst_log_entry[inst_log1->prev[0]];
-	if (!inst_log1_prev) {
-		debug_print(DEBUG_OUTPUT, 1, "output_function_body:Invalid inst_log1_prev[0x%x]\n", inst_number);
-		return 1;
-	}
+//	inst_log1_prev =  &inst_log_entry[inst_log1->prev[0]];
+//	if (!inst_log1_prev) {
+//		debug_print(DEBUG_OUTPUT, 1, "output_function_body:Invalid inst_log1_prev[0x%x]\n", inst_number);
+//		return 1;
+//	}
 	instruction =  &inst_log1->instruction;
 	//instruction_prev =  &inst_log1_prev->instruction;
 
@@ -502,7 +502,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	if ((inst_log1->prev_size) > 1) {
 		debug_print(DEBUG_OUTPUT, 1, "label%04"PRIx32":\n", inst_number);
 		tmp = fprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
-	} else {
+	} else if (1 == inst_log1->prev_size){
 		if ((inst_log1->prev[0] != (inst_number - 1)) &&
 			(inst_log1->prev[0] != 0)) {
 			debug_print(DEBUG_OUTPUT, 1, "label%04"PRIx32":\n", inst_number);
