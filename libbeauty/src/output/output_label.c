@@ -1178,7 +1178,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = fprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			debug_print(DEBUG_OUTPUT, 1, "icmp\n");
-			err = if_expression( instruction->srcA.index, inst_log1, label_redirect, labels, fd);
+			err = if_expression( instruction->predicate, inst_log1, label_redirect, labels, fd);
 			debug_print(DEBUG_OUTPUT, 1, "prev flags=%d\n",inst_log1->instruction.flags);
 			debug_print(DEBUG_OUTPUT, 1, "prev opcode=0x%x\n",inst_log1->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "0x%"PRIx64":%s\n", instruction->srcA.index, condition_table[instruction->predicate]);
