@@ -3319,6 +3319,35 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				inst_log1->value3.value_scope =  2;
 				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
 				break;
+			case TEST:
+				if (inst_log1_flags->instruction.srcA.index != inst_log1_flags->instruction.srcB.index) {
+					debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x TEST OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
+					exit (1);
+				}
+				inst_log1_flags->instruction.opcode = ICMP;
+				inst_log1_flags->instruction.flags = 0;
+				inst_log1_flags->instruction.predicate = inst_log1->instruction.srcA.index;
+				inst_log1_flags->instruction.srcA.index = 0;
+				inst_log1_flags->instruction.srcA.store = STORE_DIRECT;
+				inst_log1_flags->instruction.srcA.indirect = IND_DIRECT;
+				inst_log1_flags->instruction.srcA.relocated = 0;
+				inst_log1_flags->instruction.srcA.value_size = reg_size;
+				inst_log1_flags->instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				inst_log1_flags->instruction.dstA.store = STORE_REG;
+				inst_log1_flags->instruction.dstA.indirect = IND_DIRECT;
+				inst_log1_flags->instruction.dstA.relocated = 0;
+				inst_log1_flags->instruction.dstA.value_size = 1;
+				inst_log1_flags->value3.value_scope =  2;
+				/* FIXME: fill in rest of instruction dstA and then its value3 */
+				instruction->opcode = BC;
+				instruction->srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				instruction->srcA.store = STORE_REG;
+				instruction->srcA.indirect = IND_DIRECT;
+				instruction->srcA.relocated = 0;
+				instruction->srcA.value_size = 1;
+				inst_log1->value3.value_scope =  2;
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				break;
 			default:
 				debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
 				exit (1);
