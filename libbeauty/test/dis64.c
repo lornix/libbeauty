@@ -3364,6 +3364,42 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				inst_log1->value3.value_scope =  2;
 				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
 				break;
+			case rAND:
+				tmp = insert_nop_after(self, self->flag_dependancy[n], &new_inst);
+				reg = inst_log1_flags->instruction.dstA.index;
+				reg_size = inst_log1_flags->instruction.dstA.value_size;
+
+				inst_log_entry[new_inst].instruction.opcode = ICMP;
+				inst_log_entry[new_inst].instruction.flags = 0;
+				inst_log_entry[new_inst].instruction.predicate = inst_log1->instruction.srcA.index;
+				inst_log_entry[new_inst].instruction.srcA.index = 0;
+				inst_log_entry[new_inst].instruction.srcA.store = STORE_DIRECT;
+				inst_log_entry[new_inst].instruction.srcA.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.srcA.relocated = 0;
+				inst_log_entry[new_inst].instruction.srcA.value_size = reg_size;
+				inst_log_entry[new_inst].instruction.srcB.index = reg;
+				inst_log_entry[new_inst].instruction.srcB.store = STORE_REG;
+				inst_log_entry[new_inst].instruction.srcB.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.srcB.relocated = 0;
+				inst_log_entry[new_inst].instruction.srcB.value_size = reg_size;
+				inst_log_entry[new_inst].instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				inst_log_entry[new_inst].instruction.dstA.store = STORE_REG;
+				inst_log_entry[new_inst].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.dstA.relocated = 0;
+				inst_log_entry[new_inst].instruction.dstA.value_size = 1;
+				inst_log_entry[new_inst].value3.value_scope =  2;
+
+				/* FIXME: fill in rest of instruction dstA and then its value3 */
+				instruction->opcode = BC;
+				instruction->srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+				instruction->srcA.store = STORE_REG;
+				instruction->srcA.indirect = IND_DIRECT;
+				instruction->srcA.relocated = 0;
+				instruction->srcA.value_size = 1;
+				inst_log1->value3.value_scope =  2;
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				break;
+
 			default:
 				debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
 				exit (1);
