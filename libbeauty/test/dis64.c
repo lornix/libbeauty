@@ -3155,8 +3155,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 						debug_print(DEBUG_MAIN, 1, "flag: SBB leaves users. inst 0x%x uses flag from inst 0x%x\n", m, n);
 					}
 				}
-				debug_print(DEBUG_MAIN, 1, "flag: SBB leaves users. inst ???? uses flag from inst 0x%x\n", n);
-				//exit(1);
+				debug_print(DEBUG_MAIN, 1, "flag: NOT HANDLED: SBB leaves users. inst ???? uses flag from inst 0x%x\n", n);
+				exit(1);
 			}
 			if (inst_log1->next_size) {
 				next1 = inst_log1->next[0];
