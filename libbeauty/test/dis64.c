@@ -3026,18 +3026,18 @@ int build_flag_dependancy_table(struct self_s *self)
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
-	int flagged[inst_log + 1];
+	int *flagged = self->flag_result_users;
 	int l,m,n;
 	int found;
 	int tmp;
 	int new_inst;
-	int inst_max = inst_log;
+	int inst_max = self->flag_dependancy_size;
 
 	for (n = 1; n < inst_max; n++) {
 		flagged[n] = 0;
 	}
 
-	for (n = 1; n < inst_log; n++) {
+	for (n = 1; n < inst_max; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		switch (instruction->opcode) {
@@ -3832,6 +3832,8 @@ int main(int argc, char *argv[])
 	print_dis_instructions(self);
 	self->flag_dependancy = calloc(inst_log, sizeof(int));
 	self->flag_dependancy_opcode = calloc(inst_log, sizeof(int));
+	self->flag_result_users = calloc(inst_log, sizeof(int));
+	self->flag_dependancy_size = inst_log;
 	debug_print(DEBUG_MAIN, 1, "start build_flag_dependancy_table\n");
 	tmp = build_flag_dependancy_table(self);
 	debug_print(DEBUG_MAIN, 1, "start print_flag_dependancy_table\n");
