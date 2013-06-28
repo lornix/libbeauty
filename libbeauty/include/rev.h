@@ -40,7 +40,7 @@
 #define DEBUG_ANALYSE_PATHS 7
 #define DEBUG_ANALYSE_PHI 8
 
-void debug_print(int module, int level, const char *format, ...);
+void debug_print(int module, int level, const char *format, ...) __attribute__((__format__ (printf, 3, 4)));
 
 #include <dis.h>
 #include <exe.h>

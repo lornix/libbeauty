@@ -75,7 +75,8 @@ int debug_analyse_paths = 1;
 int debug_analyse_phi = 1;
 int debug_output = 1;
 
-void debug_print(int module, int level, const char *format, ...) {
+void debug_print(int module, int level, const char *format, ...)
+{
 	va_list ap;
 	va_start(ap, format);
 	switch (module) {
@@ -3041,6 +3042,8 @@ int build_flag_dependency_table(struct self_s *self)
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
 		switch (instruction->opcode) {
+		case RCR:
+		case RCL:
 		case ADC:
 		case SBB:
 		case IF:
@@ -3076,7 +3079,7 @@ int build_flag_dependency_table(struct self_s *self)
 					tmp = substitute_inst(self, l, new_inst);
 					self->flag_dependency[n] = new_inst;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
-					//flagged[new_inst]++;
+					flagged[new_inst]++;
 				} else {		
 					self->flag_dependency[n] = l;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
@@ -3094,6 +3097,10 @@ int build_flag_dependency_table(struct self_s *self)
 			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, flagged[n]);
 			found = 1;
 		}
+		if (flagged[n] > 0) {
+			debug_print(DEBUG_MAIN, 1, "FLAG RESULT USED. inst 0x%x:0x%x opcode=0x%x\n", n, flagged[n], inst_log_entry[n].instruction.opcode);
+		}
+
 	}
 	if (found) {
 		printf("build_flag_dependency_table: Exiting\n");
@@ -3143,6 +3150,15 @@ int fix_flag_dependency_instructions(struct self_s *self)
 			exit(1);
 			break;
 		case SBB:
+			if (self->flag_result_users[n] > 0) {
+				for (m = 1; m < max_log; m++) {
+					if (self->flag_dependency[m] == n) {
+						debug_print(DEBUG_MAIN, 1, "flag: SBB leaves users. inst 0x%x uses flag from inst 0x%x\n", m, n);
+					}
+				}
+				debug_print(DEBUG_MAIN, 1, "flag: SBB leaves users. inst ???? uses flag from inst 0x%x\n", n);
+				//exit(1);
+			}
 			if (inst_log1->next_size) {
 				next1 = inst_log1->next[0];
 			}
