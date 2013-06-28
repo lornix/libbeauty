@@ -3129,7 +3129,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 		}
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		prev = 0;
+		prev = self->flag_dependancy[n];
 		next1 = 0;
 		next2 = 0;
 		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
@@ -3139,9 +3139,6 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 			exit(1);
 			break;
 		case SBB:
-			if (inst_log1->prev_size) {
-				prev = inst_log1->prev[0];
-			}
 			if (inst_log1->next_size) {
 				next1 = inst_log1->next[0];
 			}
@@ -3152,13 +3149,13 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				next3 = inst_log_entry[next2].next[0];
 			}
 			if ((!prev | !next1 | !next2)) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern1 not handled yet\n");
 				exit(1);
 			}
 			if (!((inst_log_entry[prev].instruction.opcode == CMP) && 
 				(inst_log_entry[next1].instruction.opcode == rAND) && 
 				(inst_log_entry[next2].instruction.opcode == ADD))) { 
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern2 not handled yet\n");
 				exit(1);
 			}
 			/* FIXME: Add check step that there are no other users of the flags */
@@ -3167,27 +3164,27 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				reg = inst_log1->instruction.srcA.index;
 				reg_size = inst_log1->instruction.srcA.value_size;
 			} else {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern3 not handled yet\n");
 				exit(1);
 			}
 			if (inst_log1->instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern3 not handled yet\n");
 				exit(1);
 			}
 			if (inst_log_entry[next1].instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern4 not handled yet\n");
 				exit(1);
 			}
 			if (inst_log_entry[next1].instruction.dstA.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern5 not handled yet\n");
 				exit(1);
 			}
 			if (inst_log_entry[next2].instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern6 not handled yet\n");
 				exit(1);
 			}
 			if (inst_log_entry[next2].instruction.dstA.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern not handled yet\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern7 not handled yet\n");
 				exit(1);
 			}
 			/* Match tests passed. Now do the substitution */
