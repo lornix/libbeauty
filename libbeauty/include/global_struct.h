@@ -387,9 +387,9 @@ struct self_s {
 	int *search_back_seen;
 	struct label_redirect_s *label_redirect;
 	struct label_s *labels;
-	int flag_dependancy_size;
-	int *flag_dependancy;
-	int *flag_dependancy_opcode;
+	int flag_dependency_size;
+	int *flag_dependency;
+	int *flag_dependency_opcode;
 	int *flag_result_users;	
 };
 

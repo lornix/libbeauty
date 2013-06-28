@@ -3020,7 +3020,7 @@ int substitute_inst(struct self_s *self, int inst, int new_inst)
 }
 
 
-int build_flag_dependancy_table(struct self_s *self)
+int build_flag_dependency_table(struct self_s *self)
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log1_flags;
@@ -3031,7 +3031,7 @@ int build_flag_dependancy_table(struct self_s *self)
 	int found;
 	int tmp;
 	int new_inst;
-	int inst_max = self->flag_dependancy_size;
+	int inst_max = self->flag_dependency_size;
 
 	for (n = 1; n < inst_max; n++) {
 		flagged[n] = 0;
@@ -3074,12 +3074,12 @@ int build_flag_dependancy_table(struct self_s *self)
 					tmp = insert_nop_before(self, l, &new_inst);
 					/* copy CMP into it */
 					tmp = substitute_inst(self, l, new_inst);
-					self->flag_dependancy[n] = new_inst;
-					self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
+					self->flag_dependency[n] = new_inst;
+					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
 					//flagged[new_inst]++;
 				} else {		
-					self->flag_dependancy[n] = l;
-					self->flag_dependancy_opcode[n] = inst_log1_flags->instruction.opcode;
+					self->flag_dependency[n] = l;
+					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
 					flagged[l]++;
 				}
 			}
@@ -3096,14 +3096,14 @@ int build_flag_dependancy_table(struct self_s *self)
 		}
 	}
 	if (found) {
-		printf("build_flag_dependancy_table: Exiting\n");
+		printf("build_flag_dependency_table: Exiting\n");
 		exit(1);
 	}
 	
 	return 0;
 }
 
-int fix_flag_dependancy_instructions(struct self_s *self)
+int fix_flag_dependency_instructions(struct self_s *self)
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log1_flags;
@@ -3127,13 +3127,13 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 	max_log = inst_log;
 
 	for (n = 1; n < max_log; n++) {
-		if (!self->flag_dependancy[n]) {
+		if (!self->flag_dependency[n]) {
 			/* Go round loop again */
 			continue;
 		}
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		prev = self->flag_dependancy[n];
+		prev = self->flag_dependency[n];
 		next1 = 0;
 		next2 = 0;
 		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
@@ -3295,8 +3295,8 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 			break;
 		case IF:
 			debug_print(DEBUG_MAIN, 1, "flag IF inst 0x%x OP:0x%x\n", n, instruction->opcode);
-			inst_log1_flags =  &inst_log_entry[self->flag_dependancy[n]];
-			if (inst_log1_flags->instruction.opcode != self->flag_dependancy_opcode[n]) {
+			inst_log1_flags =  &inst_log_entry[self->flag_dependency[n]];
+			if (inst_log1_flags->instruction.opcode != self->flag_dependency_opcode[n]) {
 				return 1;
 			}
 			switch (inst_log1_flags->instruction.opcode) {
@@ -3318,14 +3318,14 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = 1;
 				inst_log1->value3.value_scope =  2;
-				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependency[n]);
 				break;
 			case TEST:
 				//if (inst_log1_flags->instruction.srcA.index != inst_log1_flags->instruction.srcB.index) {
 				//	debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x TEST OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
 				//	exit (1);
 				//}
-				tmp = insert_nop_after(self, self->flag_dependancy[n], &new_inst);
+				tmp = insert_nop_after(self, self->flag_dependency[n], &new_inst);
 				reg_size = inst_log1_flags->instruction.srcA.value_size;
 				inst_log1_flags->instruction.opcode = rAND;
 				inst_log1_flags->instruction.flags = 0;
@@ -3363,10 +3363,10 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = 1;
 				inst_log1->value3.value_scope =  2;
-				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependency[n]);
 				break;
 			case rAND:
-				tmp = insert_nop_after(self, self->flag_dependancy[n], &new_inst);
+				tmp = insert_nop_after(self, self->flag_dependency[n], &new_inst);
 				reg = inst_log1_flags->instruction.dstA.index;
 				reg_size = inst_log1_flags->instruction.dstA.value_size;
 
@@ -3398,7 +3398,7 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 				instruction->srcA.relocated = 0;
 				instruction->srcA.value_size = 1;
 				inst_log1->value3.value_scope =  2;
-				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependancy[n]);
+				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependency[n]);
 				break;
 
 			default:
@@ -3416,12 +3416,12 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 	return 0;
 }
 
-int print_flag_dependancy_table(struct self_s *self)
+int print_flag_dependency_table(struct self_s *self)
 {
 	int n;
 	for (n = 1; n < inst_log; n++) {
-		if (self->flag_dependancy[n]) {
-			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x:0x%x\n", n, self->flag_dependancy[n], self->flag_dependancy_opcode[n]);
+		if (self->flag_dependency[n]) {
+			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x:0x%x\n", n, self->flag_dependency[n], self->flag_dependency_opcode[n]);
 		}
 	}
 	return 0;
@@ -3830,15 +3830,15 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "start tidy\n");
 	tmp = tidy_inst_log(self);
 	print_dis_instructions(self);
-	self->flag_dependancy = calloc(inst_log, sizeof(int));
-	self->flag_dependancy_opcode = calloc(inst_log, sizeof(int));
+	self->flag_dependency = calloc(inst_log, sizeof(int));
+	self->flag_dependency_opcode = calloc(inst_log, sizeof(int));
 	self->flag_result_users = calloc(inst_log, sizeof(int));
-	self->flag_dependancy_size = inst_log;
-	debug_print(DEBUG_MAIN, 1, "start build_flag_dependancy_table\n");
-	tmp = build_flag_dependancy_table(self);
-	debug_print(DEBUG_MAIN, 1, "start print_flag_dependancy_table\n");
-	tmp = print_flag_dependancy_table(self);
-	tmp = fix_flag_dependancy_instructions(self);
+	self->flag_dependency_size = inst_log;
+	debug_print(DEBUG_MAIN, 1, "start build_flag_dependency_table\n");
+	tmp = build_flag_dependency_table(self);
+	debug_print(DEBUG_MAIN, 1, "start print_flag_dependency_table\n");
+	tmp = print_flag_dependency_table(self);
+	tmp = fix_flag_dependency_instructions(self);
 	//tmp = insert_nop_after(self, 4);
 	print_dis_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
