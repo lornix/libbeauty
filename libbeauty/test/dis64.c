@@ -3121,8 +3121,12 @@ int fix_flag_dependancy_instructions(struct self_s *self)
 	int64_t working_var1;
 	int64_t working_var2;
 	int64_t working_var3;
+	int max_log;
 
-	for (n = 1; n < inst_log; n++) {
+	/* Use max_log and not inst_log in case inst_log changes when adding nop instructions */
+	max_log = inst_log;
+
+	for (n = 1; n < max_log; n++) {
 		if (!self->flag_dependancy[n]) {
 			/* Go round loop again */
 			continue;
