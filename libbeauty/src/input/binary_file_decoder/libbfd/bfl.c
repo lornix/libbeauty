@@ -973,8 +973,6 @@ int bf_disassemble_init(void *handle_void, int inst_size, uint8_t *inst)
 	disassemble_string = calloc(1, 1024);
 	handle->disassemble_string = disassemble_string;
 	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %p, %p\n", disassemble_fn, print_insn_i386);
-	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %llx, %llx\n", disassemble_fn, print_insn_i386);
-	debug_print(DEBUG_MAIN, 1, "disassemble_fn done %llx, %llx\n", *disassemble_fn, *print_insn_i386);
 	return 0;
 }
 

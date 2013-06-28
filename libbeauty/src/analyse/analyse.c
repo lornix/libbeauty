@@ -103,7 +103,6 @@ int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, 
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1;
-	int n;
 	int found = 0;
 
 	do {
@@ -515,8 +514,6 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
 	int n;
-	int tmp;
-	int count = 0;
 	int type = 0;
 
 	for(n = 1; n <= *nodes_size; n++) {
@@ -570,9 +567,7 @@ build_node_type_found:
 int find_node_in_path(struct self_s *self, struct path_s *paths, int paths_size, int base_path, int node, int *index)
 {
 	int position;
-	int position_in_path;
 	int path;
-	int n;
 	int step;
 	int found = 0;
 	int tmp;
@@ -614,9 +609,7 @@ int find_node_in_path(struct self_s *self, struct path_s *paths, int paths_size,
 int find_node_at_index_in_path(struct self_s *self, struct path_s *paths, int paths_size, int base_path, int index, int *node)
 {
 	int position;
-	int position_in_path;
 	int path;
-	int n;
 	int step;
 	int found = 0;
 	int tmp;
@@ -1088,7 +1081,6 @@ int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *pat
 int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
 {
 	struct inst_log_entry_s *inst_log1;
-	struct inst_log_entry_s *inst_log2;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	int node = 1;
 	int inst_start = 1;
@@ -1423,9 +1415,8 @@ int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size
 	return 0;
 }
 
-int compare_inst(struct self_s *self, int inst_a, int inst_b) {
-	struct inst_log_entry_s *inst_log_a;
-	struct inst_log_entry_s *inst_log_b;
+int compare_inst(struct self_s *self, int inst_a, int inst_b)
+{
 	struct instruction_s *instruction_a;
 	struct instruction_s *instruction_b;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;

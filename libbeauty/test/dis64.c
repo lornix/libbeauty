@@ -1991,7 +1991,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64"\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2003,7 +2003,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->dstA.indirect != IND_DIRECT)) {
 					/* This is a special case, where the dst register is indirect, so actually a src. */
 					nodes[node].used_register[instruction->dstA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1D:0x%x\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1D:0x%"PRIx64"\n", instruction->dstA.index);
 					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
 						nodes[node].used_register[instruction->dstA.index].seen = 1;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
@@ -2015,7 +2015,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%"PRIx64", DST\n", instruction->dstA.index);
 					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
 						nodes[node].used_register[instruction->dstA.index].seen = 2;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
@@ -2044,7 +2044,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x, SRC\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64", SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2055,7 +2055,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcB.store == STORE_REG) &&
 					(instruction->srcB.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcB.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%x SRC\n", instruction->srcB.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%"PRIx64" SRC\n", instruction->srcB.index);
 					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
 						nodes[node].used_register[instruction->srcB.index].seen = 1;
 						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
@@ -2066,7 +2066,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen2:0x%x, DST\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%"PRIx64", DST\n", instruction->dstA.index);
 					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
 						nodes[node].used_register[instruction->dstA.index].seen = 2;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
@@ -2084,7 +2084,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					/* CMP and TEST do not have a dst */
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64"\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2095,7 +2095,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcB.store == STORE_REG) &&
 					(instruction->srcB.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcB.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%x\n", instruction->srcB.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%"PRIx64"\n", instruction->srcB.index);
 					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
 						nodes[node].used_register[instruction->srcB.index].seen = 1;
 						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
@@ -2111,7 +2111,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->dstA.index].dst = inst;
-					debug_print(DEBUG_MAIN, 1, "CALL Seen2:0x%x, DST\n", instruction->dstA.index);
+					debug_print(DEBUG_MAIN, 1, "CALL Seen2:0x%"PRIx64", DST\n", instruction->dstA.index);
 					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
 						nodes[node].used_register[instruction->dstA.index].seen = 2;
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
@@ -2129,7 +2129,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					/* CMP and TEST do not have a dst */
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%x\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64"\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2142,7 +2142,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64"\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2160,7 +2160,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT) &&
 					(nodes[node].used_register[instruction->srcA.index].seen == 0)) {
 					/* TODO: Add register src index here */
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%x SET\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64" SET\n", instruction->srcA.index);
 					nodes[node].used_register[instruction->srcA.index].seen = 1;
 					nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
 					nodes[node].used_register[instruction->srcA.index].src_first = inst;
@@ -2624,7 +2624,6 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 		int inst;
 		int node;
 		struct label_s label;
-		int new_label = 0;
 		int found = 0;
 		int reg_tracker[MAX_REG];
 		node = n;
@@ -2674,7 +2673,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
@@ -2682,7 +2681,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					/* FIXME: TODO*/
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					break;
 				}
@@ -2691,7 +2690,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					break;
 				case STORE_REG:
 					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%x given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
 						instruction->dstA.index,
 						inst_log1->value3.value_id); 
 					break;
@@ -2741,7 +2740,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
@@ -2752,7 +2751,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					//	&label, &new_label);
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					break;
 				}
@@ -2782,7 +2781,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value2.value_id); 
 					variable_id++;
 					break;
@@ -2793,7 +2792,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					//	&label, &new_label);
 					inst_log1->value2.value_id = 
 						reg_tracker[instruction->srcB.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value2.value_id); 
 					break;
 				}
@@ -2802,7 +2801,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					break;
 				case STORE_REG:
 					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%x given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
 						instruction->dstA.index,
 						inst_log1->value3.value_id); 
 					break;
@@ -2839,7 +2838,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
@@ -2850,7 +2849,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					//	&label, &new_label);
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					break;
 				}
@@ -2880,7 +2879,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value2.value_id); 
 					variable_id++;
 					break;
@@ -2891,7 +2890,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					//	&label, &new_label);
 					inst_log1->value2.value_id = 
 						reg_tracker[instruction->srcB.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value2.value_id); 
 					break;
 				}
@@ -2928,7 +2927,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					labels[variable_id].type = label.type;
 					labels[variable_id].lab_pointer += label.lab_pointer;
 					labels[variable_id].value = label.value;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					variable_id++;
 					break;
@@ -2936,14 +2935,14 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 					/* FIXME: TODO*/
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id); 
 					break;
 				}
 			case RET:
 				inst_log1->value1.value_id = 
 					reg_tracker[instruction->srcA.index];
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%x\n", inst,
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
 					inst_log1->value1.value_id); 
 				break;
 			case JMP:
@@ -3028,7 +3027,7 @@ int build_flag_dependency_table(struct self_s *self)
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
 	int *flagged = self->flag_result_users;
-	int l,m,n;
+	int l,n;
 	int found;
 	int tmp;
 	int new_inst;
@@ -3116,7 +3115,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
-	int l,m,n;
+	int m,n;
 	int tmp;
 	int prev;
 	int next1;
@@ -3212,7 +3211,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 			working_var2 = inst_log_entry[next2].instruction.srcA.index;
 			working_var3 = working_var1 + working_var2;
 			tmp = insert_nop_after(self, n, &new_inst);
-			debug_print(DEBUG_MAIN, 1, "flag: working_var1 = 0x%x, working_var2 = 0x%x, working_var3 = 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "flag: working_var1 = 0x%"PRIx64", working_var2 = 0x%"PRIx64", working_var3 = 0x%"PRIx64"\n",
 				working_var1,
 				working_var2,
 				working_var3);
@@ -3449,9 +3448,7 @@ int insert_nop_before(struct self_s *self, int inst, int *new_inst)
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
 	struct inst_log_entry_s *inst_log1_previous;
 	struct inst_log_entry_s *inst_log1_new;
-	struct instruction_s *instruction;
 	int l,m,n;
-	int tmp;
 	int inst_new;
 
 	inst_new = inst_log;
@@ -3507,9 +3504,7 @@ int insert_nop_after(struct self_s *self, int inst, int *new_inst)
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
 	struct inst_log_entry_s *inst_log1_next;
 	struct inst_log_entry_s *inst_log1_new;
-	struct instruction_s *instruction;
-	int l,m,n;
-	int tmp;
+	int m,n;
 	int inst_new;
 
 	inst_new = inst_log;
@@ -3868,14 +3863,14 @@ int main(int argc, char *argv[])
 		if (external_entry_points[l].valid) {
 			tmp = find_node_from_inst(self, nodes, &nodes_size, external_entry_points[l].inst_log);
 			if (tmp == 0) {
-				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x]:start inst = 0x%x, start node = 0x%x\n",
+				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x]:start inst = 0x%"PRIx64", start node = 0x%x\n",
 					l,
 					external_entry_points[l].inst_log,
 					external_entry_points[l].start_node);
 				exit(1);
 			}
 			external_entry_points[l].start_node = tmp;
-			debug_print(DEBUG_MAIN, 1, "entry[0x%x]:start inst = 0x%x, start node = 0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "entry[0x%x]:start inst = 0x%"PRIx64", start node = 0x%x\n",
 				l,
 				external_entry_points[l].inst_log,
 				external_entry_points[l].start_node);

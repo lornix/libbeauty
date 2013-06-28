@@ -458,7 +458,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1 = NULL;
 //	struct inst_log_entry_s *inst_log1_prev;
-	struct inst_log_entry_s *inst_log1_flags;
+	struct inst_log_entry_s *inst_log1_flags = NULL;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	struct label_s *label;
@@ -1374,21 +1374,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 int output_function_body(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
 {
-	int tmp, l, n, n2;
-	int tmp_state;
-	int err;
-	int found;
-	uint64_t value_id;
-	struct instruction_s *instruction;
-	//struct instruction_s *instruction_prev;
-	struct inst_log_entry_s *inst_log1 = NULL;
-	struct inst_log_entry_s *inst_log1_prev;
-	struct inst_log_entry_s *inst_log1_flags;
-	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
-	struct external_entry_point_s *external_entry_points = self->external_entry_points;
-	//struct memory_s *value;
-	struct label_s *label;
-	//struct extension_call_s *call;
+	int tmp, n;
 
 	if (!start || !end) {
 		debug_print(DEBUG_OUTPUT, 1, "output_function_body:Invalid start or end\n");
