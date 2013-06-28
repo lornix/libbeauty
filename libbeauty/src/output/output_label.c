@@ -755,7 +755,18 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " &= ");
+			tmp = fprintf(fd, " = ");
+			if (1 == instruction->srcB.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value2.indirect_value_id;
+			} else {
+				value_id = inst_log1->value2.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			tmp = fprintf(fd, " & ");
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
@@ -784,7 +795,17 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " |= ");
+			tmp = fprintf(fd, " = ");
+			if (1 == instruction->srcB.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value2.indirect_value_id;
+			} else {
+				value_id = inst_log1->value2.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			tmp = fprintf(fd, " | ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
@@ -813,8 +834,18 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			label = &labels[tmp];
 			tmp = output_label(label, fd);
 			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " ^= ");
+			tmp = fprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
+			if (1 == instruction->srcB.indirect) {
+				tmp = fprintf(fd, "*");
+				value_id = inst_log1->value2.indirect_value_id;
+			} else {
+				value_id = inst_log1->value2.value_id;
+			}
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = output_label(label, fd);
+			tmp = fprintf(fd, " ^ ");
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
