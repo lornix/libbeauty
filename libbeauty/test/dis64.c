@@ -3072,8 +3072,9 @@ int build_flag_dependency_table(struct self_s *self)
 			} else {
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
 				if (flagged[l] > 0) {
-					if (inst_log_entry[n].instruction.opcode != CMP) {
-						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP\n");
+					if (inst_log_entry[l].instruction.opcode != CMP) {
+						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP. Opcode = 0x%x\n",
+							inst_log_entry[l].instruction.opcode);
 						exit(1);
 					}
 					/* Use "before" because after will cause a race condition */
