@@ -3072,6 +3072,10 @@ int build_flag_dependency_table(struct self_s *self)
 			} else {
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
 				if (flagged[l] > 0) {
+					if (inst_log_entry[n].instruction.opcode != CMP) {
+						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP\n");
+						exit(1);
+					}
 					/* Use "before" because after will cause a race condition */
 					tmp = insert_nop_before(self, l, &new_inst);
 					/* copy CMP into it */
@@ -3109,6 +3113,117 @@ int build_flag_dependency_table(struct self_s *self)
 	return 0;
 }
 
+int matcher_sbb(struct self_s *self, int inst, int *sbb_match, int *n1, int *n2, int *n3, int *flags_result_used)
+{
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	int match = 0;
+	int prev = self->flag_dependency[inst];
+	int next1 = 0;
+	int next2 = 0;
+	int next3 = 0;
+	int nexts_present = 0;
+	int cmp_sbb_and_add = 0;
+	int cmp_sbb_add = 0;
+	int reg = 0;
+	int reg_size = 0;
+	int is_reg = 0;
+	int ssb_same_reg = 0;
+	int next1_same_reg = 0;
+	int next2_same_reg = 0;
+	int m;
+	int max_log = inst_log;
+	inst_log1 =  &inst_log_entry[inst];
+
+	if (self->flag_result_users[inst] > 0) {
+		for (m = 1; m < max_log; m++) {
+			if (self->flag_dependency[m] == inst) {
+				debug_print(DEBUG_MAIN, 1, "flag: SBB leaves users. inst 0x%x uses flag from inst 0x%x\n", m, inst);
+			}
+		}
+		*flags_result_used = 1;
+		debug_print(DEBUG_MAIN, 1, "flag: NOT HANDLED: SBB leaves users. inst ???? uses flag from inst 0x%x\n", inst);
+	}
+	if (inst_log1->next_size) {
+		next1 = inst_log1->next[0];
+	}
+	if (inst_log_entry[next1].next_size) {
+		next2 = inst_log_entry[next1].next[0];
+	}
+	if (inst_log_entry[next2].next_size) {
+		next3 = inst_log_entry[next2].next[0];
+	}
+	if ((prev != 0) && (next1 != 0) && (next2 != 0)) {
+		nexts_present = 1;
+	}
+	if ((nexts_present) &&
+		(inst_log_entry[prev].instruction.opcode == CMP) && 
+		(inst_log_entry[next1].instruction.opcode == rAND) && 
+		(inst_log_entry[next2].instruction.opcode == ADD)) {
+		cmp_sbb_and_add = 1;
+	}
+	if ((prev != 0) && (next1 != 0) &&
+		(inst_log_entry[prev].instruction.opcode == CMP) && 
+		(inst_log_entry[next1].instruction.opcode == ADD)) { 
+		cmp_sbb_add = 1;
+	}
+	if ((inst_log1->instruction.dstA.store == STORE_REG) &&
+		(inst_log1->instruction.dstA.indirect == IND_DIRECT)) {
+		reg = inst_log1->instruction.dstA.index;
+		reg_size = inst_log1->instruction.dstA.value_size;
+		is_reg = 1;
+	}
+	if (inst_log1->instruction.srcA.index == 
+		inst_log1->instruction.srcB.index) {
+		ssb_same_reg = 1;
+	}
+	if ((inst_log_entry[next1].instruction.srcB.index == reg) &&
+		(inst_log_entry[next1].instruction.dstA.index == reg)) {
+		next1_same_reg = 1;
+	}
+	if ((inst_log_entry[next2].instruction.srcB.index == reg) &&
+		(inst_log_entry[next2].instruction.dstA.index == reg)) {
+		next2_same_reg = 1;
+	}
+
+	if ((*flags_result_used == 0) &&
+		nexts_present &&
+		cmp_sbb_and_add &&
+		is_reg &&
+		ssb_same_reg &&
+		next1_same_reg &&
+		next2_same_reg) {
+		/* cmp_sbb_and_add to icmp_bc */
+		match = 5;
+	} else if ((*flags_result_used == 0) &&
+		nexts_present &&
+		cmp_sbb_add &&
+		is_reg &&
+		ssb_same_reg &&
+		next1_same_reg &&
+		next2_same_reg) {
+		/* cmp_sbb_add to icmp_bc */
+		match = 4;
+	} else if ((*flags_result_used == 0) &&
+		is_reg &&
+		ssb_same_reg) {
+		/* cmd_sbb_to_icmp_sex */
+		match = 3;
+	} else if (*flags_result_used == 0) {
+		/* cmp_ssb_to_icmp_sex_add_sub */
+		match = 2;
+	} else {
+		/* Not yet handled */
+		match = 1;
+	}
+	*n1 = next1;
+	*n2 = next2;
+	*n3 = next3;
+	*sbb_match = match;
+
+	return 0;
+}
+
 int fix_flag_dependency_instructions(struct self_s *self)
 {
 	struct inst_log_entry_s *inst_log1;
@@ -3121,6 +3236,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 	int next1;
 	int next2;
 	int next3;
+	int sbb_match;
+	int flags_result_used;
 	int reg;
 	int reg_size;
 	int new_inst = 0;
@@ -3142,6 +3259,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 		prev = self->flag_dependency[n];
 		next1 = 0;
 		next2 = 0;
+		next3 = 0;
+		sbb_match = 0;
 		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
 		switch (instruction->opcode) {
 		case ADC:
@@ -3149,6 +3268,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 			exit(1);
 			break;
 		case SBB:
+			tmp = matcher_sbb(self, n, &sbb_match, &next1, &next2, &next3, &flags_result_used);
+			debug_print(DEBUG_MAIN, 1, "SBB: match 0x%x\n", sbb_match);
 			if (self->flag_result_users[n] > 0) {
 				for (m = 1; m < max_log; m++) {
 					if (self->flag_dependency[m] == n) {
@@ -3158,154 +3279,113 @@ int fix_flag_dependency_instructions(struct self_s *self)
 				debug_print(DEBUG_MAIN, 1, "flag: NOT HANDLED: SBB leaves users. inst ???? uses flag from inst 0x%x\n", n);
 				exit(1);
 			}
-			if (inst_log1->next_size) {
-				next1 = inst_log1->next[0];
-			}
-			if (inst_log_entry[next1].next_size) {
-				next2 = inst_log_entry[next1].next[0];
-			}
-			if (inst_log_entry[next2].next_size) {
-				next3 = inst_log_entry[next2].next[0];
-			}
-			if ((!prev | !next1 | !next2)) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern1 not handled yet\n");
-				exit(1);
-			}
-			if (!((inst_log_entry[prev].instruction.opcode == CMP) && 
-				(inst_log_entry[next1].instruction.opcode == rAND) && 
-				(inst_log_entry[next2].instruction.opcode == ADD))) { 
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern2 not handled yet\n");
-				exit(1);
-			}
-			/* FIXME: Add check step that there are no other users of the flags */
-			if ((inst_log1->instruction.srcA.store == STORE_REG) &&
-				(inst_log1->instruction.srcA.indirect == IND_DIRECT)) {
-				reg = inst_log1->instruction.srcA.index;
-				reg_size = inst_log1->instruction.srcA.value_size;
-			} else {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern3 not handled yet\n");
-				exit(1);
-			}
-			if (inst_log1->instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern3 not handled yet\n");
-				exit(1);
-			}
-			if (inst_log_entry[next1].instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern4 not handled yet\n");
-				exit(1);
-			}
-			if (inst_log_entry[next1].instruction.dstA.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern5 not handled yet\n");
-				exit(1);
-			}
-			if (inst_log_entry[next2].instruction.srcB.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern6 not handled yet\n");
-				exit(1);
-			}
-			if (inst_log_entry[next2].instruction.dstA.index != reg) {
-				debug_print(DEBUG_MAIN, 1, "flag: SBB pattern7 not handled yet\n");
-				exit(1);
-			}
 			/* Match tests passed. Now do the substitution */
-			working_var1 = inst_log_entry[next1].instruction.srcA.index;
-			working_var2 = inst_log_entry[next2].instruction.srcA.index;
-			working_var3 = working_var1 + working_var2;
-			tmp = insert_nop_after(self, n, &new_inst);
-			debug_print(DEBUG_MAIN, 1, "flag: working_var1 = 0x%"PRIx64", working_var2 = 0x%"PRIx64", working_var3 = 0x%"PRIx64"\n",
-				working_var1,
-				working_var2,
-				working_var3);
-			inst_log_entry[prev].instruction.opcode = ICMP;
-			inst_log_entry[prev].instruction.flags = 0;
-			inst_log_entry[prev].instruction.predicate = LESS;
-			inst_log_entry[prev].instruction.dstA.index = REG_LESS;
-			inst_log_entry[prev].instruction.dstA.store = STORE_REG;
-			inst_log_entry[prev].instruction.dstA.indirect = IND_DIRECT;
-			inst_log_entry[prev].instruction.dstA.relocated = 0;
-			inst_log_entry[prev].instruction.dstA.value_size = 1;
-			inst_log_entry[prev].value3.value_scope =  2;
-			instruction->opcode = BC;
-			instruction->srcA.index = REG_LESS;
-			instruction->srcA.store = STORE_REG;
-			instruction->srcA.indirect = IND_DIRECT;
-			instruction->srcA.relocated = 0;
-			instruction->srcA.value_size = 1;
-			inst_log1->value3.value_scope =  2;
+			switch (sbb_match) {
+			case 5:
+				working_var1 = inst_log_entry[next1].instruction.srcA.index;
+				working_var2 = inst_log_entry[next2].instruction.srcA.index;
+				working_var3 = working_var1 + working_var2;
+				tmp = insert_nop_after(self, n, &new_inst);
+				debug_print(DEBUG_MAIN, 1, "flag: working_var1 = 0x%"PRIx64", working_var2 = 0x%"PRIx64", working_var3 = 0x%"PRIx64"\n",
+					working_var1,
+					working_var2,
+					working_var3);
+				inst_log_entry[prev].instruction.opcode = ICMP;
+				inst_log_entry[prev].instruction.flags = 0;
+				inst_log_entry[prev].instruction.predicate = LESS;
+				inst_log_entry[prev].instruction.dstA.index = REG_LESS;
+				inst_log_entry[prev].instruction.dstA.store = STORE_REG;
+				inst_log_entry[prev].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[prev].instruction.dstA.relocated = 0;
+				inst_log_entry[prev].instruction.dstA.value_size = 1;
+				inst_log_entry[prev].value3.value_scope =  2;
+				instruction->opcode = BC;
+				instruction->srcA.index = REG_LESS;
+				instruction->srcA.store = STORE_REG;
+				instruction->srcA.indirect = IND_DIRECT;
+				instruction->srcA.relocated = 0;
+				instruction->srcA.value_size = 1;
+				inst_log1->value3.value_scope =  2;
+				
+				debug_print(DEBUG_MAIN, 1, "flag: realloc: inst_log1->next_size = 0x%x, %p\n", inst_log1->next_size, inst_log1->next);
+				inst_log1->next = realloc(inst_log1->next, 2 * sizeof(int));
+				debug_print(DEBUG_MAIN, 1, "flag: realloc: inst_log1->next_size = 0x%x, %p\n", inst_log1->next_size, inst_log1->next);
+				
+				inst_log1->next[0] = next2;
+				inst_log1->next[1] = new_inst;
+				inst_log1->next_size = 2;
+	
+				inst_log_entry[new_inst].instruction.opcode = MOV;
+				inst_log_entry[new_inst].instruction.flags = 0;
+				inst_log_entry[new_inst].instruction.predicate = 0;
+				inst_log_entry[new_inst].instruction.srcA.index = working_var3;
+				inst_log_entry[new_inst].instruction.srcA.store = STORE_DIRECT;
+				inst_log_entry[new_inst].instruction.srcA.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.srcA.relocated = 0;
+				inst_log_entry[new_inst].instruction.srcA.value_size = reg_size;
+				inst_log_entry[new_inst].instruction.srcB.index = reg;
+				inst_log_entry[new_inst].instruction.srcB.store = STORE_REG;
+				inst_log_entry[new_inst].instruction.srcB.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.srcB.relocated = 0;
+				inst_log_entry[new_inst].instruction.srcB.value_size = reg_size;
+				inst_log_entry[new_inst].instruction.dstA.index = reg;
+				inst_log_entry[new_inst].instruction.dstA.store = STORE_REG;
+				inst_log_entry[new_inst].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[new_inst].instruction.dstA.relocated = 0;
+				inst_log_entry[new_inst].instruction.dstA.value_size = reg_size;
+				inst_log_entry[new_inst].value3.value_scope =  2;
+
+				inst_log_entry[next1].instruction.opcode = JMP;
+				inst_log_entry[next1].instruction.flags = 0;
+				inst_log_entry[next1].instruction.predicate = 0;
+				inst_log_entry[next1].instruction.srcA.index = working_var2;
+				inst_log_entry[next1].instruction.srcA.store = STORE_DIRECT;
+				inst_log_entry[next1].instruction.srcA.indirect = IND_DIRECT;
+				inst_log_entry[next1].instruction.srcA.relocated = 0;
+				inst_log_entry[next1].instruction.srcA.value_size = reg_size;
+				inst_log_entry[next1].instruction.srcB.index = reg;
+				inst_log_entry[next1].instruction.srcB.store = STORE_REG;
+				inst_log_entry[next1].instruction.srcB.indirect = IND_DIRECT;
+				inst_log_entry[next1].instruction.srcB.relocated = 0;
+				inst_log_entry[next1].instruction.srcB.value_size = reg_size;
+				inst_log_entry[next1].instruction.dstA.index = reg;
+				inst_log_entry[next1].instruction.dstA.store = STORE_REG;
+				inst_log_entry[next1].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[next1].instruction.dstA.relocated = 0;
+				inst_log_entry[next1].instruction.dstA.value_size = reg_size;
+				inst_log_entry[next1].value3.value_scope =  2;
+				inst_log_entry[next1].next[0] = next3;
+				tmp = inst_log_entry[next3].prev_size;
+				inst_log_entry[next3].prev = realloc(inst_log_entry[next3].prev, (tmp +  1) * sizeof(int));
+				inst_log_entry[next3].prev[tmp] = next1;
+				inst_log_entry[next3].prev_size++;
+
+				inst_log_entry[next2].instruction.opcode = MOV;
+				inst_log_entry[next2].instruction.flags = 0;
+				inst_log_entry[next2].instruction.predicate = 0;
+				inst_log_entry[next2].instruction.srcA.index = working_var2;
+				inst_log_entry[next2].instruction.srcA.store = STORE_DIRECT;
+				inst_log_entry[next2].instruction.srcA.indirect = IND_DIRECT;
+				inst_log_entry[next2].instruction.srcA.relocated = 0;
+				inst_log_entry[next2].instruction.srcA.value_size = reg_size;
+				inst_log_entry[next2].instruction.srcB.index = reg;
+				inst_log_entry[next2].instruction.srcB.store = STORE_REG;
+				inst_log_entry[next2].instruction.srcB.indirect = IND_DIRECT;
+				inst_log_entry[next2].instruction.srcB.relocated = 0;
+				inst_log_entry[next2].instruction.srcB.value_size = reg_size;
+				inst_log_entry[next2].instruction.dstA.index = reg;
+				inst_log_entry[next2].instruction.dstA.store = STORE_REG;
+				inst_log_entry[next2].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[next2].instruction.dstA.relocated = 0;
+				inst_log_entry[next2].instruction.dstA.value_size = reg_size;
+				inst_log_entry[next2].value3.value_scope =  2;
+				debug_print(DEBUG_MAIN, 1, "flag: SBB handled\n");
+				break;
+			default:
+				debug_print(DEBUG_MAIN, 1, "flag: SBB NOT HANDLED\n");
+				break;
+			}
 			
-			debug_print(DEBUG_MAIN, 1, "flag: realloc: inst_log1->next_size = 0x%x, %p\n", inst_log1->next_size, inst_log1->next);
-			inst_log1->next = realloc(inst_log1->next, 2 * sizeof(int));
-			debug_print(DEBUG_MAIN, 1, "flag: realloc: inst_log1->next_size = 0x%x, %p\n", inst_log1->next_size, inst_log1->next);
-			
-			inst_log1->next[0] = next2;
-			inst_log1->next[1] = new_inst;
-			inst_log1->next_size = 2;
-
-			inst_log_entry[new_inst].instruction.opcode = MOV;
-			inst_log_entry[new_inst].instruction.flags = 0;
-			inst_log_entry[new_inst].instruction.predicate = 0;
-			inst_log_entry[new_inst].instruction.srcA.index = working_var3;
-			inst_log_entry[new_inst].instruction.srcA.store = STORE_DIRECT;
-			inst_log_entry[new_inst].instruction.srcA.indirect = IND_DIRECT;
-			inst_log_entry[new_inst].instruction.srcA.relocated = 0;
-			inst_log_entry[new_inst].instruction.srcA.value_size = reg_size;
-			inst_log_entry[new_inst].instruction.srcB.index = reg;
-			inst_log_entry[new_inst].instruction.srcB.store = STORE_REG;
-			inst_log_entry[new_inst].instruction.srcB.indirect = IND_DIRECT;
-			inst_log_entry[new_inst].instruction.srcB.relocated = 0;
-			inst_log_entry[new_inst].instruction.srcB.value_size = reg_size;
-			inst_log_entry[new_inst].instruction.dstA.index = reg;
-			inst_log_entry[new_inst].instruction.dstA.store = STORE_REG;
-			inst_log_entry[new_inst].instruction.dstA.indirect = IND_DIRECT;
-			inst_log_entry[new_inst].instruction.dstA.relocated = 0;
-			inst_log_entry[new_inst].instruction.dstA.value_size = reg_size;
-			inst_log_entry[new_inst].value3.value_scope =  2;
-
-			inst_log_entry[next1].instruction.opcode = JMP;
-			inst_log_entry[next1].instruction.flags = 0;
-			inst_log_entry[next1].instruction.predicate = 0;
-			inst_log_entry[next1].instruction.srcA.index = working_var2;
-			inst_log_entry[next1].instruction.srcA.store = STORE_DIRECT;
-			inst_log_entry[next1].instruction.srcA.indirect = IND_DIRECT;
-			inst_log_entry[next1].instruction.srcA.relocated = 0;
-			inst_log_entry[next1].instruction.srcA.value_size = reg_size;
-			inst_log_entry[next1].instruction.srcB.index = reg;
-			inst_log_entry[next1].instruction.srcB.store = STORE_REG;
-			inst_log_entry[next1].instruction.srcB.indirect = IND_DIRECT;
-			inst_log_entry[next1].instruction.srcB.relocated = 0;
-			inst_log_entry[next1].instruction.srcB.value_size = reg_size;
-			inst_log_entry[next1].instruction.dstA.index = reg;
-			inst_log_entry[next1].instruction.dstA.store = STORE_REG;
-			inst_log_entry[next1].instruction.dstA.indirect = IND_DIRECT;
-			inst_log_entry[next1].instruction.dstA.relocated = 0;
-			inst_log_entry[next1].instruction.dstA.value_size = reg_size;
-			inst_log_entry[next1].value3.value_scope =  2;
-			inst_log_entry[next1].next[0] = next3;
-			tmp = inst_log_entry[next3].prev_size;
-			inst_log_entry[next3].prev = realloc(inst_log_entry[next3].prev, (tmp +  1) * sizeof(int));
-			inst_log_entry[next3].prev[tmp] = next1;
-			inst_log_entry[next3].prev_size++;
-
-			inst_log_entry[next2].instruction.opcode = MOV;
-			inst_log_entry[next2].instruction.flags = 0;
-			inst_log_entry[next2].instruction.predicate = 0;
-			inst_log_entry[next2].instruction.srcA.index = working_var2;
-			inst_log_entry[next2].instruction.srcA.store = STORE_DIRECT;
-			inst_log_entry[next2].instruction.srcA.indirect = IND_DIRECT;
-			inst_log_entry[next2].instruction.srcA.relocated = 0;
-			inst_log_entry[next2].instruction.srcA.value_size = reg_size;
-			inst_log_entry[next2].instruction.srcB.index = reg;
-			inst_log_entry[next2].instruction.srcB.store = STORE_REG;
-			inst_log_entry[next2].instruction.srcB.indirect = IND_DIRECT;
-			inst_log_entry[next2].instruction.srcB.relocated = 0;
-			inst_log_entry[next2].instruction.srcB.value_size = reg_size;
-			inst_log_entry[next2].instruction.dstA.index = reg;
-			inst_log_entry[next2].instruction.dstA.store = STORE_REG;
-			inst_log_entry[next2].instruction.dstA.indirect = IND_DIRECT;
-			inst_log_entry[next2].instruction.dstA.relocated = 0;
-			inst_log_entry[next2].instruction.dstA.value_size = reg_size;
-			inst_log_entry[next2].value3.value_scope =  2;
-
-			debug_print(DEBUG_MAIN, 1, "flag: SBB handled\n");
 			//exit(1);
 			break;
 		case IF:
