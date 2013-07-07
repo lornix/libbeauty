@@ -3522,6 +3522,58 @@ int fix_flag_dependency_instructions(struct self_s *self)
 				inst_log1->value3.value_scope =  2;
 				debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependency[n]);
 				break;
+			case ADD:
+				tmp = inst_log1->instruction.srcA.index;
+				if ((tmp == EQUAL) || (tmp == NOT_EQUAL)) {
+					int inst = self->flag_dependency[n];
+					tmp = insert_nop_after(self, inst, &new_inst);
+					reg = inst_log1_flags->instruction.dstA.index;
+					reg_size = inst_log1_flags->instruction.dstA.value_size;
+
+					inst_log_entry[new_inst].instruction.opcode = ICMP;
+					inst_log_entry[new_inst].instruction.flags = 0;
+					inst_log_entry[new_inst].instruction.predicate = inst_log1->instruction.srcA.index;
+					inst_log_entry[new_inst].instruction.srcA.index = 0;
+					inst_log_entry[new_inst].instruction.srcA.store = STORE_DIRECT;
+					inst_log_entry[new_inst].instruction.srcA.indirect = IND_DIRECT;
+					inst_log_entry[new_inst].instruction.srcA.relocated = 0;
+					inst_log_entry[new_inst].instruction.srcA.value_size = reg_size;
+					inst_log_entry[new_inst].instruction.srcB.store =
+						inst_log_entry[inst].instruction.dstA.store;
+					inst_log_entry[new_inst].instruction.srcB.indirect =
+						inst_log_entry[inst].instruction.dstA.indirect;
+					inst_log_entry[new_inst].instruction.srcB.indirect_size =
+						inst_log_entry[inst].instruction.dstA.indirect_size;
+					inst_log_entry[new_inst].instruction.srcB.index =
+						inst_log_entry[inst].instruction.dstA.index;
+					inst_log_entry[new_inst].instruction.srcB.relocated =
+						inst_log_entry[inst].instruction.dstA.relocated;
+					inst_log_entry[new_inst].instruction.srcB.value_size =
+						inst_log_entry[inst].instruction.dstA.value_size;
+
+					inst_log_entry[new_inst].instruction.dstA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+					inst_log_entry[new_inst].instruction.dstA.store = STORE_REG;
+					inst_log_entry[new_inst].instruction.dstA.indirect = IND_DIRECT;
+					inst_log_entry[new_inst].instruction.dstA.relocated = 0;
+					inst_log_entry[new_inst].instruction.dstA.value_size = 1;
+					inst_log_entry[new_inst].value3.value_scope =  2;
+
+					/* FIXME: fill in rest of instruction dstA and then its value3 */
+					instruction->opcode = BC;
+					instruction->srcA.index = REG_OVERFLOW + inst_log1->instruction.srcA.index;
+					instruction->srcA.store = STORE_REG;
+					instruction->srcA.indirect = IND_DIRECT;
+					instruction->srcA.relocated = 0;
+					instruction->srcA.value_size = 1;
+					inst_log1->value3.value_scope =  2;
+					debug_print(DEBUG_MAIN, 1, "Pair of instructions adjusted. inst 0x%x:0x%x\n", n, self->flag_dependency[n]);
+				} else {
+					debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x OP:ADD:0x%x:PRED=0x%"PRIx64"\n",
+						n,
+						inst_log1_flags->instruction.opcode,
+						inst_log1->instruction.srcA.index);
+				}
+				break;
 
 
 			default:

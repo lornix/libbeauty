@@ -1256,8 +1256,8 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = fprintf(fd, "\t");
-			debug_print(DEBUG_OUTPUT, 1, "if ");
-			tmp = fprintf(fd, "if ");
+			debug_print(DEBUG_OUTPUT, 1, "if1 ");
+			tmp = fprintf(fd, "if1 ");
 			found = 0;
 			tmp = 30; /* Limit the scan backwards */
 			l = inst_log1->prev[0];
@@ -1313,10 +1313,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = fprintf(fd, "\t");
 			debug_print(DEBUG_OUTPUT, 1, "if (");
 			tmp = fprintf(fd, "if (");
-			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
-			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
-			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
-			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
+//			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
+//			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
+//			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
+//			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
 			if (1 == instruction->srcA.indirect) {
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
