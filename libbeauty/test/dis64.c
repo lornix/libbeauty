@@ -3248,7 +3248,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 	int max_log;
 
 	/* Use max_log and not inst_log in case inst_log changes when adding nop instructions */
-	max_log = inst_log;
+	max_log = self->flag_dependency_size;
+	debug_print(DEBUG_MAIN, 1, "flag: MAX_LOG = 0x%x\n", max_log);
 
 	for (n = 1; n < max_log; n++) {
 		if (!self->flag_dependency[n]) {
@@ -3583,7 +3584,8 @@ int fix_flag_dependency_instructions(struct self_s *self)
 			}
 			break;
 		default:
-			debug_print(DEBUG_MAIN, 1, "flag: UNKNOWNN:0x%x not handled yet\n", instruction->opcode);
+			debug_print(DEBUG_MAIN, 1, "flag: UNKNOWNN:0x%x not handled yet. inst 0x%x:0x%x\n",
+				instruction->opcode, n, self->flag_dependency[n]);
 			exit(1);
 			break;
 		}
@@ -3594,7 +3596,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 int print_flag_dependency_table(struct self_s *self)
 {
 	int n;
-	for (n = 1; n < inst_log; n++) {
+	for (n = 1; n < self->flag_dependency_size; n++) {
 		if (self->flag_dependency[n]) {
 			debug_print(DEBUG_MAIN, 1, "FLAGS: Inst 0x%x linked to previous Inst 0x%x:0x%x\n", n, self->flag_dependency[n], self->flag_dependency_opcode[n]);
 		}
