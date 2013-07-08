@@ -3026,7 +3026,6 @@ int build_flag_dependency_table(struct self_s *self)
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
-	int *flagged = self->flag_result_users;
 	int l,n;
 	int found;
 	int tmp;
@@ -3034,7 +3033,7 @@ int build_flag_dependency_table(struct self_s *self)
 	int inst_max = self->flag_dependency_size;
 
 	for (n = 1; n < inst_max; n++) {
-		flagged[n] = 0;
+		self->flag_result_users[n] = 0;
 	}
 
 	for (n = 1; n < inst_max; n++) {
@@ -3071,7 +3070,7 @@ int build_flag_dependency_table(struct self_s *self)
 				return 1;
 			} else {
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
-				if (flagged[l] > 0) {
+				if (self->flag_result_users[l] > 0) {
 					if (inst_log_entry[l].instruction.opcode != CMP) {
 						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP. Opcode = 0x%x\n",
 							inst_log_entry[l].instruction.opcode);
@@ -3083,11 +3082,19 @@ int build_flag_dependency_table(struct self_s *self)
 					tmp = substitute_inst(self, l, new_inst);
 					self->flag_dependency[n] = new_inst;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
-					flagged[new_inst]++;
+					self->flag_result_users[new_inst]++;
+					if (new_inst > 0xe20) {
+						debug_print(DEBUG_MAIN, 1, "ADDING NEW INST 0x%x, flagged = 0x%x, flag_dep_size = 0x%x\n",
+							new_inst, self->flag_result_users[new_inst], self->flag_dependency_size);
+					}
 				} else {		
 					self->flag_dependency[n] = l;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
-					flagged[l]++;
+					self->flag_result_users[l]++;
+					if (l > 0xe20) {
+						debug_print(DEBUG_MAIN, 1, "ADDING FLAGGED 0x%x, flagged = 0x%x, flag_dep_size = 0x%x\n",
+							l, self->flag_result_users[l], self->flag_dependency_size);
+					}
 				}
 			}
 			break;
@@ -3097,12 +3104,12 @@ int build_flag_dependency_table(struct self_s *self)
 	}
 	found = 0;
 	for (n = 1; n < inst_max; n++) {
-		if (flagged[n] > 1) {
-			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, flagged[n]);
+		if (self->flag_result_users[n] > 1) {
+			debug_print(DEBUG_MAIN, 1, "Duplicate Previous flags instruction found. inst 0x%x:0x%x\n", n, self->flag_result_users[n]);
 			found = 1;
 		}
-		if (flagged[n] > 0) {
-			debug_print(DEBUG_MAIN, 1, "FLAG RESULT USED. inst 0x%x:0x%x opcode=0x%x\n", n, flagged[n], inst_log_entry[n].instruction.opcode);
+		if (self->flag_result_users[n] > 0) {
+			debug_print(DEBUG_MAIN, 1, "FLAG RESULT USED. inst 0x%x:0x%x opcode=0x%x\n", n, self->flag_result_users[n], inst_log_entry[n].instruction.opcode);
 		}
 
 	}
@@ -3616,6 +3623,15 @@ int insert_nop_before(struct self_s *self, int inst, int *new_inst)
 	inst_new = inst_log;
 	inst_log1_new = &inst_log_entry[inst_new];
 	inst_log++;
+	self->flag_dependency = realloc(self->flag_dependency, (inst_log) * sizeof(int));
+	self->flag_dependency[inst_log - 1] = 0;
+	self->flag_dependency_opcode = realloc(self->flag_dependency_opcode, (inst_log) * sizeof(int));
+	self->flag_dependency_opcode[inst_log - 1] = 0;
+	self->flag_result_users = realloc(self->flag_result_users, (inst_log) * sizeof(int));
+	self->flag_result_users[inst_log - 1] = 0;
+	debug_print(DEBUG_MAIN, 1, "INFO: Insert nop before: Old dep size = 0x%x, new dep size = 0x%"PRIx64"\n", self->flag_dependency_size, inst_log);
+	debug_print(DEBUG_MAIN, 1, "INFO: Setting flag_result_users[0x%"PRIx64"] = 0\n", inst_log - 1);
+	self->flag_dependency_size = inst_log;
 
 	inst_log1_new->instruction.opcode = NOP;
         inst_log1_new->instruction.flags = 0;
@@ -3676,6 +3692,14 @@ int insert_nop_after(struct self_s *self, int inst, int *new_inst)
 	}
 	inst_log1_new = &inst_log_entry[inst_log];
 	inst_log++;
+	self->flag_dependency = realloc(self->flag_dependency, (inst_log) * sizeof(int));
+	self->flag_dependency[inst_log - 1] = 0;
+	self->flag_dependency_opcode = realloc(self->flag_dependency_opcode, (inst_log) * sizeof(int));
+	self->flag_dependency_opcode[inst_log - 1] = 0;
+	self->flag_result_users = realloc(self->flag_result_users, (inst_log) * sizeof(int));
+	self->flag_result_users[inst_log - 1] = 0;
+	debug_print(DEBUG_MAIN, 1, "INFO: Insert nop after: Old dep size = 0x%x, new dep size = 0x%"PRIx64"\n", self->flag_dependency_size, inst_log);
+	self->flag_dependency_size = inst_log;
 
 	inst_log1_new->instruction.opcode = NOP;
         inst_log1_new->instruction.flags = 0;
@@ -4007,11 +4031,29 @@ int main(int argc, char *argv[])
 	self->flag_dependency_opcode = calloc(inst_log, sizeof(int));
 	self->flag_result_users = calloc(inst_log, sizeof(int));
 	self->flag_dependency_size = inst_log;
+	debug_print(DEBUG_MAIN, 1, "got here I-0\n");
+	debug_print(DEBUG_MAIN, 1, "INFO: flag_dep_size initialised to 0x%"PRIx64"\n", inst_log);
+	if (inst_log > 0xe2c) {
+		debug_print(DEBUG_MAIN, 1, "INFO: flag_result_users 0xe2c = 0x%x\n", self->flag_result_users[0xe2c]);
+	}
 	debug_print(DEBUG_MAIN, 1, "start build_flag_dependency_table\n");
 	tmp = build_flag_dependency_table(self);
+	debug_print(DEBUG_MAIN, 1, "got here I-1\n");
+	if (inst_log > 0xe2c) {
+		debug_print(DEBUG_MAIN, 1, "INFO: flag_result_users 0xe2c = 0x%x\n", self->flag_result_users[0xe2c]);
+	}
+	debug_print(DEBUG_MAIN, 1, "got here I-2\n");
 	debug_print(DEBUG_MAIN, 1, "start print_flag_dependency_table\n");
 	tmp = print_flag_dependency_table(self);
+	debug_print(DEBUG_MAIN, 1, "got here I-3\n");
+	if (inst_log > 0xe2c) {
+		debug_print(DEBUG_MAIN, 1, "INFO: flag_result_users 0xe2c = 0x%x\n", self->flag_result_users[0xe2c]);
+	}
+	debug_print(DEBUG_MAIN, 1, "got here I-4\n");
 	tmp = fix_flag_dependency_instructions(self);
+	if (inst_log > 0xe2c) {
+		debug_print(DEBUG_MAIN, 1, "INFO: flag_result_users 0xe2c = 0x%x\n", self->flag_result_users[0xe2c]);
+	}
 	//tmp = insert_nop_after(self, 4);
 	print_dis_instructions(self);
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
@@ -4022,11 +4064,12 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "got here 1\n");
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-		if (external_entry_points[l].valid) {
+		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
 			tmp = find_node_from_inst(self, nodes, &nodes_size, external_entry_points[l].inst_log);
 			if (tmp == 0) {
-				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x]:start inst = 0x%"PRIx64", start node = 0x%x\n",
+				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x:%s]:start inst = 0x%"PRIx64", start node = 0x%x\n",
 					l,
+					external_entry_points[l].name,
 					external_entry_points[l].inst_log,
 					external_entry_points[l].start_node);
 				exit(1);
