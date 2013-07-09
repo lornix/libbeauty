@@ -4138,6 +4138,9 @@ int main(int argc, char *argv[])
 			tmp = build_control_flow_paths(self, nodes, &nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 			debug_print(DEBUG_MAIN, 1, "tmp = %d, PATHS used = %d\n", tmp, paths_used);
+			if (tmp) {
+				exit(1);
+			}
 			tmp = analyse_multi_ret(self, paths, &paths_size, &multi_ret_size, &multi_ret);
 			if (multi_ret_size) {
 				debug_print(DEBUG_MAIN, 1, "tmp = %d, multi_ret_size = %d\n", tmp, multi_ret_size);
@@ -4160,7 +4163,12 @@ int main(int argc, char *argv[])
 			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size, l + 1);
 
 			external_entry_points[l].paths_size = paths_used;
+
 			external_entry_points[l].paths = calloc(paths_used, sizeof(struct path_s));
+			if (0 == paths_used) {
+				debug_print(DEBUG_MAIN, 1, "INFO: paths_used = 0, %s, %p\n", external_entry_points[l].name, external_entry_points[l].paths);
+				exit(1);
+			}
 			for (n = 0; n < paths_used; n++) {
 				external_entry_points[l].paths[n].used = paths[n].used;
 				external_entry_points[l].paths[n].path_prev = paths[n].path_prev;
