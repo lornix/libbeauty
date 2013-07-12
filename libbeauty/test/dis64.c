@@ -3486,7 +3486,26 @@ int fix_flag_dependency_instructions(struct self_s *self)
 				inst_log_entry[next2].instruction.dstA.relocated = 0;
 				inst_log_entry[next2].instruction.dstA.value_size = reg_size;
 				inst_log_entry[next2].value3.value_scope =  2;
-				debug_print(DEBUG_MAIN, 1, "flag: SBB handled\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB 5 handled\n");
+				break;
+			case 3:
+				inst_log_entry[prev].instruction.opcode = ICMP;
+				inst_log_entry[prev].instruction.flags = 0;
+				inst_log_entry[prev].instruction.predicate = BELOW;
+				inst_log_entry[prev].instruction.dstA.index = REG_BELOW;
+				inst_log_entry[prev].instruction.dstA.store = STORE_REG;
+				inst_log_entry[prev].instruction.dstA.indirect = IND_DIRECT;
+				inst_log_entry[prev].instruction.dstA.relocated = 0;
+				inst_log_entry[prev].instruction.dstA.value_size = 1;
+				inst_log_entry[prev].value3.value_scope =  2;
+				instruction->opcode = SEX;
+				instruction->flags = 0;
+				instruction->srcA.index = REG_BELOW;
+				instruction->srcA.store = STORE_REG;
+				instruction->srcA.indirect = IND_DIRECT;
+				instruction->srcA.relocated = 0;
+				instruction->srcA.value_size = 1;
+				debug_print(DEBUG_MAIN, 1, "flag: SBB 3 handled\n");
 				break;
 			default:
 				debug_print(DEBUG_MAIN, 1, "flag: SBB 0x%x NOT HANDLED\n", sbb_match);
