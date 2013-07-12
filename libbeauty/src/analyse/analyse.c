@@ -125,18 +125,29 @@ int node_mid_start_add(struct control_flow_node_s *node, struct node_mid_start_s
 	int n;
 	int limit = node->next_size;
 	int index = 1;
+	int used = 0;
 
 	for (n = 0; n < 1000; n++) {
 		if (node_mid_start[n].node == 0) {
 			node_mid_start[n].node = node->link_next[index].node;
 			node_mid_start[n].path_prev = path;
 			node_mid_start[n].path_prev_index = step;
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: node_mid_start_add: node 0x%x, path_prev 0x%x, path_prev_index 0x%x\n",
+				node_mid_start[n].node,
+				node_mid_start[n].path_prev,
+				node_mid_start[n].path_prev_index);
 			index++;
 			if (index >= limit) {
 				break;
 			}
 		}
 	}
+	for (n = 0; n < 1000; n++) {
+		if (node_mid_start[n].node != 0) {
+			used++;
+		}
+	}
+	debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: node_mid_start_add: node_mid_start used 0x%x\n", used);
 	return 0;
 }
 
@@ -955,7 +966,11 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			paths[path].path[step] = node;
 			paths[path].path_prev = node_mid_start[n].path_prev;
 			paths[path].path_prev_index = node_mid_start[n].path_prev_index;
-			debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: path 0x%x:0x%x, 0x%x\n", path, step, node_mid_start[n].node);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD1: path 0x%x starting from mid_start: node 0x%x, path_prev 0x%x, path_prev_index 0x%x\n",
+				path,
+				node_mid_start[n].node,
+				node_mid_start[n].path_prev,
+				node_mid_start[n].path_prev_index);
 			node_mid_start[n].node = 0;
 			step++;
 			loop = 0;
@@ -1007,7 +1022,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 					step++;
 				} else if (nodes[node].next_size > 1) {
 					tmp = node_mid_start_add(&nodes[node], node_mid_start, path, step - 1);
-					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD3: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
+					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD3: node_mid_start added: path 0x%x:0x%x, 0x%x -> 0x%x\n", path, step, node, nodes[node].link_next[0].node);
 					node = nodes[node].link_next[0].node;
 					paths[path].path[step] = node;
 					step++;

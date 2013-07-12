@@ -1579,6 +1579,108 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	return 0;
 }
 
+int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+{
+	struct external_entry_point_s *external_entry_points = self->external_entry_points;
+	char *filename;
+	FILE *fd;
+	int node;
+	int tmp;
+	int n;
+	int m;
+	int member;
+	int block_end;
+	int node_size_limited;
+	const char *font = "graph.font";
+	const char *color;
+	const char *name;
+	int value_id;
+
+	filename = calloc(1024, sizeof(char));
+	tmp = snprintf(filename, 1024, "./cfg/basic.dot");
+
+	fd = fopen(filename, "w");
+	if (!fd) {
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+		return 1;
+	}
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
+	tmp = fprintf(fd, "digraph code {\n"
+		"\tgraph [bgcolor=white];\n"
+		"\tnode [color=lightgray, style=filled shape=box"
+		" fontname=\"%s\" fontsize=\"8\"];\n", font);
+	node_size_limited = *node_size;
+
+	for (node = 1; node < *node_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
+		if (node == external_entry_points[nodes[node].entry_point - 1].start_node) {
+			name = external_entry_points[nodes[node].entry_point - 1].name;
+		} else {
+			name = "";
+		}
+		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
+                                        node,
+					node, "lightgray", node, name);
+		tmp = fprintf(fd, "type = 0x%x\\l",
+				nodes[node].type);
+		if (nodes[node].if_tail) {
+			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+				nodes[node].if_tail);
+		}
+		tmp = fprintf(fd, "\"];\n");
+
+		for (n = 0; n < nodes[node].next_size; n++) {
+			char *label;
+			if (nodes[node].next_size < 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
+				} else {
+					color = "blue";
+				}
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color);
+			} else if (nodes[node].next_size == 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
+				} else if (0 == n) {
+					color = "red";
+				} else {
+					color = "green";
+				}
+				if (0 == n) {
+					label = "false";
+				} else {
+					label = "true";
+				}
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color, label);
+			} else {
+				/* next_size > 2 */
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+					node, nodes[node].link_next[n].node, color, n);
+			}
+		}
+	}
+	tmp = fprintf(fd, "}\n");
+	fclose(fd);
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
 int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_node_s *nodes, int *node_size)
 {
 	struct ast_container_s *ast_container = ast->ast_container;
@@ -3768,7 +3870,7 @@ int main(int argc, char *argv[])
 	struct control_flow_node_s *nodes;
 	int nodes_size;
 	struct path_s *paths;
-	int paths_size = 20000;
+	int paths_size = 300000;
 	struct loop_s *loops;
 	int loops_size = 2000;
 	struct ast_s *ast;
@@ -4016,6 +4118,7 @@ int main(int argc, char *argv[])
 	}
 */
 	//inst_log--;
+	debug_print(DEBUG_MAIN, 1, "EXE FINISHED\n");
 	debug_print(DEBUG_MAIN, 1, "Instructions=%"PRId64", entry_point_list_length=%"PRId64"\n",
 		inst_log,
 		self->entry_point_list_length);
@@ -4082,6 +4185,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	tmp = output_cfg_dot_basic(self, nodes, &nodes_size);
 	paths = calloc(paths_size, sizeof(struct path_s));
 	for (n = 0; n < paths_size; n++) {
 		paths[n].path = calloc(1000, sizeof(int));
@@ -4139,6 +4243,7 @@ int main(int argc, char *argv[])
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 			debug_print(DEBUG_MAIN, 1, "tmp = %d, PATHS used = %d\n", tmp, paths_used);
 			if (tmp) {
+				debug_print(DEBUG_MAIN, 1, "Failed at external entry point %d:%s\n", l, external_entry_points[l].name);
 				exit(1);
 			}
 			tmp = analyse_multi_ret(self, paths, &paths_size, &multi_ret_size, &multi_ret);
