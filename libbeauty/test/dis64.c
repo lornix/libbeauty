@@ -1587,14 +1587,10 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 	int node;
 	int tmp;
 	int n;
-	int m;
-	int member;
-	int block_end;
 	int node_size_limited;
 	const char *font = "graph.font";
 	const char *color;
 	const char *name;
-	int value_id;
 
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/basic.dot");
@@ -3317,7 +3313,7 @@ int matcher_sbb(struct self_s *self, int inst, int *sbb_match, int *n1, int *n2,
 	} else if ((*flags_result_used == 0) &&
 		is_reg &&
 		ssb_same_reg) {
-		/* cmd_sbb_to_icmp_sex */
+		/* cmp_sbb_to_icmp_sex */
 		match = 3;
 	} else if (*flags_result_used == 0) {
 		/* cmp_ssb_to_icmp_sex_add_sub */
@@ -3375,7 +3371,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 		debug_print(DEBUG_MAIN, 1, "flag user inst 0x%x OP:0x%x\n", n, instruction->opcode);
 		switch (instruction->opcode) {
 		case ADC:
-			debug_print(DEBUG_MAIN, 1, "flag: ADC not handled yet\n");
+			debug_print(DEBUG_MAIN, 1, "flag: ADC NOT HANDLED yet\n");
 			exit(1);
 			break;
 		case SBB:
@@ -3493,7 +3489,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 				debug_print(DEBUG_MAIN, 1, "flag: SBB handled\n");
 				break;
 			default:
-				debug_print(DEBUG_MAIN, 1, "flag: SBB NOT HANDLED\n");
+				debug_print(DEBUG_MAIN, 1, "flag: SBB 0x%x NOT HANDLED\n", sbb_match);
 				break;
 			}
 			
@@ -3693,7 +3689,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 			}
 			break;
 		default:
-			debug_print(DEBUG_MAIN, 1, "flag: UNKNOWNN:0x%x not handled yet. inst 0x%x:0x%x\n",
+			debug_print(DEBUG_MAIN, 1, "flag: UNKNOWNN:0x%x NOT HANDLED yet. inst 0x%x:0x%x\n",
 				instruction->opcode, n, self->flag_dependency[n]);
 			exit(1);
 			break;
