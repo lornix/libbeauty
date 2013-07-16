@@ -37,22 +37,24 @@ int find_function_member_node(struct self_s *self, struct external_entry_point_s
 
 extern "C" int llvm_export(struct self_s *self) {
 	LLVMContext Context;
-	const char *Path = "test_llvm_export.bc";
 	const char *function_name = "test123";
+	char output_filename[512];
 	int n;
 	int m;
 	int l;
 	int tmp;
+	
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	struct control_flow_node_s *nodes = self->nodes;
 	int nodes_size = self->nodes_size;
 	
-	Module *M = new Module("test_llvm_export", Context);
-
 	for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
 		if ((external_entry_points[n].valid != 0) &&
+			(external_entry_points[n].type == 1) && 
 			(external_entry_points[n].member_nodes_size)) {
+			Module *M = new Module("test_llvm_export", Context);
 			function_name = external_entry_points[n].name;
+			snprintf(output_filename, 500, "./llvm/%s.bc", function_name);
 			FunctionType *FT =
 				FunctionType::get(Type::getInt32Ty(Context), /*not vararg*/false);
 
@@ -128,6 +130,14 @@ extern "C" int llvm_export(struct self_s *self) {
 					}
 				}
 			}
+			std::string ErrorInfo;
+			raw_fd_ostream OS(output_filename, ErrorInfo, raw_fd_ostream::F_Binary);
+
+			if (!ErrorInfo.empty())
+				return -1;
+
+			WriteBitcodeToFile(M, OS);
+			delete M;
 
 			//Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult", bb[1]);
 			//BranchInst::Create(bb[2], bb[1]);			
@@ -135,13 +145,5 @@ extern "C" int llvm_export(struct self_s *self) {
 		}
 	}
 
-	std::string ErrorInfo;
-	raw_fd_ostream OS(Path, ErrorInfo, raw_fd_ostream::F_Binary);
-
-	if (!ErrorInfo.empty())
-		return -1;
-
-	WriteBitcodeToFile(M, OS);
-	delete M;
 	return 0;
 }
