@@ -35,6 +35,45 @@ int find_function_member_node(struct self_s *self, struct external_entry_point_s
 	return found;
 }
 
+int add_instruction(struct self_s *self, BasicBlock *bb, int inst)
+{
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
+	switch (inst_log1->instruction.opcode) {
+	default:
+		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
+		break;
+	}
+
+	return 0;
+} 
+
+int add_node_instructions(struct self_s *self, BasicBlock *bb, int node, int external_entry) 
+{
+	struct inst_log_entry_s *inst_log1;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct control_flow_node_s *nodes = self->nodes;
+	int nodes_size = self->nodes_size;
+	int l,m,n;
+	int inst;
+	int inst_next;
+
+	printf("LLVM Node 0x%x\n", node);
+	inst = nodes[node].inst_start;
+	inst_next = inst;
+
+	do {
+		inst = inst_next;
+		inst_log1 =  &inst_log_entry[inst];
+		add_instruction(self, bb, inst);
+		if (inst_log1->next_size > 0) {
+			inst_next = inst_log1->next[0];
+		}
+	} while ((inst != nodes[node].inst_end) && (inst_log1->next_size != 0));
+
+	return 0;
+}
+
 extern "C" int llvm_export(struct self_s *self) {
 	LLVMContext Context;
 	const char *function_name = "test123";
@@ -76,6 +115,10 @@ extern "C" int llvm_export(struct self_s *self) {
 			for (m = 0; m < external_entry_points[n].member_nodes_size; m++) {
 				int node = external_entry_points[n].member_nodes[m];
 				printf("LLVM: node=0x%x, m=0x%x\n", node, m);
+				/* FIXME: Output PHI instructions first */
+				/* FIXME: Output instuctions within the node */
+				add_node_instructions(self, bb[m], node, n);
+				/* FIXME: Output terminator instructions */
 				if (nodes[node].next_size == 0) {
 					printf("NEXT0 FOUND Add, Ret3\n");
 					Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult3", bb[m]);
