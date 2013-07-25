@@ -1595,7 +1595,7 @@ int get_value_from_index(struct operand_s *operand, uint64_t *index)
  * This function uses information from instruction log entries
  * and creates labels.
  ************************************************************/
-int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
+int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
 	//int tmp;
 
 	/* FIXME: May handle by using first switch as switch (indirect) */
@@ -1663,7 +1663,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 				label->scope = 1;
 				label->type = 2;
 				label->lab_pointer = 0;
-				label->value = value_id;
+				label->value = -indirect_offset_value;
 			} else if (0 == indirect) {
 				label->scope = 1;
 				label->type = 1;
@@ -1702,6 +1702,11 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 		return 1;
 		break;
 	}
+	debug_print(DEBUG_ANALYSE, 1, "label in log_to_label: scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", lab_value = 0x%"PRIx64"\n",
+		label->scope,
+		label->type,
+		label->lab_pointer,
+		label->value);
 	return 0;
 }
 

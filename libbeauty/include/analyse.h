@@ -38,7 +38,7 @@ extern int analyse_control_flow_node_links(struct self_s *self, struct control_f
 extern int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int **multi_ret);
 extern int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int node_a, int node_b);
 extern int get_value_from_index(struct operand_s *operand, uint64_t *index);
-extern int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label);
+extern int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label);
 extern int register_label(struct external_entry_point_s *entry_point, uint64_t value_id,
 	struct memory_s *value, struct label_redirect_s *label_redirect, struct label_s *labels);
 extern int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_point_s *entry_point,

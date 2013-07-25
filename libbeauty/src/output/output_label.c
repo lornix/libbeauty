@@ -99,7 +99,7 @@ int output_label(struct label_s *label, FILE *fd) {
 	case 1:
 		switch (label->type) {
 		case 2:
-			debug_print(DEBUG_OUTPUT, 1, "local_stack%04"PRIx64,
+			debug_print(DEBUG_OUTPUT, 1, "local_stack%04"PRIx64"\n",
 				label->value);
 			tmp = fprintf(fd, "local_stack%04"PRIx64,
 				label->value);

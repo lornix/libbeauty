@@ -4484,7 +4484,7 @@ int main(int argc, char *argv[])
 		struct label_s label;
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
