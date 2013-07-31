@@ -4174,13 +4174,14 @@ int main(int argc, char *argv[])
 	}
 	//tmp = insert_nop_after(self, 4);
 	print_dis_instructions(self);
+	/* Build the control flow nodes from the instructions. */
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
 //	print_dis_instructions(self);
 //	exit(1);
 	debug_print(DEBUG_MAIN, 1, "got here 1\n");
-
+	/* enter the start node into each external_entry_point */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
 			tmp = find_node_from_inst(self, nodes, &nodes_size, external_entry_points[l].inst_log);
@@ -4199,7 +4200,19 @@ int main(int argc, char *argv[])
 				external_entry_points[l].start_node);
 		}
 	}
-
+	/* extract the nodes from the global nodes list and assign them to each external_entry point.
+	 * extract the instructions from the global instruction log and assign them to each external_entry_point.
+	 * This will permit future optimizations, allowing processing of each external_entry point in parallel. */
+	/* This will also permit early complexity analysis by gathering the number of branches in each function
+	 * and multiplying them together. This will give the number of required "paths". */
+	/* This will also permit a labels table per function, so local varibales in one function
+	 * can have the same label as a local varibale in another function because they have no overlapping scope.
+	 * This is particularly useful for stack variables naming and their subsequent representation in LLVM IR.
+	 */
+	/* TODO */
+	/* tmp = create_node_members() mapping from nodes in externel_entry_point to the global nodes list. */
+	/* tmp = assign_nodes_to_external_entry_points(mapping); */
+	
 	tmp = output_cfg_dot_basic(self, nodes, &nodes_size);
 	paths = calloc(paths_size, sizeof(struct path_s));
 	for (n = 0; n < paths_size; n++) {
