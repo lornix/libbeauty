@@ -223,8 +223,12 @@ struct external_entry_point_s {
 	struct path_s *paths;
 	int loops_size;
 	struct loop_s *loops;
+	int nodes_size;
+	struct control_flow_node_s *nodes;
 	int member_nodes_size; 
-	int *member_nodes; /* A list of all the nodes that are part of this function */
+	/* A list of all the global nodes that are part of this function */
+	/* Provides a mapping between the global nodes list and the function nodes list. */
+	int *member_nodes;
 	int start_ast_container;
 	/* FIXME: add function return type and param types */
 };
