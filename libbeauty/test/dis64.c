@@ -3843,6 +3843,80 @@ int insert_nop_after(struct self_s *self, int inst, int *new_inst)
 	return 0;
 }
 
+int create_function_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point)
+{
+	int m, n;
+	int global_nodes_size = self->nodes_size;
+	struct control_flow_node_s *global_nodes = self->nodes;
+	int member_nodes_size;
+	int *member_nodes;
+	int *node_list;
+	int found = 0;
+	int count = 1;
+	int node;
+	int next_node;
+	int tmp;
+
+	struct mid_node_s {
+		int node;
+		int valid;
+	};
+	struct mid_node_s *mid_node;
+
+	
+	node_list = calloc(global_nodes_size, sizeof(int));
+	mid_node = calloc(100, sizeof(struct mid_node_s));
+
+	mid_node[0].node = external_entry_point->start_node;
+	mid_node[0].valid = 1;
+
+	do {
+		for (n = 0; n < 100; n++) {
+			if (mid_node[n].valid == 1) {
+				node = mid_node[n].node;
+				mid_node[n].valid = 0;
+				break;
+			}
+		}
+		if (n == 100) {
+			/* finished */
+			found = 1;
+			break;
+		}	
+		if (node_list[node] == 0) {
+			node_list[node] = count;
+			count++;
+		}
+		for (n = 0; n < global_nodes[node].next_size; n++) {
+			next_node = global_nodes[node].link_next[n].node;
+			if (node_list[next_node] == 0) {
+				for (m = 0; m < 100; m++) {
+					if (mid_node[m].valid == 0) {
+						mid_node[m].node = next_node;
+						mid_node[m].valid = 1;
+						break;
+					}
+				}
+			}
+		}
+	} while (found == 0);
+	member_nodes = calloc(count, sizeof(int));
+	member_nodes_size = count;
+	for (n = 1; n <= global_nodes_size; n++) {
+		tmp = node_list[n];
+		if (tmp != 0 && tmp < member_nodes_size) {
+			member_nodes[tmp] = n;
+		}
+	}
+#if 0
+	printf("function: %s\n", external_entry_point->name);
+	for (n = 1; n < member_nodes_size; n++) {
+		printf("Node=0x%x\n", member_nodes[n]);
+	}
+#endif
+
+	return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -4209,8 +4283,13 @@ int main(int argc, char *argv[])
 	 * can have the same label as a local varibale in another function because they have no overlapping scope.
 	 * This is particularly useful for stack variables naming and their subsequent representation in LLVM IR.
 	 */
+	/* tmp = create_function_node_members() mapping from nodes in externel_entry_point to the global nodes list. */
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
+			tmp = create_function_node_members(self, &external_entry_points[l]);
+		}
+	}
 	/* TODO */
-	/* tmp = create_node_members() mapping from nodes in externel_entry_point to the global nodes list. */
 	/* tmp = assign_nodes_to_external_entry_points(mapping); */
 	
 	tmp = output_cfg_dot_basic(self, nodes, &nodes_size);
