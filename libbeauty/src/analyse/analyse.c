@@ -99,7 +99,7 @@ int tidy_inst_log(struct self_s *self)
 	return 0;
 }
 
-int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int inst)
+int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1;
@@ -350,7 +350,7 @@ int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow
 }
 
 int build_control_flow_loops_node_members(struct self_s *self,
-	struct control_flow_node_s *nodes, int *nodes_size,
+	struct control_flow_node_s *nodes, int nodes_size,
 	struct loop_s *loops, int *loops_size)
 {
 	int n, m;
@@ -480,14 +480,14 @@ is_subset_exit:
 	return result;
 }
 
-int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
+int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int n,m;
 	int node_b = 1;
 	int tmp;
 	//int type;
 
-	for(n = 1; n <= *nodes_size; n++) {
+	for(n = 1; n <= nodes_size; n++) {
 		node_b = n;
 		while (node_b != 0) {
 			tmp = 0;
@@ -522,12 +522,12 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 	return 0;
 }
 
-int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
+int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int n;
 	int type = 0;
 
-	for(n = 1; n <= *nodes_size; n++) {
+	for(n = 1; n <= nodes_size; n++) {
 		type = 0;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
@@ -660,7 +660,7 @@ int find_node_at_index_in_path(struct self_s *self, struct path_s *paths, int pa
 	return 0;
 }
 
-int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
+int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int n,m;
 	int node_b = 1;
@@ -677,7 +677,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int loops_size;
 	struct loop_s *loops;
 
-	for(n = 1; n <= *nodes_size; n++) {
+	for(n = 1; n <= nodes_size; n++) {
 		start_node = n;
 		if (!nodes[start_node].valid) {
 			continue;
@@ -897,7 +897,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 }
 
 
-int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size, int entry_point)
+int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int entry_point)
 
 {
 	int l;
@@ -932,7 +932,7 @@ int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int
 	return 0;
 }
 
-int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start)
+int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start)
 {
 	struct node_mid_start_s *node_mid_start;
 	int found = 0;
@@ -975,7 +975,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 			step++;
 			loop = 0;
 			do {
-				loop = path_loop_check(paths, path, step - 1, node, *nodes_size);
+				loop = path_loop_check(paths, path, step - 1, node, nodes_size);
 
 				if (loop) {
 					debug_print(DEBUG_ANALYSE_PATHS, 1, "JCD0: path = 0x%x, step = 0x%x, node = 0x%x, loop = %d\n", path, step, node, loop);
@@ -1042,7 +1042,7 @@ int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *no
 	return 0;
 }
 
-int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start)
+int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start)
 {
 	int n, m;
 	int node;
@@ -1093,7 +1093,7 @@ int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *pat
 	return 0;
 }
 
-int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size)
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
@@ -1175,10 +1175,10 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			node++;
 		}
 	}
-	*node_size = node - 1;
+	*nodes_size = node - 1;
 
 	/* Start by building the entire node table, with prev and next node. */
-	for (n = 1; n <= *node_size; n++) {
+	for (n = 1; n <= *nodes_size; n++) {
 		inst_log1 =  &inst_log_entry[nodes[n].inst_start];
 		if (inst_log1->prev_size > 0) {
 			nodes[n].prev_node = calloc(inst_log1->prev_size, sizeof(int));
@@ -1186,7 +1186,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			nodes[n].prev_size = inst_log1->prev_size;
 
 			for (m = 0; m < inst_log1->prev_size; m++) {
-				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->prev[m]);
+				tmp = find_node_from_inst(self, nodes, *nodes_size, inst_log1->prev[m]);
 				nodes[n].prev_node[m] = tmp;
 			}
 		}
@@ -1199,7 +1199,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			}
 
 			for (m = 0; m < inst_log1->next_size; m++) {
-				tmp = find_node_from_inst(self, nodes, node_size, inst_log1->next[m]);
+				tmp = find_node_from_inst(self, nodes, *nodes_size, inst_log1->next[m]);
 				nodes[n].link_next[m].node = tmp;
 			}
 		}
@@ -1208,7 +1208,7 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	 * add in the prev_link_index.
 	 * the prev_link_index can only be built once the prev/next node table is complete.
 	 */
-	for (n = 1; n <= *node_size; n++) {
+	for (n = 1; n <= *nodes_size; n++) {
 		for (m = 0; m < nodes[n].next_size; m++) {
 			tmp = nodes[n].link_next[m].node;
 			for (l = 0; l < nodes[tmp].prev_size; l++) {
@@ -1225,15 +1225,15 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 
 
 
-int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int n;
 	int m;
 	int prev_node;
 	int prev_link_index;
 
-	debug_print(DEBUG_ANALYSE, 1, "print_control_flow_nodes: size = %d\n", *node_size);	
-	for (n = 1; n <= *node_size; n++) {
+	debug_print(DEBUG_ANALYSE, 1, "print_control_flow_nodes: size = %d\n", nodes_size);	
+	for (n = 1; n <= nodes_size; n++) {
 		debug_print(DEBUG_ANALYSE, 1, "Node:0x%x, valid=%d, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
 			n,
 			nodes[n].valid,
@@ -1291,7 +1291,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 }
 
 /* Try to identify the node link types for each node */
-int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int l, n;
 	struct control_flow_node_s *node;
@@ -1302,7 +1302,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	//int found;
 	int tmp;
 
-	for (n = 1; n <= *node_size; n++) {
+	for (n = 1; n <= nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			tmp = node->link_next[l].is_loop_edge;
@@ -1342,7 +1342,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 		}
 	}
 	/* If is_loop_edge or is_loop_exit is set, reset is_normal to 0 */
-	for (n = 1; n <= *node_size; n++) {
+	for (n = 1; n <= nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			int is_loop_edge; 
@@ -1358,7 +1358,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 		}
 	}
 	/* If only is_loop_entry == 1, set is_normal to 1 */
-	for (n = 1; n <= *node_size; n++) {
+	for (n = 1; n <= nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			int is_loop_edge; 
@@ -1467,12 +1467,12 @@ int compare_inst(struct self_s *self, int inst_a, int inst_b)
 	return ret;
 }
 
-int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int node_a, int node_b) {
+int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, int node_a, int node_b) {
 	int inst_a, inst_b;
 	int offset;
 	int ret;
 	int n,m;
-	int node_new = *node_size + 1;
+	int node_new = *nodes_size + 1;
 	int new_inst_start;
 	int node_a_size;
 	int node_b_size;
@@ -1568,7 +1568,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		nodes[node_b].next_size = 1;
 		nodes[node_b].link_next[0].node = node_new;
 		
-		(*node_size)++;
+		(*nodes_size)++;
 	}
 
 	return ret;

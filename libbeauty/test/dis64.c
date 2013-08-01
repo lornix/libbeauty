@@ -551,7 +551,7 @@ int is_member_of_loop(struct control_flow_node_s *nodes, int loop_node, int test
  *	Loop: For a loop contruct. A loop has First Node, and Subsequent Nodes in the loop body.
  *		Later Loop will be converted to for() or while().
  */
-int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct ast_s *ast, int start_node)
+int cfg_to_ast(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct ast_s *ast, int start_node)
 {
 	struct ast_container_s *ast_container;
 	struct ast_if_then_else_s *ast_if_then_else;
@@ -1414,7 +1414,7 @@ int get_value_id_from_node_reg(struct self_s *self, int entry_point, int node, i
 	return ret;
 }
 
-int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *node_size,
+int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size,
                          struct label_redirect_s *label_redirect, struct label_s *labels, int entry_point)
 {
 	struct instruction_s *instruction;
@@ -1454,7 +1454,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
-	node_size_limited = *node_size;
+	node_size_limited = nodes_size;
 #if 0
 	if (node_size_limited > 50) {
 		node_size_limited = 50;
@@ -1579,7 +1579,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int *
 	return 0;
 }
 
-int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	char *filename;
@@ -1606,9 +1606,9 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
-	node_size_limited = *node_size;
+	node_size_limited = nodes_size;
 
-	for (node = 1; node < *node_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 		if (!nodes[node].valid) {
 			/* Only output nodes that are valid */
 			continue;
@@ -2134,16 +2134,16 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	return 0;
 }
 
-int init_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int init_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int node;
-	for (node = 1; node <= *node_size; node++) {
+	for (node = 1; node <= nodes_size; node++) {
 		nodes[node].used_register = calloc(MAX_REG, sizeof(struct node_used_register_s));
 	}
 	return 0;
 }
 
-int fill_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int fill_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int node;
 	int inst;
@@ -2151,7 +2151,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
 
-	for (node = 1; node <= *node_size; node++) {
+	for (node = 1; node <= nodes_size; node++) {
 		inst = nodes[node].inst_start;
 		debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
 		do {
@@ -2357,7 +2357,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 	return 0;
 }
 
-int search_back_for_join(struct control_flow_node_s *nodes, int *node_size, int node, int *phi_node) 
+int search_back_for_join(struct control_flow_node_s *nodes, int nodes_size, int node, int *phi_node) 
 {
 	struct control_flow_node_s *this_node;
 
@@ -2500,15 +2500,15 @@ exit_find_prev_path_step_node:
 	return ret;
 }
 
-int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size)
+int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int node;
 	int phi_node;
 	int n;
 	int tmp;
 
-	for (node = 1; node <= *node_size; node++) {
-		tmp = search_back_for_join(nodes, node_size, node, &phi_node);
+	for (node = 1; node <= nodes_size; node++) {
+		tmp = search_back_for_join(nodes, nodes_size, node, &phi_node);
 		if (tmp) {
 			/* No previous join node found */
 			continue;
@@ -2524,7 +2524,7 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 	return 0;
 }
 
-int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes, int node_size, struct path_s *paths, int paths_size, int path, int step, int node, int reg, int *src_node, int *first_prev_node)
+int find_phi_src_node_reg(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int paths_size, int path, int step, int node, int reg, int *src_node, int *first_prev_node)
 {
 	int prev_path;
 	int prev_step;
@@ -2575,7 +2575,7 @@ exit_find_phi_src_node_reg:
 	return ret;
 }
 
-int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int node_size)
+int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int path;
 	int node;
@@ -2591,7 +2591,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	int n, m;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 
-	node_size_limited = node_size;
+	node_size_limited = nodes_size;
 #if 0
 	if (node_size_limited > 50) {
 		node_size_limited = 50;
@@ -2623,7 +2623,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 					path = nodes[node].path[m];
 					tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
-					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
+					tmp = find_phi_src_node_reg(self, nodes, nodes_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, phi:n = 0x%x, path_node:m = 0x%x\n", node, n, m);
 					nodes[node].phi[n].path_node[m].path = path;
@@ -2635,7 +2635,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 					path = nodes[node].looped_path[m];
 					tmp = path_node_to_base_path(self, paths, paths_size, path, node, &base_path, &base_step);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:tmp = %d, reg = 0x%x, base_path = 0x%x, base_step = 0x%x\n", tmp, reg, base_path, base_step);
-					tmp = find_phi_src_node_reg(self, nodes, node_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
+					tmp = find_phi_src_node_reg(self, nodes, nodes_size, paths, paths_size, base_path, base_step, node, reg, &src_node, &first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "looped_path:path = 0x%x, tmp = 0x%x, src_node = 0x%x, first_prev_node = 0x%x\n", path, tmp, src_node, first_prev_node);
 					debug_print(DEBUG_ANALYSE_PHI, 1, "node = 0x%x, phi:n = 0x%x, path_node:m = 0x%x\n", node, n, m);
 					nodes[node].phi[n].looped_path_node[m].path = path;
@@ -2649,7 +2649,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	return 0;
 }
 
-int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, int node_size)
+int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int node;
 	int n;
@@ -2657,7 +2657,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	int l;
 	printf("fill_phi: entered\n");
 
-	for (node = 1; node <= node_size; node++) {
+	for (node = 1; node <= nodes_size; node++) {
 		printf("node = 0x%x\n", node);
 		if (nodes[node].phi_size > 0) {
 			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
@@ -2703,7 +2703,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	return 0;
 }
 
-int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes, int node_size, int node, int reg, int *value_id)
+int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int node, int reg, int *value_id)
 {
 	int n;
 	int ret = 1;
@@ -2719,6 +2719,8 @@ int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes,
 	return ret;
 }
 
+/* Not need any more as it is built earler without needing the paths */
+#if 0
 int build_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point, int nodes_size)
 {
 	int *nodes;
@@ -2757,6 +2759,7 @@ int build_entry_point_node_members(struct self_s *self, struct external_entry_po
 	free(nodes);
 	return 0;
 }
+#endif
 
 int print_entry_point_node_members(struct self_s *self, struct external_entry_point_s *external_entry_point)
 {
@@ -4357,14 +4360,14 @@ int main(int argc, char *argv[])
 	/* Build the control flow nodes from the instructions. */
 	tmp = build_control_flow_nodes(self, nodes, &nodes_size);
 	self->nodes_size = nodes_size;
-	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	tmp = print_control_flow_nodes(self, nodes, nodes_size);
 //	print_dis_instructions(self);
 //	exit(1);
 	debug_print(DEBUG_MAIN, 1, "got here 1\n");
 	/* enter the start node into each external_entry_point */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
-			tmp = find_node_from_inst(self, nodes, &nodes_size, external_entry_points[l].inst_log);
+			tmp = find_node_from_inst(self, nodes, nodes_size, external_entry_points[l].inst_log);
 			if (tmp == 0) {
 				debug_print(DEBUG_MAIN, 1, "find_node_from_inst failed. entry[0x%x:%s]:start inst = 0x%"PRIx64", start node = 0x%x\n",
 					l,
@@ -4396,7 +4399,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	tmp = output_cfg_dot_basic(self, nodes, &nodes_size);
+	tmp = output_cfg_dot_basic(self, nodes, nodes_size);
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
@@ -4456,7 +4459,7 @@ int main(int argc, char *argv[])
 				loops[n].nest = 0;
 			}
 
-			tmp = build_control_flow_paths(self, nodes, &nodes_size,
+			tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
 				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 			debug_print(DEBUG_MAIN, 1, "tmp = %d, PATHS used = %d\n", tmp, paths_used);
 			if (tmp) {
@@ -4470,8 +4473,8 @@ int main(int argc, char *argv[])
 					debug_print(DEBUG_MAIN, 1, "multi_ret: node 0x%x\n", multi_ret[m]);
 				}
 				if (multi_ret_size == 2) {
-					tmp = analyse_merge_nodes(self, nodes, &nodes_size, multi_ret[0], multi_ret[1]);
-					tmp = build_control_flow_paths(self, nodes, &nodes_size,
+					tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size, multi_ret[0], multi_ret[1]);
+					tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
 						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 				} else if (multi_ret_size > 2) {
 					debug_print(DEBUG_MAIN, 1, "multi_ret_size > 2 not yet handled\n");
@@ -4481,8 +4484,8 @@ int main(int argc, char *argv[])
 			//tmp = print_control_flow_paths(self, paths, &paths_size);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
-			tmp = build_control_flow_loops_node_members(self, nodes, &nodes_size, loops, &loops_size);
-			tmp = build_node_paths(self, nodes, &nodes_size, paths, &paths_size, l + 1);
+			tmp = build_control_flow_loops_node_members(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size, loops, &loops_size);
+			tmp = build_node_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size, paths, &paths_size, l + 1);
 
 			external_entry_points[l].paths_size = paths_used;
 
@@ -4526,9 +4529,9 @@ int main(int argc, char *argv[])
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 2\n");
 	/* Node specific processing */
-	tmp = build_node_dominance(self, nodes, &nodes_size);
-	tmp = analyse_control_flow_node_links(self, nodes, &nodes_size);
-	tmp = build_node_type(self, nodes, &nodes_size);
+	tmp = build_node_dominance(self, nodes, nodes_size);
+	tmp = analyse_control_flow_node_links(self, nodes, nodes_size);
+	tmp = build_node_type(self, nodes, nodes_size);
 	//tmp = build_control_flow_depth(self, nodes, &nodes_size,
 	//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 	//debug_print(DEBUG_MAIN, 1, "Merge: 0x%x\n", nodes_size);
@@ -4540,11 +4543,11 @@ int main(int argc, char *argv[])
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 3 nodes_size = 0%x\n", nodes_size);
 
-	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	tmp = print_control_flow_nodes(self, nodes, nodes_size);
 	debug_print(DEBUG_MAIN, 1, "got here 4\n");
 
 
-	tmp = build_node_if_tail(self, nodes, &nodes_size);
+	tmp = build_node_if_tail(self, nodes, nodes_size);
 	for (n = 0; n < nodes_size; n++) {
 		if ((nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
 			(nodes[n].if_tail == 0)) {
@@ -4555,7 +4558,8 @@ int main(int argc, char *argv[])
 	/* This allows us to output a single function in the .dot output files. */	
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
-			tmp = build_entry_point_node_members(self, &external_entry_points[l], nodes_size);
+			/* Not needed any more */
+			/* tmp = build_entry_point_node_members(self, &external_entry_points[l], nodes_size); */
 			tmp = print_entry_point_node_members(self, &external_entry_points[l]);
 		}
 	}
@@ -4572,12 +4576,12 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-	tmp = print_control_flow_nodes(self, nodes, &nodes_size);
+	tmp = print_control_flow_nodes(self, nodes, nodes_size);
 
 //	Doing this after SSA now.
 #if 0
 //      Don't bother with the AST output for now 
-//	tmp = output_cfg_dot(self, nodes, &nodes_size);
+//	tmp = output_cfg_dot(self, nodes, nodes_size);
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 //	for (l = 0; l < 21; l++) {
 //	for (l = 21; l < 22; l++) {
@@ -4626,8 +4630,8 @@ int main(int argc, char *argv[])
 	 * 2 = DST first
 	 * If SRC and DST in same instruction, set SRC first.
 	 ****************************************************************/
-	tmp = init_node_used_register_table(self, nodes, &nodes_size);
-	tmp = fill_node_used_register_table(self, nodes, &nodes_size);
+	tmp = init_node_used_register_table(self, nodes, nodes_size);
+	tmp = fill_node_used_register_table(self, nodes, nodes_size);
 	if (tmp) {
 		debug_print(DEBUG_MAIN, 1, "FIXME: fill node used register table failed\n");
 		exit(1);
@@ -4641,7 +4645,7 @@ int main(int argc, char *argv[])
          * The nodes can be processed in any order for this step.
 	 ****************************************************************/
 
-	tmp = fill_node_phi_dst(self, nodes, &nodes_size);
+	tmp = fill_node_phi_dst(self, nodes, nodes_size);
 
 	/****************************************************************
 	 * Then for each path running through each PHI node, locate the previous node that used that register.
@@ -5740,7 +5744,7 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
-			tmp = output_cfg_dot(self, nodes, &nodes_size, label_redirect, labels, l);
+			tmp = output_cfg_dot(self, nodes, nodes_size, label_redirect, labels, l);
 		}
 	}
 	tmp = llvm_export(self);

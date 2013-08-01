@@ -12,31 +12,31 @@ struct mid_start_s {
 };
 
 extern int tidy_inst_log(struct self_s *self);
-extern int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int inst);
+extern int find_node_from_inst(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int inst);
 extern int node_mid_start_add(struct control_flow_node_s *node, struct node_mid_start_s *node_mid_start, int path, int step);
 extern int path_loop_check(struct path_s *paths, int path, int step, int node, int limit);
 extern int merge_path_into_loop(struct path_s *paths, struct loop_s *loop, int path);
 extern int build_control_flow_loops(struct self_s *self, struct path_s *paths, int *paths_size, struct loop_s *loops, int *loop_size);
 extern int build_control_flow_loops_multi_exit(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct loop_s *loops, int loops_size);
 extern int build_control_flow_loops_node_members(struct self_s *self,
-	struct control_flow_node_s *nodes, int *nodes_size,
+	struct control_flow_node_s *nodes, int nodes_size,
 	struct loop_s *loops, int *loops_size);
 extern int print_control_flow_loops(struct self_s *self, struct loop_s *loops, int *loops_size);
 extern int add_path_to_node(struct control_flow_node_s *node, int path);
 extern int add_looped_path_to_node(struct control_flow_node_s *node, int path);
 extern int is_subset(int size_a, int *a, int size_b, int *b);
-extern int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
-extern int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
-extern int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
-extern int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, struct path_s *paths, int *paths_size, int entry_point);
-extern int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
+extern int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size);
+extern int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size);
+extern int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size);
+extern int build_node_paths(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int entry_point);
+extern int build_control_flow_paths(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
 extern int print_control_flow_paths(struct self_s *self, struct path_s *paths, int *paths_size);
-extern int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size);
-extern int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
-extern int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size);
-extern int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int *node_size);
+extern int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size);
+extern int build_control_flow_depth(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, struct path_s *paths, int *paths_size, int *paths_used, int node_start);
+extern int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size);
+extern int analyse_control_flow_node_links(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size);
 extern int analyse_multi_ret(struct self_s *self, struct path_s *paths, int *paths_size, int *multi_ret_size, int **multi_ret);
-extern int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *node_size, int node_a, int node_b);
+extern int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int node_a, int node_b);
 extern int get_value_from_index(struct operand_s *operand, uint64_t *index);
 extern int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label);
 extern int register_label(struct external_entry_point_s *entry_point, uint64_t value_id,
