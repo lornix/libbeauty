@@ -1667,15 +1667,94 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 	return 0;
 }
 
+int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *external_entry_point)
+{
+	char *filename;
+	FILE *fd;
+	int node;
+	int nodes_size = external_entry_point->nodes_size;
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	int tmp;
+	int n;
+	int node_size_limited;
+	const char *font = "graph.font";
+	const char *color;
+	const char *name;
 
+	filename = calloc(1024, sizeof(char));
+	tmp = snprintf(filename, 1024, "./cfg/basic-%s.dot", external_entry_point->name);
 
+	fd = fopen(filename, "w");
+	if (!fd) {
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+		return 1;
+	}
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
+	tmp = fprintf(fd, "digraph code {\n"
+		"\tgraph [bgcolor=white];\n"
+		"\tnode [color=lightgray, style=filled shape=box"
+		" fontname=\"%s\" fontsize=\"8\"];\n", font);
+	node_size_limited = nodes_size;
 
+	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
+		if (node == external_entry_point->start_node) {
+			name = external_entry_point->name;
+		} else {
+			name = "";
+		}
+		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
+                                        node,
+					node, "lightgray", node, name);
+		tmp = fprintf(fd, "type = 0x%x\\l",
+				external_entry_point->nodes[node].type);
+		if (external_entry_point->nodes[node].if_tail) {
+			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+				external_entry_point->nodes[node].if_tail);
+		}
+		tmp = fprintf(fd, "\"];\n");
 
-
-
-
-
-
+		for (n = 0; n < external_entry_point->nodes[node].next_size; n++) {
+			char *label;
+			if (nodes[node].next_size < 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
+				} else {
+					color = "blue";
+				}
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color);
+			} else if (nodes[node].next_size == 2) {
+				if (1 == nodes[node].link_next[n].is_loop_edge) {
+					color = "gold";
+				} else if (0 == n) {
+					color = "red";
+				} else {
+					color = "green";
+				}
+				if (0 == n) {
+					label = "false";
+				} else {
+					label = "true";
+				}
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+					node, nodes[node].link_next[n].node, color, label);
+			} else {
+				/* next_size > 2 */
+				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+					node, nodes[node].link_next[n].node, color, n);
+			}
+		}
+	}
+	tmp = fprintf(fd, "}\n");
+	fclose(fd);
+	return 0;
+}
 
 int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_node_s *nodes, int *node_size)
 {
@@ -3897,6 +3976,10 @@ int create_function_node_members(struct self_s *self, struct external_entry_poin
 						break;
 					}
 				}
+				if (m == 100) {
+					printf("Failed in create_function_node_members(). No free mid_nodes.\n");
+					exit(1);
+				}
 			}
 		}
 	} while (found == 0);
@@ -3908,6 +3991,29 @@ int create_function_node_members(struct self_s *self, struct external_entry_poin
 			member_nodes[tmp] = n;
 		}
 	}
+	external_entry_point->member_nodes_size = member_nodes_size;
+	external_entry_point->member_nodes = member_nodes;
+	external_entry_point->nodes_size = member_nodes_size;
+	external_entry_point->nodes = calloc(member_nodes_size, sizeof(struct control_flow_node_s));
+
+	/* node 0 is intentionally not used */
+	for (n = 1; n < member_nodes_size; n++) {
+		memcpy(&(external_entry_point->nodes[n]), &(global_nodes[member_nodes[n]]), sizeof (struct control_flow_node_s));
+		external_entry_point->nodes[n].prev_node = calloc(external_entry_point->nodes[n].prev_size, sizeof(int));
+		memcpy(&(external_entry_point->nodes[n].prev_node), &(global_nodes[member_nodes[n]].prev_node), external_entry_point->nodes[n].prev_size * sizeof (int));
+		for (m = 0; m < external_entry_point->nodes[n].prev_size; m++) {
+			external_entry_point->nodes[n].prev_node[m] = node_list[external_entry_point->nodes[n].prev_node[m]];
+		}
+		external_entry_point->nodes[n].prev_link_index = calloc(external_entry_point->nodes[n].prev_size, sizeof(int));
+		memcpy(&(external_entry_point->nodes[n].prev_link_index), &(global_nodes[member_nodes[n]].prev_link_index), external_entry_point->nodes[n].prev_size * sizeof (int));
+		external_entry_point->nodes[n].link_next = calloc(external_entry_point->nodes[n].next_size, sizeof(struct node_link_s));
+		memcpy(&(external_entry_point->nodes[n].link_next), &(global_nodes[member_nodes[n]].link_next), external_entry_point->nodes[n].next_size * sizeof (struct node_link_s));
+		for (m = 0; m < external_entry_point->nodes[n].next_size; m++) {
+			external_entry_point->nodes[n].link_next[m].node = node_list[external_entry_point->nodes[n].link_next[m].node];
+		}
+	}
+	free(mid_node);
+	free(node_list);
 #if 0
 	printf("function: %s\n", external_entry_point->name);
 	for (n = 1; n < member_nodes_size; n++) {
@@ -4289,10 +4395,14 @@ int main(int argc, char *argv[])
 			tmp = create_function_node_members(self, &external_entry_points[l]);
 		}
 	}
-	/* TODO */
-	/* tmp = assign_nodes_to_external_entry_points(mapping); */
 	
 	tmp = output_cfg_dot_basic(self, nodes, &nodes_size);
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
+			tmp = output_cfg_dot_basic2(self, &external_entry_points[l]);
+		}
+	}
 	paths = calloc(paths_size, sizeof(struct path_s));
 	for (n = 0; n < paths_size; n++) {
 		paths[n].path = calloc(1000, sizeof(int));
