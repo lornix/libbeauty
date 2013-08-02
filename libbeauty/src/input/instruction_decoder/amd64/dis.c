@@ -2747,12 +2747,20 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->dstA.index = REG_TMP1;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = 64;
+
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_STACK;
 		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 64;
+
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_STACK;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2793,6 +2801,12 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.index = REG_AX;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_AX;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -2810,6 +2824,12 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.index = REG_TMP1;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_TMP1;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		result = 1;
