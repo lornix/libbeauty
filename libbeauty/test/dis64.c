@@ -1414,7 +1414,7 @@ int get_value_id_from_node_reg(struct self_s *self, int entry_point, int node, i
 	return ret;
 }
 
-int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size,
+int output_cfg_dot(struct self_s *self,
                          struct label_redirect_s *label_redirect, struct label_s *labels, int entry_point)
 {
 	struct instruction_s *instruction;
@@ -1422,13 +1422,14 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int n
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	struct process_state_s *process_state;
+	struct control_flow_node_s *nodes = external_entry_points[entry_point].nodes;
+	int nodes_size = external_entry_points[entry_point].nodes_size;
 	char *filename;
 	FILE *fd;
 	int node;
 	int tmp;
 	int n;
 	int m;
-	int member;
 	int block_end;
 	int node_size_limited;
 	const char *font = "graph.font";
@@ -1460,8 +1461,7 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int n
 		node_size_limited = 50;
 	}
 #endif
-	for (member = 0; member < external_entry_points[entry_point].member_nodes_size; member++) {
-		node = external_entry_points[entry_point].member_nodes[member];
+	for (node = 1; node < external_entry_points[entry_point].nodes_size; node++) {
 //	for (node = 1; node <= node_size_limited; node++) {
 #if 0
 		if ((node != 0x13) && 
@@ -1477,8 +1477,8 @@ int output_cfg_dot(struct self_s *self, struct control_flow_node_s *nodes, int n
 			/* Only output nodes that are valid */
 			continue;
 		}
-		if (node == external_entry_points[nodes[node].entry_point - 1].start_node) {
-			name = external_entry_points[nodes[node].entry_point - 1].name;
+		if (node == 1) {
+			name = external_entry_points[entry_point].name;
 		} else {
 			name = "";
 		}
@@ -1702,7 +1702,7 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 			/* Only output nodes that are valid */
 			continue;
 		}
-		if (node == external_entry_point->start_node) {
+		if (node == 1) {
 			name = external_entry_point->name;
 		} else {
 			name = "";
@@ -4459,7 +4459,7 @@ int main(int argc, char *argv[])
 			}
 
 			tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
-				paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+				paths, &paths_size, &paths_used, 1);
 			debug_print(DEBUG_MAIN, 1, "tmp = %d, PATHS used = %d\n", tmp, paths_used);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Failed at external entry point %d:%s\n", l, external_entry_points[l].name);
@@ -4474,7 +4474,7 @@ int main(int argc, char *argv[])
 				if (multi_ret_size == 2) {
 					tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, &(external_entry_points[l].nodes_size), multi_ret[0], multi_ret[1]);
 					tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
-						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+						paths, &paths_size, &paths_used, 1);
 				} else if (multi_ret_size > 2) {
 					debug_print(DEBUG_MAIN, 1, "multi_ret_size > 2 not yet handled\n");
 					exit(1);
@@ -4581,8 +4581,7 @@ int main(int argc, char *argv[])
 //	for (l = 21; l < 22; l++) {
 //	for (l = 37; l < 38; l++) {
 		if (external_entry_points[l].valid) {
-			tmp = external_entry_points[l].start_node;
-			debug_print(DEBUG_ANALYSE_PATHS, 1, "External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, tmp);
+			debug_print(DEBUG_ANALYSE_PATHS, 1, "External entry point %d: type=%d, name=%s inst_log=0x%lx, start_node=0x%x\n", l, external_entry_points[l].type, external_entry_points[l].name, external_entry_points[l].inst_log, 1);
 			tmp = print_control_flow_paths(self, external_entry_points[l].paths, &(external_entry_points[l].paths_size));
 			tmp = print_control_flow_loops(self, external_entry_points[l].loops, &(external_entry_points[l].loops_size));
 		}
@@ -5763,7 +5762,7 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid) {
-			tmp = output_cfg_dot(self, nodes, nodes_size, label_redirect, labels, l);
+			tmp = output_cfg_dot(self, label_redirect, labels, l);
 		}
 	}
 	tmp = llvm_export(self);
