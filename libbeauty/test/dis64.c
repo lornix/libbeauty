@@ -4027,6 +4027,7 @@ int assign_id_label_dst(struct self_s *self, int variable_id, int n, struct inst
 	int ret = 1;
 	struct instruction_s *instruction =  &inst_log1->instruction;
 
+	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
 	debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 		n,
 		instruction->srcA.indirect,
@@ -4070,7 +4071,7 @@ int assign_id_label_dst(struct self_s *self, int variable_id, int n, struct inst
 		if (inst_log1->value3.value_scope == 1) {
 			inst_log1->value3.value_scope = 2;
 		}
-		memset(&label, 0, sizeof(struct label_s));
+		memset(label, 0, sizeof(struct label_s));
 		ret = log_to_label(instruction->dstA.store,
 			instruction->dstA.indirect,
 			instruction->dstA.index,
@@ -4915,15 +4916,18 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
+				int next;
 				external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
 				external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
 				external_entry_points[l].variable_id = 0x100;
-				n = external_entry_points[l].nodes[m].inst_start;
+				next = external_entry_points[l].nodes[m].inst_start;
 				do {
 					struct label_s label;
+					n = next;
 					inst_log1 =  &inst_log_entry[n];
 					instruction =  &inst_log1->instruction;
 					/* returns 0 for id and label set. 1 for error */
+					debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
 					tmp  = assign_id_label_dst(self, external_entry_points[l].variable_id, n, inst_log1, &label);
 					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 						n,
@@ -4936,12 +4940,20 @@ int main(int argc, char *argv[])
 						inst_log1->value1.indirect_value_id);
 
 					if (!tmp) {
+						debug_print(DEBUG_MAIN, 1, "variable_id = %x\n", external_entry_points[l].variable_id);
+						if (external_entry_points[l].variable_id >= 10000) {
+							debug_print(DEBUG_MAIN, 1, "variable_id overrun 10000 limit. Trying to write to %d\n", external_entry_points[l].variable_id);
+							exit(1);
+						}
 						external_entry_points[l].label_redirect[external_entry_points[l].variable_id].redirect = external_entry_points[l].variable_id;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].scope = label.scope;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].type = label.type;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].lab_pointer += label.lab_pointer;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].value = label.value;
 						external_entry_points[l].variable_id++;
+					}
+					if (inst_log1->next_size) {
+						next = inst_log1->next[0];
 					}
 				} while (n != external_entry_points[l].nodes[m].inst_end);
 			}
@@ -4993,6 +5005,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#if 0
 	for (n = 1; n <= nodes_size; n++) {
 		for (m = 0; m < MAX_REG; m++) {
 			if (nodes[n].used_register[m].seen) {
@@ -5013,6 +5026,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+#endif
 	/* Enter value id/label id of param into phi with src node 0. */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		for (m = 0; m < MAX_REG; m++) {
