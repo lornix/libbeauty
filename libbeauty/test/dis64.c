@@ -4362,7 +4362,6 @@ int main(int argc, char *argv[])
 	self->nodes_size = nodes_size;
 	tmp = print_control_flow_nodes(self, nodes, nodes_size);
 //	print_dis_instructions(self);
-//	exit(1);
 	debug_print(DEBUG_MAIN, 1, "got here 1\n");
 	/* enter the start node into each external_entry_point */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
@@ -4473,7 +4472,7 @@ int main(int argc, char *argv[])
 					debug_print(DEBUG_MAIN, 1, "multi_ret: node 0x%x\n", multi_ret[m]);
 				}
 				if (multi_ret_size == 2) {
-					tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size, multi_ret[0], multi_ret[1]);
+					tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, &(external_entry_points[l].nodes_size), multi_ret[0], multi_ret[1]);
 					tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
 						paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 				} else if (multi_ret_size > 2) {
@@ -4529,29 +4528,37 @@ int main(int argc, char *argv[])
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 2\n");
 	/* Node specific processing */
-	tmp = build_node_dominance(self, nodes, nodes_size);
-	tmp = analyse_control_flow_node_links(self, nodes, nodes_size);
-	tmp = build_node_type(self, nodes, nodes_size);
-	//tmp = build_control_flow_depth(self, nodes, &nodes_size,
-	//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
-	//debug_print(DEBUG_MAIN, 1, "Merge: 0x%x\n", nodes_size);
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-		if (external_entry_points[l].valid) {
-			tmp = build_control_flow_loops_multi_exit(self, nodes, nodes_size,
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = build_node_dominance(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			tmp = analyse_control_flow_node_links(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			tmp = build_node_type(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			//tmp = build_control_flow_depth(self, nodes, &nodes_size,
+			//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
+			tmp = build_control_flow_loops_multi_exit(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
 				external_entry_points[l].loops, external_entry_points[l].loops_size);
 		}
 	}
-	debug_print(DEBUG_MAIN, 1, "got here 3 nodes_size = 0%x\n", nodes_size);
+	debug_print(DEBUG_MAIN, 1, "got here 3\n");
 
-	tmp = print_control_flow_nodes(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes for function %s\n", external_entry_points[l].name);
+			tmp = print_control_flow_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 	debug_print(DEBUG_MAIN, 1, "got here 4\n");
 
 
-	tmp = build_node_if_tail(self, nodes, nodes_size);
-	for (n = 0; n < nodes_size; n++) {
-		if ((nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
-			(nodes[n].if_tail == 0)) {
-			debug_print(DEBUG_MAIN, 1, "FAILED: Node 0x%x with no if_tail\n", n);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = build_node_if_tail(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			for (n = 0; n < external_entry_points[l].nodes_size; n++) {
+				if ((external_entry_points[l].nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
+					(external_entry_points[l].nodes[n].if_tail == 0)) {
+					debug_print(DEBUG_MAIN, 1, "FAILED: Node 0x%x with no if_tail\n", n);
+				}
+			}
 		}
 	}
 	/* Build the node members list for each function */
@@ -4576,7 +4583,12 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-	tmp = print_control_flow_nodes(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes for function %s\n", external_entry_points[l].name);
+			tmp = print_control_flow_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 
 //	Doing this after SSA now.
 #if 0
@@ -4630,6 +4642,8 @@ int main(int argc, char *argv[])
 	 * 2 = DST first
 	 * If SRC and DST in same instruction, set SRC first.
 	 ****************************************************************/
+	/* FIXME: TODO convert nodes to external_entry_points[l].nodes */
+	exit(1);
 	tmp = init_node_used_register_table(self, nodes, nodes_size);
 	tmp = fill_node_used_register_table(self, nodes, nodes_size);
 	if (tmp) {
