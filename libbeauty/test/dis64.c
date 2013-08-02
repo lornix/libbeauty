@@ -4915,11 +4915,11 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
+			external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
+			external_entry_points[l].variable_id = 0x100;
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
 				int next;
-				external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
-				external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
-				external_entry_points[l].variable_id = 0x100;
 				next = external_entry_points[l].nodes[m].inst_start;
 				do {
 					struct label_s label;
