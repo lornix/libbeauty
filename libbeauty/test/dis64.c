@@ -2137,7 +2137,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 int init_node_used_register_table(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
 {
 	int node;
-	for (node = 1; node <= nodes_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 		nodes[node].used_register = calloc(MAX_REG, sizeof(struct node_used_register_s));
 	}
 	return 0;
@@ -2151,7 +2151,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
 
-	for (node = 1; node <= nodes_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 		inst = nodes[node].inst_start;
 		debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
 		do {
@@ -2507,7 +2507,7 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 	int n;
 	int tmp;
 
-	for (node = 1; node <= nodes_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 		tmp = search_back_for_join(nodes, nodes_size, node, &phi_node);
 		if (tmp) {
 			/* No previous join node found */
@@ -2597,7 +2597,7 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 		node_size_limited = 50;
 	}
 #endif
-	for (node = 1; node <= node_size_limited; node++) {
+	for (node = 1; node < node_size_limited; node++) {
 		if (nodes[node].phi_size > 0) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
@@ -2657,7 +2657,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	int l;
 	printf("fill_phi: entered\n");
 
-	for (node = 1; node <= nodes_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 		printf("node = 0x%x\n", node);
 		if (nodes[node].phi_size > 0) {
 			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
@@ -2800,7 +2800,7 @@ int assign_labels_to_src(struct self_s *self, int *label_id)
 	struct instruction_s *instruction;
 	int variable_id = *label_id;
 
-	for (n = 1; n <= nodes_size; n++) {
+	for (n = 1; n < nodes_size; n++) {
 		int inst;
 		int node;
 		struct label_s label;
@@ -4027,6 +4027,97 @@ int create_function_node_members(struct self_s *self, struct external_entry_poin
 	return 0;
 }
 
+int assign_id_label_dst(struct self_s *self, int variable_id, int n, struct inst_log_entry_s *inst_log1, struct label_s *label)
+{
+	/* returns 0 for id and label set. 1 for error */
+	int ret = 1;
+	struct instruction_s *instruction =  &inst_log1->instruction;
+
+	debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		n,
+		instruction->srcA.indirect,
+		instruction->srcA.index,
+		instruction->srcA.relocated,
+		inst_log1->value1.value_scope,
+		inst_log1->value1.value_id,
+		inst_log1->value1.indirect_offset_value,
+		inst_log1->value1.indirect_value_id);
+
+	switch (instruction->opcode) {
+	case NOP:
+		break;
+	case MOV:
+	case ADD:
+	case ADC:
+	case SUB:
+	case SBB:
+	case MUL:
+	case IMUL:
+	case OR:
+	case XOR:
+	case rAND:
+	case NOT:
+	case NEG:
+	case SHL:
+	case SHR:
+	case SAL:
+	case SAR:
+	case SEX:
+	case ICMP:
+		/* If dstA.indirect, assign the dst label to indirect_value_id
+		   In the indirect case the value_id is a SRC and not a DST */
+		/* If not dstA.indirect, assign the dst label to value_id. */
+		if (IND_DIRECT != instruction->dstA.indirect) {
+			inst_log1->value3.indirect_value_id = variable_id;
+		} else {
+			inst_log1->value3.value_id = variable_id;
+		}
+		/* Override the EXE setting for now */
+		if (inst_log1->value3.value_scope == 1) {
+			inst_log1->value3.value_scope = 2;
+		}
+		memset(&label, 0, sizeof(struct label_s));
+		ret = log_to_label(instruction->dstA.store,
+			instruction->dstA.indirect,
+			instruction->dstA.index,
+			instruction->dstA.relocated,
+			inst_log1->value3.value_scope,
+			inst_log1->value3.value_id,
+			inst_log1->value3.indirect_offset_value,
+			inst_log1->value3.indirect_value_id,
+			label);
+		if (ret) {
+			debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
+		}
+		break;
+
+	/* Specially handled because value3 is not assigned and writen to a destination. */
+	case TEST:
+	case CMP:
+		break;
+
+	case CALL:
+		debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
+		if (IND_DIRECT != instruction->dstA.indirect) {
+			inst_log1->value3.indirect_value_id = variable_id;
+		} else {
+			inst_log1->value3.value_id = variable_id;
+		}
+		break;
+	case IF:
+	case BC:
+	case RET:
+	case JMP:
+	case JMPT:
+		break;
+	default:
+		debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
+		ret = 1;
+		break;
+	}
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 	int n = 0;
@@ -4647,12 +4738,19 @@ int main(int argc, char *argv[])
 	 * If SRC and DST in same instruction, set SRC first.
 	 ****************************************************************/
 	/* FIXME: TODO convert nodes to external_entry_points[l].nodes */
-	exit(1);
-	tmp = init_node_used_register_table(self, nodes, nodes_size);
-	tmp = fill_node_used_register_table(self, nodes, nodes_size);
-	if (tmp) {
-		debug_print(DEBUG_MAIN, 1, "FIXME: fill node used register table failed\n");
-		exit(1);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = init_node_used_register_table(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_node_used_register_table(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			if (tmp) {
+				debug_print(DEBUG_MAIN, 1, "FIXME: fill node used register table failed\n");
+				exit(1);
+			}
+		}
 	}
 
 	/****************************************************************
@@ -4663,7 +4761,11 @@ int main(int argc, char *argv[])
          * The nodes can be processed in any order for this step.
 	 ****************************************************************/
 
-	tmp = fill_node_phi_dst(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_node_phi_dst(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 
 	/****************************************************************
 	 * Then for each path running through each PHI node, locate the previous node that used that register.
@@ -4674,12 +4776,20 @@ int main(int argc, char *argv[])
 	 * return which base path it is on. Only process if not a previous path.
 	 ****************************************************************/
 
-	tmp = fill_node_phi_src(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_node_phi_src(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 	/* Scan each of the list of paths in the src, and reduce the list to
 	 * a list of immediately/first previous nodes with assocated node that assigned the register.
          * Also do sanity checks on the path nodes lists based on first_prev_node. 
 	 * This reduces the PHI to a format similar to that used in LLVM */
-	tmp = fill_phi_node_list(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_phi_node_list(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 	/************************************************************
 	 * This section deals with starting true SSA.
 	 * This bit sets the valid_id to 0 for both dst and src.
@@ -4703,102 +4813,38 @@ int main(int argc, char *argv[])
 	labels = calloc(10000, sizeof(struct label_s));
 	self->labels = labels;
 	variable_id = 0x100;
-	/* n < inst_log verified to be correct limit */
-	for (n = 1; n < inst_log; n++) {
-		struct label_s label;
-		inst_log1 =  &inst_log_entry[n];
-		instruction =  &inst_log1->instruction;
-		debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
-				n,
-				instruction->srcA.indirect,
-				instruction->srcA.index,
-				instruction->srcA.relocated,
-				inst_log1->value1.value_scope,
-				inst_log1->value1.value_id,
-				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id);
 
-		switch (instruction->opcode) {
-		case NOP:
-			break;
-		case MOV:
-		case ADD:
-		case ADC:
-		case SUB:
-		case SBB:
-		case MUL:
-		case IMUL:
-		case OR:
-		case XOR:
-		case rAND:
-		case NOT:
-		case NEG:
-		case SHL:
-		case SHR:
-		case SAL:
-		case SAR:
-		case SEX:
-		case ICMP:
-			/* If dstA.indirect, assign the dst label to indirect_value_id
-			   In the indirect case the value_id is a SRC and not a DST */
-			/* If not dstA.indirect, assign the dst label to value_id. */
-			if (IND_DIRECT != instruction->dstA.indirect) {
-				inst_log1->value3.indirect_value_id = variable_id;
-			} else {
-				inst_log1->value3.value_id = variable_id;
-			}
-			/* Override the EXE setting for now */
-			if (inst_log1->value3.value_scope == 1) {
-				inst_log1->value3.value_scope = 2;
-			}
-			memset(&label, 0, sizeof(struct label_s));
-			tmp = log_to_label(instruction->dstA.store,
-				instruction->dstA.indirect,
-				instruction->dstA.index,
-				instruction->dstA.relocated,
-				inst_log1->value3.value_scope,
-				inst_log1->value3.value_id,
-				inst_log1->value3.indirect_offset_value,
-				inst_log1->value3.indirect_value_id,
-				&label);
-			if (tmp) {
-				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
-			}
-			if (!tmp) {
-				label_redirect[variable_id].redirect = variable_id;
-				labels[variable_id].scope = label.scope;
-				labels[variable_id].type = label.type;
-				labels[variable_id].lab_pointer += label.lab_pointer;
-				labels[variable_id].value = label.value;
-			}
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
+				n = external_entry_points[l].nodes[m].inst_start;
+				do {
+					struct label_s label;
+					inst_log1 =  &inst_log_entry[n];
+					instruction =  &inst_log1->instruction;
+					/* returns 0 for id and label set. 1 for error */
+					tmp  = assign_id_label_dst(self, variable_id, n, inst_log1, &label);
+					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+						n,
+						instruction->srcA.indirect,
+						instruction->srcA.index,
+						instruction->srcA.relocated,
+						inst_log1->value1.value_scope,
+						inst_log1->value1.value_id,
+						inst_log1->value1.indirect_offset_value,
+						inst_log1->value1.indirect_value_id);
 
-			break;
-
-		/* Specially handled because value3 is not assigned and writen to a destination. */
-		case TEST:
-		case CMP:
-			break;
-
-		case CALL:
-			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
-			if (IND_DIRECT != instruction->dstA.indirect) {
-				inst_log1->value3.indirect_value_id = variable_id;
-			} else {
-				inst_log1->value3.value_id = variable_id;
+					if (!tmp) {
+						label_redirect[variable_id].redirect = variable_id;
+						labels[variable_id].scope = label.scope;
+						labels[variable_id].type = label.type;
+						labels[variable_id].lab_pointer += label.lab_pointer;
+						labels[variable_id].value = label.value;
+						variable_id++;
+					}
+				} while (n != external_entry_points[l].nodes[m].inst_end);
 			}
-			break;
-		case IF:
-		case BC:
-		case RET:
-		case JMP:
-		case JMPT:
-			break;
-		default:
-			debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
-			return 1;
-			break;
 		}
-		variable_id++;
 	}
 
 	for (n = 0x100; n < 0x130; n++) {
@@ -4812,18 +4858,22 @@ int main(int argc, char *argv[])
 
 	/* Assign labels to PHI instructions dst */
 
-	for (n = 1; n <= nodes_size; n++) {
-			printf("JCD: scanning node phi 0x%x\n", n);
-		if (nodes[n].phi_size) {
-			printf("JCD: phi insts found at node 0x%x\n", n);
-			for (m = 0; m < nodes[n].phi_size; m++) {
-				nodes[n].phi[m].value_id = variable_id;
-				label_redirect[variable_id].redirect = variable_id;
-				labels[variable_id].scope = 1;
-				labels[variable_id].type = 1;
-				labels[variable_id].lab_pointer = 0;
-				labels[variable_id].value = variable_id;
-				variable_id++;
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				printf("JCD: scanning node phi 0x%x\n", n);
+				if (external_entry_points[l].nodes[n].phi_size) {
+					printf("JCD: phi insts found at node 0x%x\n", n);
+					for (m = 0; m < external_entry_points[l].nodes[n].phi_size; m++) {
+						external_entry_points[l].nodes[n].phi[m].value_id = variable_id;
+						label_redirect[variable_id].redirect = variable_id;
+						labels[variable_id].scope = 1;
+						labels[variable_id].type = 1;
+						labels[variable_id].lab_pointer = 0;
+						labels[variable_id].value = variable_id;
+						variable_id++;
+					}
+				}
 			}
 		}
 	}
