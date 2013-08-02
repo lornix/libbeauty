@@ -225,8 +225,7 @@ static int get_value_RTL_instruction(
 			/* unknown */
 			destination->value_scope = 0;
 			/* 1 - Entry Used */
-			destination->value_id = self->local_counter;
-			self->local_counter++;
+			destination->value_id = 0;
 			destination->valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
 				destination->init_value,
@@ -251,12 +250,11 @@ static int get_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						source->index,
 						source->value_size);
-				value->value_id = self->local_counter;
+				value->value_id = 0;
 				value->value_scope = 1;
 				if (1 == info_id) {
 					value->value_scope = 2;
 				}
-				self->local_counter++;
 			}
 			if (!value) {
 				debug_print(DEBUG_EXE, 1, "GET CASE0:STORE_REG ERROR!\n");
@@ -312,8 +310,7 @@ static int get_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						source->index,
 						source->indirect_size);
-				value->value_id = self->local_counter;
-				self->local_counter++;
+				value->value_id = 0;
 			}
 			if (!value) {
 				debug_print(DEBUG_EXE, 1, "GET CASE2:STORE_REG ERROR!\n");
@@ -343,9 +340,7 @@ static int get_value_RTL_instruction(
 			/* Data */
 			value_data->value_scope = 3;
 			/* Param number */
-			value_data->value_id =
-				self->local_counter;
-			self->local_counter++;
+			value_data->value_id = 0;
 		}
 		debug_print(DEBUG_EXE, 1, "variable on data:0x%"PRIx64"\n",
 			data_index);
@@ -398,8 +393,7 @@ static int get_value_RTL_instruction(
 			value = add_new_store(memory_reg,
 					source->index,
 					source->indirect_size);
-			value->value_id = self->local_counter;
-			self->local_counter++;
+			value->value_id = 0;
 		}
 		if (!value) {
 			debug_print(DEBUG_EXE, 1, "GET CASE2:STORE_REG ERROR!\n");
@@ -426,15 +420,13 @@ static int get_value_RTL_instruction(
 				/* Param */
 				value_stack->value_scope = 1;
 				/* Param number */
-				value_stack->value_id = self->local_counter;
-				self->local_counter++;
+				value_stack->value_id = 0;
 			} else {
 				debug_print(DEBUG_EXE, 1, "LOCAL\n");
 				/* Local */
 				value_stack->value_scope = 2;
 				/* Local number */
-				value_stack->value_id = self->local_counter;
-				self->local_counter++;
+				value_stack->value_id = 0;
 			}
 /* Section ends */
 		}
@@ -598,8 +590,7 @@ static int put_value_RTL_instruction(
 				value = add_new_store(memory_reg,
 						instruction->dstA.index,
 						instruction->dstA.indirect_size);
-				value->value_id = self->local_counter;
-				self->local_counter++;
+				value->value_id = 0;
 			}
 			if (!value) {
 				debug_print(DEBUG_EXE, 1, "GET CASE2:STORE_REG ERROR!\n");
@@ -841,9 +832,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
-		inst->value3.value_id = self->local_counter;
-		inst->value2.value_id = self->local_counter;
-		self->local_counter++;
+		inst->value3.value_id = 0;
+		inst->value2.value_id = 0;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -928,9 +918,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
-		inst->value3.value_id = self->local_counter;
-		inst->value2.value_id = self->local_counter;
-		self->local_counter++;
+		inst->value3.value_id = 0;
+		inst->value2.value_id = 0;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -1586,9 +1575,6 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		//inst->value3.value_id = inst->value2.value_id;
 		inst->value3.value_id = 0;
 		inst->value2.value_id = 0;
-		//inst->value3.value_id = self->local_counter;
-		//inst->value2.value_id = self->local_counter;
-		//self->local_counter++;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -1655,7 +1641,6 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
  
 		/* Get value of dstA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
-		debug_print(DEBUG_EXE, 1, "CALL self->local_counter = 0x%x\n", self->local_counter);
 		/* FIXME: Currently this is a NOP. */
 		/* Get value of dstA */
 		inst->value3.start_address = inst->value2.start_address;
@@ -1683,9 +1668,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			inst->value2.ref_log;
 		inst->value3.value_scope = inst->value2.value_scope;
 		/* Counter */
-		inst->value3.value_id = self->local_counter;
-		inst->value2.value_id = self->local_counter;
-		self->local_counter++;
+		inst->value3.value_id = 0;
+		inst->value2.value_id = 0;
 		/* 1 - Entry Used */
 		inst->value2.valid = 1;
 		inst->value3.valid = 1;
@@ -1704,7 +1688,6 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		operand.value_size = instruction->dstA.value_size;
 
 		ret = get_value_RTL_instruction(self, process_state, &(operand), &(inst->value2), 1); 
-		debug_print(DEBUG_EXE, 1, "CALL self->local_counter = 0x%x\n", self->local_counter);
 		break;
 
 	default:

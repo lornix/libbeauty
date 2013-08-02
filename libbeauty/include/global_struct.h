@@ -231,6 +231,10 @@ struct external_entry_point_s {
 	int *member_nodes;
 	int start_ast_container;
 	/* FIXME: add function return type and param types */
+	struct label_redirect_s *label_redirect;
+	struct label_s *labels;
+	int variable_id;
+	int *search_back_seen;
 };
 
 /* Memory and Registers are a list of accessed stores. */
@@ -387,10 +391,6 @@ struct self_s {
 	uint64_t entry_point_list_length;  /* Number of entry_point entries allocated */
 	int nodes_size;
 	struct control_flow_node_s *nodes;
-	int local_counter;
-	int *search_back_seen;
-	struct label_redirect_s *label_redirect;
-	struct label_s *labels;
 	int flag_dependency_size;
 	int *flag_dependency;
 	int *flag_dependency_opcode;
