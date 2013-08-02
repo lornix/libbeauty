@@ -394,7 +394,7 @@ struct self_s {
 	int flag_dependency_size;
 	int *flag_dependency;
 	int *flag_dependency_opcode;
-	int *flag_result_users;	
+	int *flag_result_users;
 };
 
 #endif /* __GLOBAL_STRUCT__ */

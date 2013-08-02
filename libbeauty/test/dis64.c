@@ -4021,11 +4021,16 @@ int create_function_node_members(struct self_s *self, struct external_entry_poin
 	return 0;
 }
 
-int assign_id_label_dst(struct self_s *self, int variable_id, int n, struct inst_log_entry_s *inst_log1, struct label_s *label)
+int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_log_entry_s *inst_log1, struct label_s *label)
 {
 	/* returns 0 for id and label set. 1 for error */
 	int ret = 1;
 	struct instruction_s *instruction =  &inst_log1->instruction;
+	int variable_id = self->external_entry_points[function].variable_id;
+	uint64_t stack_address;
+	int index;
+	int tmp;
+	struct memory_s *memory;
 
 	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
 	debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
@@ -4062,27 +4067,68 @@ int assign_id_label_dst(struct self_s *self, int variable_id, int n, struct inst
 		/* If dstA.indirect, assign the dst label to indirect_value_id
 		   In the indirect case the value_id is a SRC and not a DST */
 		/* If not dstA.indirect, assign the dst label to value_id. */
-		if (IND_DIRECT != instruction->dstA.indirect) {
-			inst_log1->value3.indirect_value_id = variable_id;
-		} else {
+		switch (instruction->dstA.indirect) {
+		case IND_DIRECT:
 			inst_log1->value3.value_id = variable_id;
-		}
-		/* Override the EXE setting for now */
-		if (inst_log1->value3.value_scope == 1) {
-			inst_log1->value3.value_scope = 2;
-		}
-		memset(label, 0, sizeof(struct label_s));
-		ret = log_to_label(instruction->dstA.store,
-			instruction->dstA.indirect,
-			instruction->dstA.index,
-			instruction->dstA.relocated,
-			inst_log1->value3.value_scope,
-			inst_log1->value3.value_id,
-			inst_log1->value3.indirect_offset_value,
-			inst_log1->value3.indirect_value_id,
-			label);
-		if (ret) {
-			debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
+			/* Override the EXE setting for now */
+			if (inst_log1->value3.value_scope == 1) {
+				inst_log1->value3.value_scope = 2;
+			}
+			memset(label, 0, sizeof(struct label_s));
+			ret = log_to_label(instruction->dstA.store,
+				instruction->dstA.indirect,
+				instruction->dstA.index,
+				instruction->dstA.relocated,
+				inst_log1->value3.value_scope,
+				inst_log1->value3.value_id,
+				inst_log1->value3.indirect_offset_value,
+				inst_log1->value3.indirect_value_id,
+				label);
+			if (ret) {
+				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
+			}
+			break;
+
+		case IND_MEM:
+			inst_log1->value3.indirect_value_id = 0;
+			break;
+
+		case IND_STACK:
+			stack_address = inst_log1->value3.indirect_init_value + inst_log1->value3.indirect_offset_value;
+			debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+			memory = search_store(
+				self->external_entry_points[function].process_state.memory_stack,
+				stack_address,
+				inst_log1->instruction.dstA.indirect_size);
+			if (memory) {
+				if (memory->value_id) {
+					inst_log1->value3.indirect_value_id = memory->value_id;
+					break;
+				} else {
+					inst_log1->value3.indirect_value_id = variable_id;
+					memory->value_id = variable_id;
+					ret = log_to_label(instruction->dstA.store,
+						instruction->dstA.indirect,
+						instruction->dstA.index,
+						instruction->dstA.relocated,
+						inst_log1->value3.value_scope,
+						inst_log1->value3.value_id,
+						inst_log1->value3.indirect_offset_value,
+						inst_log1->value3.indirect_value_id,
+						label);
+				}
+			} else {
+				debug_print(DEBUG_MAIN, 1, "assign_id: memory not found for stack address\n");
+			}
+			break;
+
+		case IND_IO:
+			debug_print(DEBUG_MAIN, 1, "IND_IO not yet handled\n");
+			exit(1);
+			break;
+
+		default:
+			break;
 		}
 		break;
 
@@ -4912,12 +4958,18 @@ int main(int argc, char *argv[])
 	/************************************************************
 	 * This bit assigned a variable ID and label to each assignment (dst).
 	 ************************************************************/
-
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
 			external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
 			external_entry_points[l].variable_id = 0x100;
+			for (n = 0; n < MEMORY_STACK_SIZE; n++) {
+				if (external_entry_points[l].process_state.memory_stack[n].valid == 1) {
+					debug_print(DEBUG_MAIN, 1, "0x%x:memory_stack[%d].start_address = 0x%"PRIx64"\n",
+						l, n, external_entry_points[l].process_state.memory_stack[n].start_address);
+				}
+			}
+
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
 				int next;
 				next = external_entry_points[l].nodes[m].inst_start;
@@ -4928,7 +4980,7 @@ int main(int argc, char *argv[])
 					instruction =  &inst_log1->instruction;
 					/* returns 0 for id and label set. 1 for error */
 					debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
-					tmp  = assign_id_label_dst(self, external_entry_points[l].variable_id, n, inst_log1, &label);
+					tmp  = assign_id_label_dst(self, l, n, inst_log1, &label);
 					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 						n,
 						instruction->srcA.indirect,
