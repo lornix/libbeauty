@@ -2796,6 +2796,8 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 	struct inst_log_entry_s *inst_log1;
 	struct instruction_s *instruction;
 	int variable_id = external_entry_point->variable_id;
+	uint64_t stack_address;
+	struct memory_s *memory;
 
 	/* n is the node to process */
 	int inst;
@@ -2854,20 +2856,42 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				break;
 			case STORE_REG:
 				/* FIXME: TODO*/
-				inst_log1->value1.value_id = 
-					reg_tracker[instruction->srcA.index];
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
-					inst_log1->value1.value_id); 
+				switch(instruction->srcA.indirect) {
+				case IND_DIRECT:
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value1.value_id);
+					break;
+				case IND_STACK:
+					stack_address = inst_log1->value1.indirect_init_value + inst_log1->value1.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcA.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value1.indirect_value_id = memory->value_id;
+						}
+					}
+				}
 				break;
 			}
 			switch (instruction->dstA.store) {
 			case STORE_DIRECT:
 				break;
 			case STORE_REG:
-				reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
-					instruction->dstA.index,
-					inst_log1->value3.value_id); 
+				switch(instruction->srcA.indirect) {
+				case IND_DIRECT:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id);
+					break;
+				case IND_STACK:
+					break;
+				}
 				break;
 			}
 			break;
@@ -5100,9 +5124,6 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	//tmp = assign_labels_to_src(self, &variable_id);
-
-	//self->local_counter = variable_id;
 
 	print_dis_instructions(self);
 #if 0

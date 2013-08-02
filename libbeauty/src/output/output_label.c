@@ -569,7 +569,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				value_id = inst_log1->value1.indirect_value_id;
 				break;
 			case IND_STACK:
-				tmp = fprintf(fd, "stack_");
+				//tmp = fprintf(fd, "stack_");
 				value_id = inst_log1->value1.indirect_value_id;
 				break;
 			case IND_IO:
