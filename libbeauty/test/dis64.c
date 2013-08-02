@@ -3946,7 +3946,7 @@ int create_function_node_members(struct self_s *self, struct external_entry_poin
 	struct mid_node_s *mid_node;
 
 	
-	node_list = calloc(global_nodes_size, sizeof(int));
+	node_list = calloc(global_nodes_size + 1, sizeof(int));
 	mid_node = calloc(100, sizeof(struct mid_node_s));
 
 	mid_node[0].node = external_entry_point->start_node;
@@ -4530,13 +4530,18 @@ int main(int argc, char *argv[])
 	/* Node specific processing */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			debug_print(DEBUG_MAIN, 1, "got here 2a\n");
 			tmp = build_node_dominance(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			debug_print(DEBUG_MAIN, 1, "got here 2b\n");
 			tmp = analyse_control_flow_node_links(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			debug_print(DEBUG_MAIN, 1, "got here 2c\n");
 			tmp = build_node_type(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+			debug_print(DEBUG_MAIN, 1, "got here 2d\n");
 			//tmp = build_control_flow_depth(self, nodes, &nodes_size,
 			//		paths, &paths_size, &paths_used, external_entry_points[l].start_node);
 			tmp = build_control_flow_loops_multi_exit(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
 				external_entry_points[l].loops, external_entry_points[l].loops_size);
+			debug_print(DEBUG_MAIN, 1, "got here 2e\n");
 		}
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 3\n");

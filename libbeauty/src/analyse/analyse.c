@@ -487,7 +487,7 @@ int build_node_dominance(struct self_s *self, struct control_flow_node_s *nodes,
 	int tmp;
 	//int type;
 
-	for(n = 1; n <= nodes_size; n++) {
+	for(n = 1; n < nodes_size; n++) {
 		node_b = n;
 		while (node_b != 0) {
 			tmp = 0;
@@ -527,7 +527,7 @@ int build_node_type(struct self_s *self, struct control_flow_node_s *nodes, int 
 	int n;
 	int type = 0;
 
-	for(n = 1; n <= nodes_size; n++) {
+	for(n = 1; n < nodes_size; n++) {
 		type = 0;
 		/* Check that it is a branch statement */
 		if (2 != nodes[n].next_size) {
@@ -677,7 +677,7 @@ int build_node_if_tail(struct self_s *self, struct control_flow_node_s *nodes, i
 	int loops_size;
 	struct loop_s *loops;
 
-	for(n = 1; n <= nodes_size; n++) {
+	for(n = 1; n < nodes_size; n++) {
 		start_node = n;
 		if (!nodes[start_node].valid) {
 			continue;
@@ -1233,7 +1233,7 @@ int print_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 	int prev_link_index;
 
 	debug_print(DEBUG_ANALYSE, 1, "print_control_flow_nodes: size = %d\n", nodes_size);	
-	for (n = 1; n <= nodes_size; n++) {
+	for (n = 1; n < nodes_size; n++) {
 		debug_print(DEBUG_ANALYSE, 1, "Node:0x%x, valid=%d, type=%d, dominator=0x%x, if_tail=0x%x, loop_head=%d, inst_start=0x%x, inst_end=0x%x, entry_point=0x%x, multi_exit=0x%x, depth=0x%x\n",
 			n,
 			nodes[n].valid,
@@ -1302,7 +1302,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 	//int found;
 	int tmp;
 
-	for (n = 1; n <= nodes_size; n++) {
+	for (n = 1; n < nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			tmp = node->link_next[l].is_loop_edge;
@@ -1342,7 +1342,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 		}
 	}
 	/* If is_loop_edge or is_loop_exit is set, reset is_normal to 0 */
-	for (n = 1; n <= nodes_size; n++) {
+	for (n = 1; n < nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			int is_loop_edge; 
@@ -1358,7 +1358,7 @@ int analyse_control_flow_node_links(struct self_s *self, struct control_flow_nod
 		}
 	}
 	/* If only is_loop_entry == 1, set is_normal to 1 */
-	for (n = 1; n <= nodes_size; n++) {
+	for (n = 1; n < nodes_size; n++) {
 		node = &nodes[n];
 		for (l = 0; l < node->next_size; l++) {
 			int is_loop_edge; 
@@ -1472,7 +1472,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 	int offset;
 	int ret;
 	int n,m;
-	int node_new = *nodes_size + 1;
+	int node_new = *nodes_size;
 	int new_inst_start;
 	int node_a_size;
 	int node_b_size;
