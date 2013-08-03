@@ -4665,6 +4665,12 @@ int main(int argc, char *argv[])
 	}
 	
 	tmp = output_cfg_dot_basic(self, nodes, nodes_size);
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes1 for function %x:%s\n", l, external_entry_points[l].name);
+			tmp = print_control_flow_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
@@ -4738,9 +4744,10 @@ int main(int argc, char *argv[])
 					debug_print(DEBUG_MAIN, 1, "multi_ret: node 0x%x\n", multi_ret[m]);
 				}
 				if (multi_ret_size == 2) {
-					tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, &(external_entry_points[l].nodes_size), multi_ret[0], multi_ret[1]);
-					tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
-						paths, &paths_size, &paths_used, 1);
+					/* FIXME: disable this temporarily. It is broken */
+					//tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, &(external_entry_points[l].nodes_size), multi_ret[0], multi_ret[1]);
+					//tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
+					//	paths, &paths_size, &paths_used, 1);
 				} else if (multi_ret_size > 2) {
 					debug_print(DEBUG_MAIN, 1, "multi_ret_size > 2 not yet handled\n");
 					exit(1);
@@ -4814,12 +4821,11 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
-			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes for function %s\n", external_entry_points[l].name);
+			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes for function %x:%s\n", l, external_entry_points[l].name);
 			tmp = print_control_flow_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
 		}
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 4\n");
-
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
@@ -4987,11 +4993,17 @@ int main(int argc, char *argv[])
 			external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
 			external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
 			external_entry_points[l].variable_id = 0x100;
+			debug_print(DEBUG_MAIN, 1, "NAME DST: 0x%x:%s\n",
+				l, external_entry_points[l].name);
 			for (n = 0; n < MEMORY_STACK_SIZE; n++) {
 				if (external_entry_points[l].process_state.memory_stack[n].valid == 1) {
 					debug_print(DEBUG_MAIN, 1, "0x%x:memory_stack[%d].start_address = 0x%"PRIx64"\n",
 						l, n, external_entry_points[l].process_state.memory_stack[n].start_address);
 				}
+			}
+			for (n = 1; n < external_entry_points[l].nodes_size; n++) {
+				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_start = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_start);
+				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_end = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_end);
 			}
 
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
@@ -5030,6 +5042,10 @@ int main(int argc, char *argv[])
 					}
 					if (inst_log1->next_size) {
 						next = inst_log1->next[0];
+					} else if (n != external_entry_points[l].nodes[m].inst_end) {
+						debug_print(DEBUG_MAIN, 1, "DST inst 0x%x, l = 0x%x, m = 0x%x next failure. No inst_end!!! inst_end1 = 0x%x, inst_end2 = 0x%x\n",
+							n, l, m, external_entry_points[l].nodes[m].inst_end, external_entry_points[l].nodes[m - 1].inst_end);
+						exit(1);
 					}
 				} while (n != external_entry_points[l].nodes[m].inst_end);
 			}
@@ -5923,7 +5939,7 @@ int main(int argc, char *argv[])
 #endif
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
-		if (external_entry_points[l].valid) {
+		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
 			tmp = output_cfg_dot(self, external_entry_points[l].label_redirect, external_entry_points[l].labels, l);
 		}
 	}

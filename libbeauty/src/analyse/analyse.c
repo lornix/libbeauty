@@ -1153,6 +1153,14 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 			/* FIXME: Stop duplicate prev_inst being created in the first place */
 		}
 	}
+	for (n = 1; n < inst_log; n++) {
+		if (inst_log_entry[n].node_start) {
+			debug_print(DEBUG_ANALYSE, 1, "p_node_start = inst 0x%x\n", n);	
+		}
+		if (inst_log_entry[n].node_end) {
+			debug_print(DEBUG_ANALYSE, 1, "p_node_end = inst 0x%x\n", n);	
+		}
+	}
 	node = 1;
 	for (n = 1; n < inst_log; n++) {
 		inst_log1 = &inst_log_entry[n];
@@ -1176,6 +1184,11 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 		}
 	}
 	*nodes_size = node - 1;
+
+	for (n = 1; n <= *nodes_size; n++) {
+			debug_print(DEBUG_ANALYSE, 1, "p_node[0x%x]_start = inst 0x%x\n", n, nodes[n].inst_start);	
+			debug_print(DEBUG_ANALYSE, 1, "p_node[0x%x]_end = inst 0x%x\n", n, nodes[n].inst_end);
+	}
 
 	/* Start by building the entire node table, with prev and next node. */
 	for (n = 1; n <= *nodes_size; n++) {
@@ -1219,6 +1232,10 @@ int build_control_flow_nodes(struct self_s *self, struct control_flow_node_s *no
 				}
 			}
 		}
+	}
+	for (n = 1; n <= *nodes_size; n++) {
+			debug_print(DEBUG_ANALYSE, 1, "p_node[0x%x]_start = inst 0x%x\n", n, nodes[n].inst_start);	
+			debug_print(DEBUG_ANALYSE, 1, "p_node[0x%x]_end = inst 0x%x\n", n, nodes[n].inst_end);
 	}
 	return 0;
 }
