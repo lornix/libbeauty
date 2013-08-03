@@ -1563,6 +1563,7 @@ int analyse_merge_nodes(struct self_s *self, int function, int node_a, int node_
 			nodes[node_a].prev_link_index[size] = 0;
 			nodes[node_a].prev_size++;
 			nodes[node_b].inst_end = new_inst_start + offset - 1;
+			self->inst_log_entry[nodes[node_b].inst_end].node_end = 1;
 			nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
 			nodes[node_b].next_size = 1;
 			nodes[node_b].link_next[0].node = node_a;
