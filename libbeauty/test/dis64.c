@@ -1421,7 +1421,7 @@ int output_cfg_dot(struct self_s *self,
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
-	struct process_state_s *process_state;
+	struct process_state_s *process_state = &external_entry_points[entry_point].process_state;
 	struct control_flow_node_s *nodes = external_entry_points[entry_point].nodes;
 	int nodes_size = external_entry_points[entry_point].nodes_size;
 	char *filename;
@@ -1437,7 +1437,7 @@ int output_cfg_dot(struct self_s *self,
 	const char *name;
 	int value_id;
 
-	if (external_entry_points[entry_point].member_nodes_size == 0) {
+	if (nodes_size == 0) {
 		debug_print(DEBUG_MAIN, 1, "external_entry_point 0x%x empty\n", entry_point);
 		return 1;
 	}
@@ -1461,7 +1461,7 @@ int output_cfg_dot(struct self_s *self,
 		node_size_limited = 50;
 	}
 #endif
-	for (node = 1; node < external_entry_points[entry_point].nodes_size; node++) {
+	for (node = 1; node < nodes_size; node++) {
 //	for (node = 1; node <= node_size_limited; node++) {
 #if 0
 		if ((node != 0x13) && 
@@ -1497,11 +1497,11 @@ int output_cfg_dot(struct self_s *self,
 				tmp = fprintf(fd, "phi[%d] = REG0x%x:0x%x ",
 					n, nodes[node].phi[n].reg, nodes[node].phi[n].value_id);
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
-					tmp = get_value_id_from_node_reg(self, nodes[node].entry_point, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
+					//tmp = get_value_id_from_node_reg(self, nodes[node].entry_point, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
 					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x:L:0x%x, ",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
 						nodes[node].phi[n].phi_node[m].node,
-						value_id);
+						nodes[node].phi[n].phi_node[m].value_id);
 				}
 #if 0
 				for (m = 0; m < nodes[node].path_size; m++) {
@@ -1520,7 +1520,6 @@ int output_cfg_dot(struct self_s *self,
 				tmp = fprintf(fd, "\\l");
 			}
 		}
-		process_state = &external_entry_points[nodes[node].entry_point - 1].process_state;
 		n = nodes[node].inst_start;
 		block_end = 0;
 		do {
@@ -2138,6 +2137,10 @@ int init_node_used_register_table(struct self_s *self, struct control_flow_node_
 {
 	int node;
 	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		nodes[node].used_register = calloc(MAX_REG, sizeof(struct node_used_register_s));
 	}
 	return 0;
@@ -2152,6 +2155,10 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 	struct instruction_s *instruction;
 
 	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		inst = nodes[node].inst_start;
 		debug_print(DEBUG_MAIN, 1, "In Block:0x%x\n", node);
 		do {
@@ -2508,6 +2515,10 @@ int fill_node_phi_dst(struct self_s *self, struct control_flow_node_s *nodes, in
 	int tmp;
 
 	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		tmp = search_back_for_join(nodes, nodes_size, node, &phi_node);
 		if (tmp) {
 			/* No previous join node found */
@@ -2598,6 +2609,10 @@ int fill_node_phi_src(struct self_s *self, struct control_flow_node_s *nodes, in
 	}
 #endif
 	for (node = 1; node < node_size_limited; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		if (nodes[node].phi_size > 0) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				debug_print(DEBUG_ANALYSE_PHI, 1, "phi_src:node=0x%x, node->entry:0x%x, name=%s\n", node, nodes[node].entry_point,
@@ -2658,6 +2673,10 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	printf("fill_phi: entered\n");
 
 	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
 		printf("node = 0x%x\n", node);
 		if (nodes[node].phi_size > 0) {
 			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
@@ -4745,9 +4764,10 @@ int main(int argc, char *argv[])
 				}
 				if (multi_ret_size == 2) {
 					/* FIXME: disable this temporarily. It is broken */
-					//tmp = analyse_merge_nodes(self, external_entry_points[l].nodes, &(external_entry_points[l].nodes_size), multi_ret[0], multi_ret[1]);
-					//tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
-					//	paths, &paths_size, &paths_used, 1);
+					debug_print(DEBUG_MAIN, 1, "analyse_merge_nodes: 0x%x, 0x%x\n", multi_ret[0], multi_ret[1]);
+					tmp = analyse_merge_nodes(self, l, multi_ret[0], multi_ret[1]);
+					tmp = build_control_flow_paths(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size,
+						paths, &paths_size, &paths_used, 1);
 				} else if (multi_ret_size > 2) {
 					debug_print(DEBUG_MAIN, 1, "multi_ret_size > 2 not yet handled\n");
 					exit(1);
@@ -4800,6 +4820,12 @@ int main(int argc, char *argv[])
 		}
 	}
 	debug_print(DEBUG_MAIN, 1, "got here 2\n");
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			debug_print(DEBUG_MAIN, 1, "print_control_flow_nodes for function %x:%s\n", l, external_entry_points[l].name);
+			tmp = print_control_flow_nodes(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
 	/* Node specific processing */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
@@ -4831,6 +4857,9 @@ int main(int argc, char *argv[])
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			tmp = build_node_if_tail(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
 			for (n = 0; n < external_entry_points[l].nodes_size; n++) {
+				if (!(external_entry_points[l].nodes[n].valid)) {
+					continue;
+				}
 				if ((external_entry_points[l].nodes[n].type == NODE_TYPE_IF_THEN_ELSE) &&
 					(external_entry_points[l].nodes[n].if_tail == 0)) {
 					debug_print(DEBUG_MAIN, 1, "FAILED: Node 0x%x with no if_tail\n", n);
@@ -5002,12 +5031,18 @@ int main(int argc, char *argv[])
 				}
 			}
 			for (n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!(external_entry_points[l].nodes[n].valid)) {
+					continue;
+				}
 				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_start = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_start);
 				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_end = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_end);
 			}
 
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
 				int next;
+				if (!(external_entry_points[l].nodes[m].valid)) {
+					continue;
+				}
 				next = external_entry_points[l].nodes[m].inst_start;
 				do {
 					struct label_s label;
@@ -5067,6 +5102,10 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!(external_entry_points[l].nodes[n].valid)) {
+					/* Only output nodes that are valid */
+					continue;
+				}
 				printf("JCD: scanning node phi 0x%x\n", n);
 				if (external_entry_points[l].nodes[n].phi_size) {
 					printf("JCD: phi insts found at node 0x%x\n", n);
@@ -5092,6 +5131,10 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
+					continue;
+				}
 				tmp = fill_reg_dependency_table(self, &external_entry_points[l], n);
 			}
 		}
@@ -5136,6 +5179,10 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
+					continue;
+				}
 				tmp = assign_labels_to_src(self, &external_entry_points[l], n);
 			}
 		}

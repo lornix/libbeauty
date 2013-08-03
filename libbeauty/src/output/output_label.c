@@ -1084,9 +1084,14 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (IND_DIRECT == instruction->srcA.indirect) {
 				/* A direct call */
 				/* FIXME: Get the output right */
-				if (1 == instruction->srcA.relocated) {
+				if (1 == instruction->srcA.relocated && inst_log1->extension) {
 					struct extension_call_s *call;
 					call = inst_log1->extension;
+					if (!call) {
+						printf("call is NULL\n");
+						exit(1);
+					}
+						
 					//tmp = fprintf(fd, "%s(%d:", 
 					//	external_entry_points[instruction->srcA.index].name,
 					//	external_entry_points[instruction->srcA.index].params_size);

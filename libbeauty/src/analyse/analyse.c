@@ -1484,12 +1484,14 @@ int compare_inst(struct self_s *self, int inst_a, int inst_b)
 	return ret;
 }
 
-int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, int *nodes_size, int node_a, int node_b) {
+int analyse_merge_nodes(struct self_s *self, int function, int node_a, int node_b) {
 	int inst_a, inst_b;
 	int offset;
 	int ret;
 	int n,m;
-	int node_new = *nodes_size;
+	struct control_flow_node_s *nodes = self->external_entry_points[function].nodes;
+	int nodes_size = self->external_entry_points[function].nodes_size;
+	int node_new = nodes_size;
 	int new_inst_start;
 	int node_a_size;
 	int node_b_size;
@@ -1499,6 +1501,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 	node_a_size = nodes[node_a].inst_end - nodes[node_a].inst_start;
 	node_b_size = nodes[node_b].inst_end - nodes[node_b].inst_start;
 	if (node_a_size > node_b_size) {
+		debug_print(DEBUG_ANALYSE, 1, "merge_nodes: swap node_a and node_b\n");
 		// Swap node_a and node_b
 		tmp = node_a;
 		node_a = node_b;
@@ -1525,6 +1528,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 			int size = nodes[node_a].prev_size;
 			int size_node_b = nodes[node_b].prev_size;
 			// node_a identical to node_b
+			debug_print(DEBUG_ANALYSE, 1, "merge_nodes: node_a identical to node_b\n");
 			ret = 1;
 			debug_print(DEBUG_ANALYSE, 1, "Merge2  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 			debug_print(DEBUG_ANALYSE, 1, "Merge2  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
@@ -1540,6 +1544,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 			}
 			nodes[node_a].prev_size += size_node_b;
 			/* Mark the node_b as un-used */
+			debug_print(DEBUG_ANALYSE, 1, "merge_nodes: Mark the node_b as un-used\n");
 			nodes[node_b].inst_end = new_inst_start + offset - 1;
 			nodes[node_b].prev_size = 0;
 			nodes[node_b].valid = 0;
@@ -1549,6 +1554,7 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		} else {
 			int size = nodes[node_a].prev_size;
 			// Whole of node a contained in node b
+			debug_print(DEBUG_ANALYSE, 1, "merge_nodes: Whole of node_a contained in node_b\n");
 			ret = 1;
 			debug_print(DEBUG_ANALYSE, 1, "Merge3  inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 			nodes[node_a].prev_node = realloc(nodes[node_a].prev_node, (size + 1) * sizeof(int));
@@ -1566,6 +1572,18 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		debug_print(DEBUG_ANALYSE, 1, "Merge4 inst_a = 0x%x, n = 0x%x\n", inst_a, n);
 		// FIXME: Now create a new node, and merge node_a and node_b into it.
 		//	This will create a single ret node for the function. 
+		debug_print(DEBUG_ANALYSE, 1, "merge_nodes: Create a node_new: 0x%x\n", node_new);
+
+		nodes_size++;
+		debug_print(DEBUG_ANALYSE, 1, "merge_nodes: 0x%x = nodes_size++\n", nodes_size);
+		nodes = realloc(nodes, nodes_size * sizeof(struct control_flow_node_s));
+		self->external_entry_points[function].nodes = nodes;
+		self->external_entry_points[function].nodes_size = nodes_size;
+		if (node_new >= nodes_size) {
+			debug_print(DEBUG_ANALYSE, 1, "merge_nodes: failure, trying to write an extra node before having realloced it. node_new = 0x%x, nodes_size = 0x%x\n", node_new, nodes_size);
+			exit(1);
+		}
+
 		nodes[node_new].inst_start = new_inst_start;
 		nodes[node_new].inst_end = inst_a;
 		nodes[node_a].inst_end = new_inst_start - 1;
@@ -1584,8 +1602,6 @@ int analyse_merge_nodes(struct self_s *self, struct control_flow_node_s *nodes, 
 		nodes[node_b].link_next = calloc(1, sizeof(struct node_link_s));
 		nodes[node_b].next_size = 1;
 		nodes[node_b].link_next[0].node = node_new;
-		
-		(*nodes_size)++;
 	}
 
 	return ret;
