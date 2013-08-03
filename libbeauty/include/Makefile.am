@@ -6,6 +6,9 @@ include_HEADERS = \
 	exe.h \
 	opcodes.h \
 	llvm.h \
+	analyse.h \
+	global_struct.h \
+	output.h \
 	rev.h
 
 
