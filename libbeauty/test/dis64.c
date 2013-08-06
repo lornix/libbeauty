@@ -2823,6 +2823,7 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 	struct label_s label;
 	int found = 0;
 	int reg_tracker[MAX_REG];
+	debug_print(DEBUG_MAIN, 1, "assign_labels_to_src() node 0x%x\n", node);
 	/* Initialise the reg_tracker at each node */
 	for (m = 0; m < MAX_REG; m++) {
 		if (nodes[node].used_register[m].seen == 1) {
@@ -2901,7 +2902,7 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 			case STORE_DIRECT:
 				break;
 			case STORE_REG:
-				switch(instruction->srcA.indirect) {
+				switch(instruction->dstA.indirect) {
 				case IND_DIRECT:
 					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
 					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
@@ -3018,10 +3019,16 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 			case STORE_DIRECT:
 				break;
 			case STORE_REG:
-				reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
-					instruction->dstA.index,
-					inst_log1->value3.value_id); 
+				switch(instruction->dstA.indirect) {
+				case IND_DIRECT:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id); 
+					break;
+				case IND_STACK:
+					break;
+				}
 				break;
 			}
 			break;
