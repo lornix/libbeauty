@@ -279,14 +279,21 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 		}
 		if (err) break;
 		tmp = fprintf(fd, "(");
-		if (IND_MEM == inst_log1_flagged->instruction.dstA.indirect) {
+
+		switch (inst_log1_flagged->instruction.srcB.indirect) {
+		case IND_MEM:
+		case IND_IO:
 			tmp = fprintf(fd, "*");
+			/* fall through */
+		case IND_STACK:
 			value_id = inst_log1_flagged->value2.indirect_value_id;
-		} else {
+			break;
+		case IND_DIRECT:
 			value_id = inst_log1_flagged->value2.value_id;
+			break;
 		}
-		if (STORE_DIRECT == inst_log1_flagged->instruction.dstA.store) {
-			tmp = fprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.dstA.index);
+		if (STORE_DIRECT == inst_log1_flagged->instruction.srcB.store) {
+			tmp = fprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
 		} else {
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
@@ -294,16 +301,29 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			tmp = output_label(label, fd);
 		}
 		tmp = fprintf(fd, "%s", condition_string);
-		if (IND_MEM == inst_log1_flagged->instruction.srcA.indirect) {
+
+		switch (inst_log1_flagged->instruction.srcA.indirect) {
+		case IND_MEM:
+		case IND_IO:
 			tmp = fprintf(fd, "*");
+			/* fall through */
+		case IND_STACK:
 			value_id = inst_log1_flagged->value1.indirect_value_id;
-		} else {
+			break;
+		case IND_DIRECT:
 			value_id = inst_log1_flagged->value1.value_id;
+			break;
 		}
-		tmp = label_redirect[value_id].redirect;
-		label = &labels[tmp];
-		//tmp = fprintf(fd, "0x%x:", tmp);
-		tmp = output_label(label, fd);
+
+		if (STORE_DIRECT == inst_log1_flagged->instruction.srcB.store) {
+			tmp = fprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
+		} else {
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			//tmp = fprintf(fd, "0x%x:", tmp);
+			tmp = output_label(label, fd);
+		}
+
 		tmp = fprintf(fd, ") ");
 		break;
 	case SUB:
@@ -1170,7 +1190,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "//\tcmp ");
 			tmp = fprintf(fd, "//\tcmp ");
-			if (1 == instruction->dstA.indirect) {
+			if (1 == instruction->srcB.indirect) {
 				tmp = fprintf(fd, "*");
 				value_id = inst_log1->value2.indirect_value_id;
 			} else {

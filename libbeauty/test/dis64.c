@@ -2965,13 +2965,28 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				break;
 			case STORE_REG:
 				/* FIXME: TODO*/
-				/* srcA */
-				//tmp = search_back_for_register(self, l, node, inst, 0,
-				//	&label, &new_label);
-				inst_log1->value1.value_id = 
-					reg_tracker[instruction->srcA.index];
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
-					inst_log1->value1.value_id); 
+				switch(instruction->srcA.indirect) {
+				case IND_DIRECT:
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value1.value_id);
+					break;
+				case IND_STACK:
+					stack_address = inst_log1->value1.indirect_init_value + inst_log1->value1.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcA.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value1.indirect_value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given indirect_value_id = 0x%"PRIx64"\n", inst,
+								inst_log1->value1.indirect_value_id); 
+						}
+					}
+				}
 				break;
 			}
 			switch (instruction->srcB.store) {
@@ -3006,13 +3021,28 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				break;
 			case STORE_REG:
 				/* FIXME: TODO*/
-				/* srcB */
-				//search_back_for_register(self, l, node, inst, 1,
-				//	&label, &new_label);
-				inst_log1->value2.value_id = 
-					reg_tracker[instruction->srcB.index];
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB given value_id = 0x%"PRIx64"\n", inst,
-					inst_log1->value2.value_id); 
+				switch(instruction->srcB.indirect) {
+				case IND_DIRECT:
+					inst_log1->value2.value_id = 
+						reg_tracker[instruction->srcB.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value2.value_id);
+					break;
+				case IND_STACK:
+					stack_address = inst_log1->value2.indirect_init_value + inst_log1->value2.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcB.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value2.indirect_value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given indirect_value_id = 0x%"PRIx64"\n", inst,
+								inst_log1->value2.indirect_value_id); 
+						}
+					}
+				}
 				break;
 			}
 			switch (instruction->dstA.store) {
