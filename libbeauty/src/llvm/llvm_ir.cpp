@@ -35,7 +35,7 @@ int find_function_member_node(struct self_s *self, struct external_entry_point_s
 	return found;
 }
 
-int add_instruction(struct self_s *self, BasicBlock *bb, int inst)
+int add_instruction(struct self_s *self, BasicBlock *bb, int external_entry, int inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
@@ -65,7 +65,7 @@ int add_node_instructions(struct self_s *self, BasicBlock *bb, int node, int ext
 	do {
 		inst = inst_next;
 		inst_log1 =  &inst_log_entry[inst];
-		add_instruction(self, bb, inst);
+		add_instruction(self, bb, external_entry, inst);
 		if (inst_log1->next_size > 0) {
 			inst_next = inst_log1->next[0];
 		}
@@ -102,7 +102,7 @@ extern "C" int llvm_export(struct self_s *self) {
 
 			Function *F = Function::Create(FT, Function::ExternalLinkage, function_name, M);
 
-			BasicBlock **bb = (BasicBlock **)calloc(external_entry_points[n].member_nodes_size + 1, sizeof (BasicBlock *));
+			BasicBlock **bb = (BasicBlock **)calloc(nodes_size + 1, sizeof (BasicBlock *));
 			for (m = 1; m < nodes_size; m++) {
 				std::string node_string;
 				std::stringstream tmp_str;
