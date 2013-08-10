@@ -6024,6 +6024,16 @@ int main(int argc, char *argv[])
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
+			debug_print(DEBUG_MAIN, 1, "name = %s\n", external_entry_points[l].name);
+			debug_print(DEBUG_MAIN, 1, "params size = 0x%x\n", external_entry_points[l].params_size);
+			for (n = 0; n < external_entry_points[l].params_size; n++) {
+				debug_print(DEBUG_MAIN, 1, "params = 0x%x\n", external_entry_points[l].params[n]);
+			}
+		}
+	}
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if ((external_entry_points[l].valid) && (external_entry_points[l].type == 1)) {
 			tmp = output_cfg_dot(self, external_entry_points[l].label_redirect, external_entry_points[l].labels, l);
 		}
 	}
