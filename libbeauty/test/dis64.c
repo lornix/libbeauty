@@ -1483,9 +1483,22 @@ int output_cfg_dot(struct self_s *self,
 			name = "";
 		}
 		tmp = fprintf(fd, " \"Node:0x%08x\" ["
-                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
+                                        "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s",
                                         node,
 					node, "lightgray", node, name);
+		if (external_entry_points[entry_point].params_size > 0) {
+			tmp = fprintf(fd, "(");
+			for (n = 0; n < external_entry_points[entry_point].params_size; n++) {
+				int label_index;
+				label_index = external_entry_points[entry_point].params[n];
+				tmp = output_label(&external_entry_points[entry_point].labels[label_index], fd);
+				if (n + 1 < external_entry_points[entry_point].params_size) {
+					tmp = fprintf(fd, ", ");
+				}
+			}
+			tmp = fprintf(fd, ")");
+		}
+		tmp = fprintf(fd, "\\l");
 		tmp = fprintf(fd, "type = 0x%x\\l",
 				nodes[node].type);
 		if (nodes[node].if_tail) {
