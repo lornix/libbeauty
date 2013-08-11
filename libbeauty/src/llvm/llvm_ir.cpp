@@ -92,6 +92,7 @@ extern "C" int llvm_export(struct self_s *self) {
 		if ((external_entry_points[n].valid != 0) &&
 			(external_entry_points[n].type == 1) && 
 			(external_entry_points[n].nodes_size)) {
+			Value** value = (Value**) calloc(external_entry_points[n].variable_id, sizeof(Value*));
 			nodes = external_entry_points[n].nodes;
 			nodes_size = external_entry_points[n].nodes_size;
 			Module *M = new Module("test_llvm_export", Context);
@@ -100,10 +101,25 @@ extern "C" int llvm_export(struct self_s *self) {
 
 			function_name = external_entry_points[n].name;
 			snprintf(output_filename, 500, "./llvm/%s.bc", function_name);
+			std::vector<Type*>FuncTy_0_args;
+			for (m = 0; m < external_entry_points[n].params_size; m++) {
+				FuncTy_0_args.push_back(IntegerType::get(M->getContext(), 32));
+			}
+
 			FunctionType *FT =
-				FunctionType::get(Type::getInt32Ty(Context), /*not vararg*/false);
+				FunctionType::get(Type::getInt32Ty(Context),
+					FuncTy_0_args,
+					false); /*not vararg*/
 
 			Function *F = Function::Create(FT, Function::ExternalLinkage, function_name, M);
+
+			Function::arg_iterator args = F->arg_begin();
+			for (m = 0; m < external_entry_points[n].params_size; m++) {
+				int index = external_entry_points[n].params[m];
+				value[index] = args;
+				args++;
+				value[index]->setName("param1");
+			}
 
 			BasicBlock **bb = (BasicBlock **)calloc(nodes_size + 1, sizeof (BasicBlock *));
 			for (m = 1; m < nodes_size; m++) {
@@ -117,6 +133,7 @@ extern "C" int llvm_export(struct self_s *self) {
 
 			Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
 			Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
+			Value *Four = value[external_entry_points[n].params[0]];
 
 			for (node = 1; node < nodes_size; node++) {
 				printf("LLVM: node=0x%x\n", node);
@@ -126,7 +143,8 @@ extern "C" int llvm_export(struct self_s *self) {
 				/* FIXME: Output terminator instructions */
 				if (nodes[node].next_size == 0) {
 					printf("NEXT0 FOUND Add, Ret3\n");
-					Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult3", bb[node]);
+					//Value *Add = BinaryOperator::CreateAdd(Two, value[external_entry_points[n].params[0]], "addresult3", bb[node]);
+					Value *Add = BinaryOperator::CreateAdd(Two, Four, "addresult3", bb[node]);
 					ReturnInst::Create(Context, Add, bb[node]);
 				} else if (nodes[node].next_size == 1) {
 					int found = 0;
