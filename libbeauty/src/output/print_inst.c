@@ -84,6 +84,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	int tmp;
 	int tmp_state = 0;
 	int n, l;
+	char buffer[1024];
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->opcode);
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->flags);
@@ -336,7 +337,8 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 					}
 					fprintf(fd, "int%"PRId64"_t ",
 						label->size_bits);
-					tmp = output_label(label, fd);
+					tmp = label_to_string(label, buffer, 1023);
+					tmp = fprintf(fd, "%s", buffer);
 					tmp_state++;
 				}
 			}
@@ -352,7 +354,8 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 				}
 				fprintf(fd, "int%"PRId64"_t ",
 					label->size_bits);
-				tmp = output_label(label, fd);
+				tmp = label_to_string(label, buffer, 1023);
+				tmp = fprintf(fd, "%s", buffer);
 				tmp_state++;
 			}
 			tmp = fprintf(fd, ");");

@@ -1487,11 +1487,13 @@ int output_cfg_dot(struct self_s *self,
                                         node,
 					node, "lightgray", node, name);
 		if (external_entry_points[entry_point].params_size > 0) {
+			char buffer[1024];
 			tmp = fprintf(fd, "(");
 			for (n = 0; n < external_entry_points[entry_point].params_size; n++) {
 				int label_index;
 				label_index = external_entry_points[entry_point].params[n];
-				tmp = output_label(&external_entry_points[entry_point].labels[label_index], fd);
+				tmp = label_to_string(&external_entry_points[entry_point].labels[label_index], buffer, 1023);
+				fprintf(fd, "%s", buffer);
 				if (n + 1 < external_entry_points[entry_point].params_size) {
 					tmp = fprintf(fd, ", ");
 				}
@@ -6144,6 +6146,7 @@ int main(int argc, char *argv[])
 			tmp_state = 0;
 			for (m = 0; m < REG_PARAMS_ORDER_MAX; m++) {
 				struct label_s *label;
+				char buffer[1024];
 				for (n = 0; n < external_entry_points[l].params_size; n++) {
 					label = &(external_entry_points[l].labels[external_entry_points[l].params[n]]);
 					debug_print(DEBUG_MAIN, 1, "reg_params_order = 0x%x, label->value = 0x%"PRIx64"\n", reg_params_order[m], label->value);
@@ -6158,13 +6161,15 @@ int main(int argc, char *argv[])
 						if (label->lab_pointer) {
 							fprintf(fd, "*");
 						}
-						tmp = output_label(label, fd);
+						tmp = label_to_string(label, buffer, 1023);
+						fprintf(fd, "%s", buffer);
 						tmp_state++;
 					}
 				}
 			}
 			for (n = 0; n < external_entry_points[l].params_size; n++) {
 				struct label_s *label;
+				char buffer[1024];
 				label = &(external_entry_points[l].labels[external_entry_points[l].params[n]]);
 				if ((label->scope == 2) &&
 					(label->type == 1)) {
@@ -6178,19 +6183,22 @@ int main(int argc, char *argv[])
 				if (label->lab_pointer) {
 					fprintf(fd, "*");
 				}
-				tmp = output_label(label, fd);
+				tmp = label_to_string(label, buffer, 1023);
+				fprintf(fd, "%s", buffer);
 				tmp_state++;
 			}
 			tmp = fprintf(fd, ")\n{\n");
 			for (n = 0; n < external_entry_points[l].locals_size; n++) {
 				struct label_s *label;
+				char buffer[1024];
 				label = &(external_entry_points[l].labels[external_entry_points[l].locals[n]]);
 				fprintf(fd, "\tint%"PRId64"_t ",
 					label->size_bits);
 				if (label->lab_pointer) {
 					fprintf(fd, "*");
 				}
-				tmp = output_label(label, fd);
+				tmp = label_to_string(label, buffer, 1023);
+				fprintf(fd, "%s", buffer);
 				fprintf(fd, ";\n");
 			}
 			fprintf(fd, "\n");

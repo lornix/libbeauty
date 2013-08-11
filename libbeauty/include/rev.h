@@ -191,7 +191,7 @@ struct ast_s {
 
 extern int execute_instruction(struct self_s *self, struct process_state_s *process_state, struct inst_log_entry_s *inst);
 extern int process_block(struct self_s *self, struct process_state_s *process_state, void *handle_void, uint64_t inst_log_prev, uint64_t eip_offset_limit);
-extern int output_label(struct label_s *label, FILE *fd);
+extern int label_to_string(struct label_s *label, char *string, int size);
 int output_function_body(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
 uint32_t output_function_name(FILE *fd,
