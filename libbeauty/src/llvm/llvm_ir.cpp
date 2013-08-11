@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 //#include "llvm.h"
-//#include <rev.h>
 #include <string>
 #include <sstream>
 #include <global_struct.h>
+#include <output.h>
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"
 #include "llvm/DerivedTypes.h"
@@ -85,6 +85,9 @@ extern "C" int llvm_export(struct self_s *self) {
 	struct control_flow_node_s *nodes;
 	int nodes_size;
 	int node;
+	struct label_s *labels;
+	int labels_size;
+	char buffer[1024];
 	
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	
@@ -95,6 +98,8 @@ extern "C" int llvm_export(struct self_s *self) {
 			Value** value = (Value**) calloc(external_entry_points[n].variable_id, sizeof(Value*));
 			nodes = external_entry_points[n].nodes;
 			nodes_size = external_entry_points[n].nodes_size;
+			labels = external_entry_points[n].labels;
+			labels_size = external_entry_points[n].variable_id;
 			Module *M = new Module("test_llvm_export", Context);
  			M->setDataLayout("e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128");
 			M->setTargetTriple("x86_64-pc-linux-gnu");
@@ -118,7 +123,8 @@ extern "C" int llvm_export(struct self_s *self) {
 				int index = external_entry_points[n].params[m];
 				value[index] = args;
 				args++;
-				value[index]->setName("param1");
+				tmp = label_to_string(&(labels[index]), buffer, 1023);
+				value[index]->setName(buffer);
 			}
 
 			BasicBlock **bb = (BasicBlock **)calloc(nodes_size + 1, sizeof (BasicBlock *));

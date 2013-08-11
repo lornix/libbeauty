@@ -21,6 +21,13 @@
  */
 
 #ifndef __OUTPUT__
+
+#ifdef __cplusplus
+extern "C" int label_to_string(struct label_s *label, char *string, int size);
+#else
+extern int label_to_string(struct label_s *label, char *string, int size);
+#endif
+
 #define __OUTPUT__
 
 #endif /* __OUTPUT__ */

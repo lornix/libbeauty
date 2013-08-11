@@ -163,6 +163,33 @@ struct ast_type_index_s {
 	uint64_t index; /* index into the specific object table */
 };
 
+/* redirect is used for SSA correction, when one needs to rename a variable */
+/* renaming the variable within the log entries would take too long. */
+/* so use log entry value_id -> redirect -> label_s */
+struct label_redirect_s {
+	uint64_t redirect;
+} ;
+
+struct label_s {
+	/* local = 1, param = 2, data = 3, mem = 4, sp_bp = 5 */
+	uint64_t scope;
+	/* For local or param: reg = 1, stack = 2 */
+	/* For data: data = 1, &data = 2, value = 3 */
+	uint64_t type;
+	/* value */
+	uint64_t value;
+	/* size in bits */
+	uint64_t size_bits;
+	/* is it a pointer */
+	uint64_t lab_pointer;
+	/* is it a signed */
+	uint64_t lab_signed;
+	/* is it a unsigned */
+	uint64_t lab_unsigned;
+	/* human readable name */
+	char *name;
+} ;
+
 #define NODE_TYPE_UNKNOWN 0
 #define NODE_TYPE_LOOP 1
 #define NODE_TYPE_IF_THEN_ELSE 2
