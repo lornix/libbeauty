@@ -1629,14 +1629,15 @@ int get_value_from_index(struct operand_s *operand, uint64_t *index)
  * This function uses information from instruction log entries
  * and creates labels.
  ************************************************************/
-int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
+int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
 	//int tmp;
 
 	/* FIXME: May handle by using first switch as switch (indirect) */
-	debug_print(DEBUG_ANALYSE, 1, "value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", size=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
 				store,
 				indirect,
 				index,
+				size,
 				relocated,
 				value_scope,
 				value_id,
@@ -1659,16 +1660,19 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 			label->type = 1;
 			label->lab_pointer = 1;
 			label->value = index;
+			label->size_bits = size;
 		} else if (relocated) {
 			label->scope = 3;
 			label->type = 2;
 			label->lab_pointer = 0;
 			label->value = index;
+			label->size_bits = size;
 		} else {
 			label->scope = 3;
 			label->type = 3;
 			label->lab_pointer = 0;
 			label->value = index;
+			label->size_bits = size;
 		}
 		break;
 	case STORE_REG:
@@ -1680,12 +1684,14 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 				label->type = 2;
 				label->lab_pointer = 0;
 				label->value = indirect_offset_value;
+				label->size_bits = size;
 				debug_print(DEBUG_ANALYSE, 1, "PARAM_STACK^\n");
 			} else if (0 == indirect) {
 				label->scope = 2;
 				label->type = 1;
 				label->lab_pointer = 0;
 				label->value = index;
+				label->size_bits = size;
 				debug_print(DEBUG_ANALYSE, 1, "PARAM_REG^\n");
 			} else {
 				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN PARAMS\n");
@@ -1698,11 +1704,13 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 				label->type = 2;
 				label->lab_pointer = 0;
 				label->value = -indirect_offset_value;
+				label->size_bits = size;
 			} else if (0 == indirect) {
 				label->scope = 1;
 				label->type = 1;
 				label->lab_pointer = 0;
 				label->value = value_id;
+				label->size_bits = size;
 			} else {
 				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN LOCAL\n");
 			}
@@ -1720,12 +1728,14 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 			label->type = 1;
 			label->lab_pointer = 1;
 			label->value = indirect_value_id;
+			label->size_bits = size;
 			break;
 		default:
 			label->scope = 0;
 			label->type = value_scope;
 			label->lab_pointer = 0;
 			label->value = 0;
+			label->size_bits = 0;
 			debug_print(DEBUG_ANALYSE, 1, "unknown value scope: %04"PRIx64";\n", (value_scope));
 			return 1;
 			break;
@@ -1736,11 +1746,12 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 		return 1;
 		break;
 	}
-	debug_print(DEBUG_ANALYSE, 1, "label in log_to_label: scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", lab_value = 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "label in log_to_label: scope=0x%"PRIx64", type=0x%"PRIx64", lab_pointer=0x%"PRIx64", lab_value = 0x%"PRIx64", lab_size_bits = 0x%"PRIx64"\n",
 		label->scope,
 		label->type,
 		label->lab_pointer,
-		label->value);
+		label->value,
+		label->size_bits);
 	return 0;
 }
 
@@ -1753,7 +1764,6 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 	int label_offset;
 	label_offset = label_redirect[value_id].redirect;
 	label = &labels[label_offset];
-	label->size_bits = value->length * 8;
 	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64"\n",
 		value_id,
 		label->scope,

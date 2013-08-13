@@ -88,6 +88,7 @@ extern "C" int llvm_export(struct self_s *self) {
 	struct label_s *labels;
 	int labels_size;
 	char buffer[1024];
+	int index;
 	
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	
@@ -108,7 +109,10 @@ extern "C" int llvm_export(struct self_s *self) {
 			snprintf(output_filename, 500, "./llvm/%s.bc", function_name);
 			std::vector<Type*>FuncTy_0_args;
 			for (m = 0; m < external_entry_points[n].params_size; m++) {
-				FuncTy_0_args.push_back(IntegerType::get(M->getContext(), 32));
+				index = external_entry_points[n].params[m];
+				int size = labels[index].size_bits;
+				printf("Label 0x%x: size_bits = 0x%x\n", index, size);
+				FuncTy_0_args.push_back(IntegerType::get(M->getContext(), size));
 			}
 
 			FunctionType *FT =
@@ -120,7 +124,7 @@ extern "C" int llvm_export(struct self_s *self) {
 
 			Function::arg_iterator args = F->arg_begin();
 			for (m = 0; m < external_entry_points[n].params_size; m++) {
-				int index = external_entry_points[n].params[m];
+				index = external_entry_points[n].params[m];
 				value[index] = args;
 				args++;
 				tmp = label_to_string(&(labels[index]), buffer, 1023);
