@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include "llvm.h"
 #include <string>
 #include <sstream>
 #include <global_struct.h>
@@ -19,7 +18,19 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
-int find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node)
+class LLVM_ir_export
+{
+	public:
+		int find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node);
+		int add_instruction(struct self_s *self, Value **value, BasicBlock *bb, int external_entry, int inst);
+		int add_node_instructions(struct self_s *self, Value **value, BasicBlock *bb, int node, int external_entry);
+		int fill_value(struct self_s *self, Value **value, int value_id, int external_entry);
+		int output(struct self_s *self);
+	private:
+		LLVMContext Context;
+};
+
+int LLVM_ir_export::find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node)
 {
 	int found = 1;
 	int n;
@@ -35,11 +46,46 @@ int find_function_member_node(struct self_s *self, struct external_entry_point_s
 	return found;
 }
 
-int add_instruction(struct self_s *self, BasicBlock *bb, int external_entry, int inst)
+int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlock *bb, int external_entry, int inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[external_entry]);
+	Value *srcA;
+	Value *srcB;
+	Value *dstA;
+	int value_id;
+	int tmp;
+
 	switch (inst_log1->instruction.opcode) {
+	case 2:  // ADD
+		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("value_id1 = 0x%lx, value_id2 = 0x%lx\n", inst_log1->value1.value_id, inst_log1->value2.value_id);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL\n");
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL\n");
+				exit(1);
+			}
+		}
+		srcB = value[value_id];
+		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		dstA = BinaryOperator::CreateAdd(srcA, srcB, "addresult4", bb);
+		break;
 	default:
 		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
 		break;
@@ -48,7 +94,7 @@ int add_instruction(struct self_s *self, BasicBlock *bb, int external_entry, int
 	return 0;
 } 
 
-int add_node_instructions(struct self_s *self, BasicBlock *bb, int node, int external_entry) 
+int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, BasicBlock *bb, int node, int external_entry) 
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
@@ -65,7 +111,7 @@ int add_node_instructions(struct self_s *self, BasicBlock *bb, int node, int ext
 	do {
 		inst = inst_next;
 		inst_log1 =  &inst_log_entry[inst];
-		add_instruction(self, bb, external_entry, inst);
+		add_instruction(self, value, bb, external_entry, inst);
 		if (inst_log1->next_size > 0) {
 			inst_next = inst_log1->next[0];
 		}
@@ -74,8 +120,23 @@ int add_node_instructions(struct self_s *self, BasicBlock *bb, int node, int ext
 	return 0;
 }
 
-extern "C" int llvm_export(struct self_s *self) {
-	LLVMContext Context;
+int LLVM_ir_export::fill_value(struct self_s *self, Value **value, int value_id, int external_entry)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[external_entry]);
+	struct label_s *label = &(external_entry_point->labels[value_id]);
+	int labels_size = external_entry_point->variable_id;
+
+	if ((label->scope == 3) &&
+		(label->type == 3)) {
+		value[value_id] = ConstantInt::get(Type::getInt32Ty(Context), label->value);
+		return 0;
+	}
+
+	return 1;
+}
+
+int LLVM_ir_export::output(struct self_s *self)
+{
 	const char *function_name = "test123";
 	char output_filename[512];
 	int n;
@@ -149,7 +210,7 @@ extern "C" int llvm_export(struct self_s *self) {
 				printf("LLVM: node=0x%x\n", node);
 				/* FIXME: Output PHI instructions first */
 				/* FIXME: Output instuctions within the node */
-				add_node_instructions(self, bb[node], node, n);
+				LLVM_ir_export::add_node_instructions(self, value, bb[node], node, n);
 				/* FIXME: Output terminator instructions */
 				if (nodes[node].next_size == 0) {
 					printf("NEXT0 FOUND Add, Ret3\n");
@@ -227,3 +288,19 @@ extern "C" int llvm_export(struct self_s *self) {
 
 	return 0;
 }
+
+int LLVM_ir_export_entry(struct self_s *self)
+{
+	int tmp;
+	LLVM_ir_export object;
+	tmp = object.output(self);
+	return tmp;
+}
+
+extern "C" int llvm_export(struct self_s *self)
+{
+	int tmp;
+	tmp = LLVM_ir_export_entry(self);
+	return tmp;
+}
+
