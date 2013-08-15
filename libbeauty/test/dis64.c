@@ -3292,6 +3292,59 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 	return 0;
 }
 
+int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point_s *external_entry_point, int node)
+{
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	int m;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	int variable_id = external_entry_point->variable_id;
+	uint64_t stack_address;
+	struct memory_s *memory;
+	int value_id;
+	int value_id3;
+
+	int inst;
+	struct label_s label;
+	int found = 0;
+	debug_print(DEBUG_MAIN, 1, "redirect_mov_reg_reg_labels() node 0x%x\n", node);
+
+	inst = nodes[node].inst_start;
+	do {
+		inst_log1 =  &inst_log_entry[inst];
+		instruction =  &inst_log1->instruction;
+		switch (instruction->opcode) {
+		case MOV:
+			if ((IND_DIRECT == instruction->srcA.indirect) &&
+				(STORE_REG == instruction->srcA.store) &&
+				(IND_DIRECT == instruction->dstA.indirect) &&
+				(STORE_REG == instruction->dstA.store)) {
+
+				value_id = inst_log1->value1.value_id;
+				value_id3 = inst_log1->value3.value_id;
+				label_redirect[value_id3].redirect = value_id;
+			}
+			break;
+		default:
+			break;
+		}
+		if (inst == nodes[node].inst_end) {
+			found = 1;
+		}
+		if (inst_log1->next_size > 0) {
+			inst = inst_log1->next[0];
+		} else {
+			/* Exit here */
+			found = 1;
+		}
+	} while (!found);
+
+	return 0;
+}
+
 int insert_nop_before(struct self_s *self, int inst, int *new_inst);
 int insert_nop_after(struct self_s *self, int inst, int *new_inst);
 
@@ -5318,6 +5371,18 @@ int main(int argc, char *argv[])
 					continue;
 				}
 				tmp = assign_labels_to_src(self, &external_entry_points[l], n);
+			}
+		}
+	}
+	/* turn "MOV reg, reg" into a NOP from the SSA perspective. Make the dst = src label */
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
+					continue;
+				}
+				tmp = redirect_mov_reg_reg_labels(self, &external_entry_points[l], n);
 			}
 		}
 	}
