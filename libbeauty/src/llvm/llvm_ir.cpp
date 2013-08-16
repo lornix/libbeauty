@@ -128,7 +128,14 @@ int LLVM_ir_export::fill_value(struct self_s *self, Value **value, int value_id,
 
 	if ((label->scope == 3) &&
 		(label->type == 3)) {
-		value[value_id] = ConstantInt::get(Type::getInt32Ty(Context), label->value);
+		if (label->size_bits == 32) {
+			value[value_id] = ConstantInt::get(Type::getInt32Ty(Context), label->value);
+		} else if (label->size_bits == 64) {
+			value[value_id] = ConstantInt::get(Type::getInt64Ty(Context), label->value);
+		} else {
+			printf("LLVM fill_value() failed with size_bits = 0x%lx\n", label->size_bits);
+			exit(1);
+		}
 		return 0;
 	}
 
