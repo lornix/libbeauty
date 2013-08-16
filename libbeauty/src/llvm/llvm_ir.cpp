@@ -56,6 +56,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 	Value *dstA;
 	int value_id;
 	int tmp;
+	char buffer[1024];
 
 	switch (inst_log1->instruction.opcode) {
 	case 2:  // ADD
@@ -84,7 +85,22 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		}
 		srcB = value[value_id];
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
-		dstA = BinaryOperator::CreateAdd(srcA, srcB, "addresult4", bb);
+		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb);
+		value[inst_log1->value3.value_id] = dstA;
+		break;
+	case 0x1e:  // RET
+		printf("LLVM 0x%x: OPCODE = 0x%x:RET\n", inst, inst_log1->instruction.opcode);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL\n");
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		ReturnInst::Create(Context, srcA, bb);
 		break;
 	default:
 		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
@@ -213,16 +229,19 @@ int LLVM_ir_export::output(struct self_s *self)
 			Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
 			Value *Four = value[external_entry_points[n].params[0]];
 
+			/* FIXME: this needs the node to follow paths so the value[] is filled in the correct order */
 			for (node = 1; node < nodes_size; node++) {
 				printf("LLVM: node=0x%x\n", node);
 				/* FIXME: Output PHI instructions first */
 				/* FIXME: Output instuctions within the node */
 				LLVM_ir_export::add_node_instructions(self, value, bb[node], node, n);
+#if 0
 				/* FIXME: Output terminator instructions */
 				if (nodes[node].next_size == 0) {
 					printf("NEXT0 FOUND Add, Ret3\n");
 					//Value *Add = BinaryOperator::CreateAdd(Two, value[external_entry_points[n].params[0]], "addresult3", bb[node]);
 					Value *Add = BinaryOperator::CreateAdd(Two, Four, "addresult3", bb[node]);
+					/* FIXME: get the return correct, using value[]. */
 					ReturnInst::Create(Context, Add, bb[node]);
 				} else if (nodes[node].next_size == 1) {
 					int found = 0;
@@ -277,6 +296,7 @@ int LLVM_ir_export::output(struct self_s *self)
 						switch_inst->addCase(const_int1, bb[node_case]);
 					}
 				}
+#endif
 			}
 			std::string ErrorInfo;
 			raw_fd_ostream OS(output_filename, ErrorInfo, raw_fd_ostream::F_Binary);
