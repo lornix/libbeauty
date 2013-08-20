@@ -73,6 +73,8 @@ char * opcode_table[] = {
 	"PHI",  // 0x22
 	"ICMP",  // 0x23
 	"BC"  // 0x24
+	"LOAD"  // 0x25
+	"STORE"  // 0x26`
 };
 
 char *store_table[] = { "i", "r", "m", "s" };

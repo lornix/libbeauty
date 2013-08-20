@@ -80,6 +80,8 @@ enum {
 #define PHI 0x22 /* A PHI point */
 #define ICMP 0x23 /* ICMP. Similar to LLVM ICMP */
 #define BC 0x24 /* Branch Conditional. Similar to LLVM ICMP */
+#define LOAD 0x25 /* Load from memory/stack */
+#define STORE 0x26 /* Store to memory/stack */
 
 #define OVERFLOW 0
 #define NOT_OVERFLOW 1
