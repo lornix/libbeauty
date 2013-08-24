@@ -1,6 +1,6 @@
 include $(top_srcdir)/misc/Makefile.common
 
-AM_CFLAGS = -I$(top_srcdir)/test -O0 -g3 -Wall
+AM_CFLAGS = -I$(top_srcdir)/test -I/usr/include/llvm-c-3.2 -I/usr/include/llvm-3.2 -O0 -g3 -Wall
 
 #bin_PROGRAMS = dis32 dis64 bf
 noinst_PROGRAMS = dis64 test_id
@@ -24,7 +24,7 @@ test_id_SOURCES = \
 
 #dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lopcodes -liberty -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lbfd -lz -ldl
 dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lz -ldl
-test_id_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lz -ldl
+test_id_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib
 
 dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall
 test_id_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall

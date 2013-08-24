@@ -56,6 +56,9 @@
  Appendix A. 25366713.pdf
 */
 
+#define __STDC_LIMIT_MACROS
+#define __STDC_CONSTANT_MACROS
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -69,6 +72,8 @@
 
 #include <rev.h>
 #include <bfl.h>
+
+#include <llvm-c-3.2/llvm-c/Disassembler.h>
 
 #define EIP_START 0x40000000
 
@@ -95,6 +100,7 @@ int debug_analyse_phi = 1;
 int debug_output = 1;
 
 struct test_s {
+	int	valid;
 	uint8_t bytes[16];
 	int bytes_size;
 	int	opcode;
@@ -105,6 +111,7 @@ struct test_s {
 #define LEAL 10
 
 struct test_s test_data = {
+	.valid = 1,
 	.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
 	.bytes_size = 6,
 	.opcode = LEAL,
@@ -183,16 +190,12 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 
 int main(int argc, char *argv[])
 {
-	int n = 0;
-	uint32_t arch = 9;
-	uint64_t mach = 8;
 	int tmp;
-	int err;
-	int l;
-	int not_finished;
 	int octets = 0;
 	int offset = 0;
 	const char *file;
+	LLVMDisasmContextRef DC;
+	char buffer[1024];
 
 	if (argc != 2) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -203,6 +206,10 @@ int main(int argc, char *argv[])
 	file = argv[1];
 
 	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
+	if (!test_data.valid) {
+		debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
+	}
+
 	inst_size = test_data.bytes_size;
 	inst = &(test_data.bytes[0]);
 
@@ -212,6 +219,9 @@ int main(int argc, char *argv[])
 	handle_void = bf_test_open_file(file);
 	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
 	tmp = bf_disassemble_init(handle_void, inst_size, inst);
+	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
+                                      0, NULL,
+                                      NULL);
 
 	debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
 	bf_disassemble_set_options(handle_void, "att");
@@ -225,6 +235,12 @@ int main(int argc, char *argv[])
 	octets = bf_disassemble(handle_void, offset);
 	bf_disassemble_callback_end(handle_void);
 	debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
+
+	octets = LLVMDisasmInstruction(DC, inst,
+                             inst_size, 0,
+                             buffer, 1023);
+	debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer);
+	
 
 	return 0;
 
