@@ -99,7 +99,7 @@ int debug_analyse_paths = 1;
 int debug_analyse_phi = 1;
 int debug_output = 1;
 
-struct test_s {
+struct test_data_s {
 	int	valid;
 	uint8_t bytes[16];
 	int bytes_size;
@@ -108,17 +108,29 @@ struct test_s {
 	int	*operands;
 };
 
-#define LEAL 10
+#define ADDL 1
+#define LEAL 2
 
-struct test_s test_data = {
-	.valid = 1,
-	.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
-	.bytes_size = 6,
-	.opcode = LEAL,
-	.operands_type = 1,
-	.operands = NULL
+struct test_data_s test_data[] = {
+	{
+		.valid = 1,
+		.bytes = {0x01, 0xf8},
+		.bytes_size = 2,
+		.opcode = ADDL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
+		.bytes_size = 6,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	}
 };
-	
+
+#define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
 
 void debug_print(int module, int level, const char *format, ...)
 {
@@ -190,7 +202,7 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 
 int main(int argc, char *argv[])
 {
-	int tmp;
+	int n;
 	int octets = 0;
 	int offset = 0;
 	const char *file;
@@ -206,41 +218,48 @@ int main(int argc, char *argv[])
 	file = argv[1];
 
 	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
-	if (!test_data.valid) {
-		debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
-	}
-
-	inst_size = test_data.bytes_size;
-	inst = &(test_data.bytes[0]);
+	debug_print(DEBUG_MAIN, 1, "size_of test_data = 0x%lx\n", sizeof(test_data));
+	debug_print(DEBUG_MAIN, 1, "size_of struct test_data_s = 0x%lx\n", sizeof(struct test_data_s));
+	debug_print(DEBUG_MAIN, 1, "number of test_data entries = 0x%lx\n", sizeof(test_data) / sizeof(struct test_data_s));
+	debug_print(DEBUG_MAIN, 1, "test_data_no = 0x%lx\n", test_data_no);
 
 	self = malloc(sizeof *self);
 	debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
 	/* Open file is only used to enable the disassemler */
-	handle_void = bf_test_open_file(file);
-	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
-	tmp = bf_disassemble_init(handle_void, inst_size, inst);
+//	handle_void = bf_test_open_file(file);
+//	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
-                                      0, NULL,
-                                      NULL);
+		0, NULL,
+		NULL);
 
-	debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
-	bf_disassemble_set_options(handle_void, "att");
-	bf_disassemble_callback_start(handle_void);
-	octets = bf_disassemble(handle_void, offset);
-	bf_disassemble_callback_end(handle_void);
-	debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
-	debug_print(DEBUG_MAIN, 1, "disassemble intel: ");
-	bf_disassemble_set_options(handle_void, "intel");
-	bf_disassemble_callback_start(handle_void);
-	octets = bf_disassemble(handle_void, offset);
-	bf_disassemble_callback_end(handle_void);
-	debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
+	for (n = 0; n < test_data_no; n++) {
+		if (!test_data[n].valid) {
+			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
+		}
 
-	octets = LLVMDisasmInstruction(DC, inst,
-                             inst_size, 0,
-                             buffer, 1023);
-	debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer);
-	
+		inst_size = test_data[n].bytes_size;
+		inst = &(test_data[n].bytes[0]);
+#if 0
+		tmp = bf_disassemble_init(handle_void, inst_size, inst);
+		debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
+		bf_disassemble_set_options(handle_void, "att");
+		bf_disassemble_callback_start(handle_void);
+		octets = bf_disassemble(handle_void, offset);
+		bf_disassemble_callback_end(handle_void);
+		debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
+		debug_print(DEBUG_MAIN, 1, "disassemble intel: ");
+		bf_disassemble_set_options(handle_void, "intel");
+		bf_disassemble_callback_start(handle_void);
+		octets = bf_disassemble(handle_void, offset);
+		bf_disassemble_callback_end(handle_void);
+		debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
+#endif
+
+		octets = LLVMDisasmInstruction(DC, inst,
+			inst_size, offset,
+			buffer, 1023);
+		debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer);
+	}
 
 	return 0;
 

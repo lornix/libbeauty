@@ -12,7 +12,7 @@ lib_LTLIBRARIES = libbeauty_decoder_amd64.la
 #	opcodes.h
 
 libbeauty_decoder_amd64_la_SOURCES = \
-	opcodes.c dis.c prefix_0f.c
+	opcodes.c dis.c prefix_0f.c decode.c helper.c
 
 libbeauty_decoder_amd64_la_LDFLAGS = \
 	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)

@@ -30,7 +30,7 @@
 #include "internal.h"
 
 /* Refer to Intel reference: Volume 2A, section 2.1.3 Mod R/M and SIB Bytes */
-int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint64_t size, uint8_t rex, uint8_t *return_reg, int *half) {
+int decode_rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint64_t size, uint8_t rex, uint8_t *return_reg, int *half) {
 	uint8_t reg;
 	uint8_t reg_mem;
 	uint8_t mod;
@@ -1026,13 +1026,13 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 	return result;
 }
 
-int dis_Ex_Gx(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
+int decode_Ex_Gx(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
 	int half;
 	int tmp;
 	struct instruction_s *instruction;
 	/* FIXME: Cannot handle 89 16 */
 
-	tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
+	tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
 	if (!tmp) {
 		return 0;
 	}
@@ -1073,12 +1073,12 @@ int dis_Ex_Gx(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	return 1;
 }
 
-int dis_Gx_Ex(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
+int decode_Gx_Ex(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
 	int half=0;
 	int tmp;
 	struct instruction_s *instruction;
 
-	tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
+	tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
 	if (!tmp) {
 		return 0;
 	}
@@ -1118,13 +1118,13 @@ int dis_Gx_Ex(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	return 1;
 }
 
-int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
+int decode_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, uint8_t *reg, int size) {
 	int half;
 	int tmp;
 	struct reloc_table_s *reloc_table_entry;
 	struct instruction_s *instruction;
 
-	tmp = rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
+	tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, size, rex, reg, &half);
 	if (!tmp) {
 		return 0;
 	}
@@ -1199,7 +1199,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 	dis_instructions->instruction_number++;
 	return 1;
 }
-int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, int size) {
+int decode_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset, int size) {
 	uint8_t reg;
 	uint8_t reg_mem;
 	uint8_t mod;
@@ -1287,7 +1287,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 };
 
 
-int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
+int decode_amd64(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
 	uint8_t reg = 0;
 	int half = 0;
 	int result = 0;
@@ -1361,16 +1361,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 
 	switch(byte) {
 	case 0x00:												/* ADD Eb,Gb */
-		result = dis_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x01:												/* ADD Ev,Gv */
-		result = dis_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x02:												/* ADD Gb,Eb */
-		result = dis_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x03:												/* ADD Gv,Ev */
-		result = dis_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, ADD, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x04:												/* ADD AL,Ib */
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -1443,17 +1443,17 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
                 /* POP -> ES=[SP]; SP=SP+4 (+2 for word); */
 		break;
 	case 0x08:												/* OR Eb,Gb */
-		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x09:												/* OR Ev,Gv */
-		result = dis_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x0a:												/* OR Gb,Eb */
-		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, 8);
 		result = 1;
 		break;
 	case 0x0b:												/* OR Gv,Ev */
-		result = dis_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, OR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x0c:												/* OR AL,Ib */
 		break;
@@ -1462,7 +1462,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x0e:												/* PUSH CS */		
 		break;
 	case 0x0f:												/* 2 byte opcodes*/
-		result = prefix_0f(handle_void, dis_instructions, base_address, offset, width, rex);
+		//result = decode_prefix_0f(handle_void, dis_instructions, base_address, offset, width, rex);
 		break;
 	case 0x10:												/* ADC Eb,Gb */
 		break;
@@ -1483,7 +1483,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x18:												/* SBB Eb,Gb */
 		break;
 	case 0x19:												/* SBB Ev,Gv */
-		result = dis_Ex_Gx(handle_void, SBB, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, SBB, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x1a:												/* SBB Gb,Eb */
 		break;
@@ -1500,7 +1500,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x20:												/* AND Eb,Gb */
 		break;
 	case 0x21:												/* AND Ev,Gv */
-		result = dis_Ex_Gx(handle_void, rAND, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, rAND, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x22:												/* AND Gb,Eb */
 		break;
@@ -1543,16 +1543,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x27:												/* DAA */
 		break;
 	case 0x28:												/* SUB Eb,Gb */
-		result = dis_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x29:												/* SUB Ev,Gv */
-		result = dis_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x2a:												/* SUB Gb,Eb */
-		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x2b:												/* SUB Gv,Ev */
-		result = dis_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, SUB, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x2c:												/* SUB AL,Ib */
 		break;
@@ -1595,13 +1595,13 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x30:												/* XOR Eb,Gb */
 		break;
 	case 0x31:												/* XOR Ev,Gv */
-		result = dis_Ex_Gx(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x32:												/* XOR Gb,Eb */
-		result = dis_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x33:												/* XOR Gv,Ev */
-		result = dis_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, XOR, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x34:												/* XOR AL,Ib */
 		break;
@@ -1612,16 +1612,16 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x37:												/* AAA */
 		break;
 	case 0x38:												/* CMP Eb,Gb */
-		result = dis_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x39:												/* CMP Ev,Gv */
-		result = dis_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x3a:												/* CMP Gb,Eb */
-		result = dis_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x3b:												/* CMP Gv,Ev */
-		result = dis_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, CMP, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x3c:												/* CMP AL,Ib */
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -1831,7 +1831,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		break;
 	case 0x63:												/* MOVS Rv,Rw */
 		/* MOVSDX: Signed extention. 32 bit to 64 bit. */
-		result = dis_Ex_Gx(handle_void, SEX, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, SEX, rex, dis_instructions, base_address, offset, &reg, width);
 		/* Correct value_size */
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number - 1];	
 		instruction->srcA.value_size = width / 2;
@@ -1849,7 +1849,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x68:												/* PUSH Iv */
 		break;
 	case 0x69:												/* IMUL Gv,Ev,Iv */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -1977,7 +1977,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0x80:												/* Grpl Eb,Ib */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, 1, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, 1, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2017,7 +2017,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0x81:												/* Grpl Ev,Iv */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2067,7 +2067,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x82:												/* Grpl Eb,Ib Mirror instruction */
 		break;
 	case 0x83:												/* Grpl Ev,Ix */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2111,37 +2111,37 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0x84:												/* TEST Eb,Gb */
-		result = dis_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x85:												/* TEST Ev,Gv */
-		result = dis_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, TEST, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x86:												/* XCHG Eb,Gb */
 		break;
 	case 0x87:												/* XCHG Ev,Gv */
 		break;
 	case 0x88:												/* MOV Eb,Gb */
-		result = dis_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x89:												/* MOV Ev,Gv */
 		/* FIXME: Cannot handle 89 16 */
 		/* FIXED: Cannot handle 4c 89 64 24 08 */
 		/* FIXME: Cannot handle 89 05 NN NN NN NN */
-		result = dis_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Gx(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0x8a:												/* MOV Gb,Eb */
-		result = dis_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0x8b:
 		/* MOV Gv,Ev */
-		result = dis_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Gx_Ex(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 #if 0
 		/* FIXME: Cannot handle 8b 15 00 00 00 00 */
 		/* FIXME: Cannot handle 8b 45 fc */
 		/* FIXME: Cannot handle 48 8b 05 00 00 00 00 */
-		//result = dis_Gx_Ex(handle_void, MOV, dis_instructions, base_address, offset, &reg, 4);
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		//result = decode_Gx_Ex(handle_void, MOV, dis_instructions, base_address, offset, &reg, 4);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2183,7 +2183,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0x8c:												/* Mov Ew,Sw */
 		break;
 	case 0x8d:												/* LEA Gv */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2579,7 +2579,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0xc0:												/* GRP2 Eb,Ib */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, 1, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, 1, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2611,7 +2611,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		result = 1;
 		break;
 	case 0xc1:												/* GRP2 Ev,Ib */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2755,11 +2755,11 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xc5:												/* LDS */
 		break;
 	case 0xc6:												/* MOV Eb,Ib */
-		result = dis_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
+		result = decode_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, 8);
 		break;
 	case 0xc7:												/* MOV EW,Iv */
 		/* JCD: Work in progress */
-		result = dis_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
+		result = decode_Ex_Ix(handle_void, MOV, rex, dis_instructions, base_address, offset, &reg, width);
 		break;
 	case 0xc8:												/* ENTER Iv,Ib */
 		break;
@@ -2839,7 +2839,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xd0:												/* GRP2 Eb,1 */
 		break;
 	case 0xd1:												/* GRP2 Ev,1 */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -2880,7 +2880,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xd2:												/* GRP2 Eb,CL */
 		break;
 	case 0xd3:												/* GRP2 Ev,CL */
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		if (!tmp) {
 			result = 0;
 			break;
@@ -3136,10 +3136,10 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 	case 0xf5:												/* CMC */
 		break;
 	case 0xf6:												/* GRP3 Eb ,Ib: */
-		result = dis_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, 8);
+		result = decode_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, 8);
 		break;
 	case 0xf7:												/* GRP3 Ev ,Iv: */
-		result = dis_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, width);
+		result = decode_Ex(handle_void, grp3_table, rex, dis_instructions, base_address, offset, width);
 		break;
 	case 0xf8:												/* CLC */
 		break;
@@ -3183,7 +3183,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			dis_instructions->instruction_number++;
 
 		}
-		tmp = rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
+		tmp = decode_rmb(handle_void, dis_instructions, base_address, offset, width, rex, &reg, &half);
 		debug_print(DEBUG_INPUT_DIS, 1, "Unfinished section 0xff\n");
 		debug_print(DEBUG_INPUT_DIS, 1, "half=0x%x, reg=0x%x\n",half, reg);
 		if (!tmp) {
@@ -3290,7 +3290,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 				debug_print(DEBUG_INPUT_DIS, 1, "JMP HALF\n");
 				instruction->opcode = JMPT;
 				instruction->flags = 0;
-				/* srcA does in rmb() */
+				/* srcA does in decode_rmb() */
 //				instruction->srcA.store = STORE_DIRECT;
 //				instruction->srcA.indirect = IND_DIRECT;
 				instruction->srcA.indirect_size = 64;
@@ -3358,7 +3358,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			instruction->srcA.value_size = 32;
 			instruction->dstA.store = STORE_REG;
 			/* due to special PUSH case, with added
-			 * instruction before rmb
+			 * instruction before decode_rmb
 			 */
 			/* SP and BP use STACK memory and not DATA memory. */
 			instruction->dstA.indirect = IND_STACK;
