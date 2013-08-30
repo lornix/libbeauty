@@ -73,7 +73,8 @@
 #include <rev.h>
 #include <bfl.h>
 
-#include <llvm-c-3.2/llvm-c/Disassembler.h>
+#include <llvm-c/Disassembler.h>
+#include "decode_inst.h"
 
 #define EIP_START 0x40000000
 
@@ -124,6 +125,30 @@ struct test_data_s test_data[] = {
 		.valid = 1,
 		.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
 		.bytes_size = 6,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0x0f, 0xb6, 0x75, 0xa0},
+		.bytes_size = 6,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0x0f, 0xb6, 0x93, 0x25, 0x04, 0x00, 0x00},
+		.bytes_size = 7,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00},
+		.bytes_size = 7,
 		.opcode = LEAL,
 		.operands_type = 1,
 		.operands = NULL
@@ -207,7 +232,13 @@ int main(int argc, char *argv[])
 	int offset = 0;
 	const char *file;
 	LLVMDisasmContextRef DC;
-	char buffer[1024];
+	LLVMDecodeAsmContextRef DC2;
+	char buffer1[1024];
+	uint8_t *buffer;
+	size_t buffer_size = 0;
+	uint64_t opcode;
+	const char *opcode_name = NULL;
+	uint64_t TSFlags;
 
 	if (argc != 2) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -231,14 +262,22 @@ int main(int argc, char *argv[])
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
 		0, NULL,
 		NULL);
+	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", NULL,
+		0, NULL,
+		NULL);
+//const MCInstrInfo *MII = LLVMDisasmGetMII(DC2);
+	int num_opcodes = LLVMDecodeAsmGetNumOpcodes(DC2);
+	debug_print(DEBUG_MAIN, 1, "num_opcodes = 0x%x\n", num_opcodes);
+
+	LLVMDecodeAsmPrintOpcodes(DC); 
 
 	for (n = 0; n < test_data_no; n++) {
 		if (!test_data[n].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
 
-		inst_size = test_data[n].bytes_size;
-		inst = &(test_data[n].bytes[0]);
+		buffer_size = test_data[n].bytes_size;
+		buffer = &(test_data[n].bytes[0]);
 #if 0
 		tmp = bf_disassemble_init(handle_void, inst_size, inst);
 		debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
@@ -254,11 +293,16 @@ int main(int argc, char *argv[])
 		bf_disassemble_callback_end(handle_void);
 		debug_print(DEBUG_MAIN, 1, "  octets=%d\n", octets);
 #endif
-
-		octets = LLVMDisasmInstruction(DC, inst,
-			inst_size, offset,
-			buffer, 1023);
-		debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer);
+		octets = LLVMDisasmInstruction(DC, buffer,
+			buffer_size, offset,
+			buffer1, 1023);
+		debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer1);
+		opcode_name = NULL;
+		octets = LLVMDecodeAsmInstruction(DC2, buffer,
+			buffer_size, offset,
+			buffer1, 1023, &opcode, &opcode_name, &TSFlags);
+		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
+		debug_print(DEBUG_MAIN, 1, "LLVM DIS opcode = 0x%lx:%s TSFlags = 0x%lx\n", opcode, opcode_name, TSFlags);
 	}
 
 	return 0;
