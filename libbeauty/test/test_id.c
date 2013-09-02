@@ -123,6 +123,14 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		.bytes = {0x04, 0x02},
+		.bytes_size = 2,
+		.opcode = ADDL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
 		.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
 		.bytes_size = 6,
 		.opcode = LEAL,
@@ -149,6 +157,22 @@ struct test_data_s test_data[] = {
 		.valid = 1,
 		.bytes = {0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00},
 		.bytes_size = 7,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0xc7, 0x45, 0x98, 0xa1, 0xff, 0xff, 0xff},
+		.bytes_size = 7,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		.bytes = {0x41, 0xc6, 0x84, 0x24, 0x16, 0x04, 0x00, 0x00, 0x0c},
+		.bytes_size = 9,
 		.opcode = LEAL,
 		.operands_type = 1,
 		.operands = NULL
@@ -269,7 +293,7 @@ int main(int argc, char *argv[])
 	int num_opcodes = LLVMDecodeAsmGetNumOpcodes(DC2);
 	debug_print(DEBUG_MAIN, 1, "num_opcodes = 0x%x\n", num_opcodes);
 
-	LLVMDecodeAsmPrintOpcodes(DC); 
+	//LLVMDecodeAsmPrintOpcodes(DC); 
 
 	for (n = 0; n < test_data_no; n++) {
 		if (!test_data[n].valid) {
@@ -296,13 +320,22 @@ int main(int argc, char *argv[])
 		octets = LLVMDisasmInstruction(DC, buffer,
 			buffer_size, offset,
 			buffer1, 1023);
-		debug_print(DEBUG_MAIN, 1, "LLVM DIS octets = 0x%x:%s\n", octets, buffer1);
+		printf("LLVM DIS octets = 0x%x:", octets);
+		for (n = 0; n < octets; n++) {
+			printf("%02x ", buffer1[n]);
+		}
+		printf(":%s\n", buffer1);
 		opcode_name = NULL;
 		octets = LLVMDecodeAsmInstruction(DC2, buffer,
 			buffer_size, offset,
 			buffer1, 1023, &opcode, &opcode_name, &TSFlags);
 		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
-		debug_print(DEBUG_MAIN, 1, "LLVM DIS opcode = 0x%lx:%s TSFlags = 0x%lx\n", opcode, opcode_name, TSFlags);
+		printf("LLVM DIS2 octets = 0x%x:", octets);
+		for (n = 0; n < octets; n++) {
+			printf("%02x ", buffer1[n]);
+		}
+		printf(":%s\n", buffer1);
+		printf("LLVM DIS2 opcode = 0x%lx:%s TSFlags = 0x%lx\n\n", opcode, opcode_name, TSFlags);
 	}
 
 	return 0;

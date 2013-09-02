@@ -177,9 +177,11 @@ size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
 	StringRef Comments = DC->CommentsToEmit.str();
 
 	SmallVector<char, 64> InsnStr;
+	InsnStr.empty();
 	raw_svector_ostream OS(InsnStr);
-	IP->printInst(&Inst, OS, Comments);
+	//IP->printInst(&Inst, OS, Comments);
 	OS.flush();
+	OS.str();
 	const MCInstrInfo *MII = DC->getInstInfo();
 	int num_opcodes = MII->getNumOpcodes();
 	*opcode = Inst.getOpcode();
@@ -188,6 +190,40 @@ size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
 	Name = IP->getOpcodeName(Inst.getOpcode());
 	*opcode_name = Name.data();
 	printf("opcode_name = %p\n", opcode_name);
+	int num_operands = Inst.getNumOperands();
+	printf("num_operands = 0x%x\n", num_operands);
+	MCOperand *Operand;
+	for (n = 0; n < num_operands; n++) {
+		Operand = &Inst.getOperand(n);
+		printf("Operand = %p\n", Operand);
+		printf("Valid = %d, isReg = %d, isImm = %d, isFPImm = %d, isExpr = %d, isInst = %d\n",
+			Operand->isValid(),
+			Operand->isReg(),
+			Operand->isImm(),
+			Operand->isFPImm(),
+			Operand->isExpr(),
+			Operand->isInst());
+		//printf("Operand.Kind = 0x%x\n", Operand->Kind);
+		if (Operand->isImm()) {
+			printf("Imm = 0x%lx\n", Operand->getImm());
+		}
+		if (Operand->isReg()) {
+			uint32_t reg;
+			reg = Operand->getReg();
+			printf("Reg = 0x%x\n", reg);
+			if (reg) {
+				IP->printRegName(OS, reg);
+				OS.flush();
+				InsnStr.data()[InsnStr.size()] = '\0'; // Terminate string.
+				printf("RegName = %s\n", InsnStr.data());
+			}
+		}
+	}
+	SmallVector<char, 6400> Buffer2;
+	raw_svector_ostream OS2(Buffer2);
+	Inst.dump_pretty(OS2);
+	OS2.flush();
+	
 
 	// Tell the comment stream that the vector changed underneath it.
 	DC->CommentsToEmit.clear();
@@ -225,6 +261,8 @@ uint64_t LLVMDecodeAsmGetTSFlags(LLVMDecodeAsmContextRef DCR, uint64_t opcode) {
 	printf("OpSizeMask = 0x%lx:0x%lx\n", X86II::OpSize, TSFlags & X86II::OpSize);
 	printf("AdSizeMask = 0x%lx:0x%lx\n", X86II::AdSize, TSFlags & X86II::AdSize);
 	printf("Op0Mask = 0x%lx:0x%lx\n", X86II::Op0Mask, (TSFlags & X86II::Op0Mask) >> X86II::Op0Shift);
+	printf("REX_W_Mask = 0x%lx:0x%lx\n", X86II::REX_W, (TSFlags & X86II::REX_W) >> X86II::REXShift);
+	printf("Imm_Mask = 0x%lx:0x%lx\n", X86II::ImmMask, (TSFlags & X86II::ImmMask) >> X86II::ImmShift);
 	printf("FormMask = 0x%lx:0x%lx\n", X86II::FormMask, TSFlags & X86II::FormMask);
 	return TSFlags;
 }
