@@ -251,7 +251,7 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 
 int main(int argc, char *argv[])
 {
-	int n;
+	int n,l;
 	int octets = 0;
 	int offset = 0;
 	const char *file;
@@ -295,13 +295,15 @@ int main(int argc, char *argv[])
 
 	//LLVMDecodeAsmPrintOpcodes(DC); 
 
-	for (n = 0; n < test_data_no; n++) {
-		if (!test_data[n].valid) {
+//	for (l = 0; l < test_data_no; l++) {
+	for (l = 3; l < 4; l++) {
+		if (!test_data[l].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
+		debug_print(DEBUG_MAIN, 1, "test data 0x%x\n", l);
 
-		buffer_size = test_data[n].bytes_size;
-		buffer = &(test_data[n].bytes[0]);
+		buffer_size = test_data[l].bytes_size;
+		buffer = &(test_data[l].bytes[0]);
 #if 0
 		tmp = bf_disassemble_init(handle_void, inst_size, inst);
 		debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
@@ -322,7 +324,7 @@ int main(int argc, char *argv[])
 			buffer1, 1023);
 		printf("LLVM DIS octets = 0x%x:", octets);
 		for (n = 0; n < octets; n++) {
-			printf("%02x ", buffer1[n]);
+			printf("%02x ", buffer[n]);
 		}
 		printf(":%s\n", buffer1);
 		opcode_name = NULL;
@@ -332,7 +334,7 @@ int main(int argc, char *argv[])
 		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
 		printf("LLVM DIS2 octets = 0x%x:", octets);
 		for (n = 0; n < octets; n++) {
-			printf("%02x ", buffer1[n]);
+			printf("%02x ", buffer[n]);
 		}
 		printf(":%s\n", buffer1);
 		printf("LLVM DIS2 opcode = 0x%lx:%s TSFlags = 0x%lx\n\n", opcode, opcode_name, TSFlags);

@@ -21,6 +21,8 @@
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/Support/Format.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/MemoryObject.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
@@ -70,7 +72,7 @@ LLVMDecodeAsmContextRef LLVMCreateDecodeAsm(const char *TripleName, void *DisInf
   assert(MII && "Unable to create target instruction info!");
 
 	int tmp = MII->getNumOpcodes();
-	printf("Number of opcodes = 0x%x\n", tmp);
+	outs() << format("Number of opcodes = 0x%x\n", tmp);
   const MCRegisterInfo *MRI = TheTarget->createMCRegInfo(TripleName);
   assert(MRI && "Unable to create target register info!");
 
@@ -158,11 +160,16 @@ size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
   // Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
   llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, PC);
 
+	outs() << "DECODE INST\n";
   uint64_t Size;
   MCInst Inst;
   const MCDisassembler *DisAsm = DC->getDisAsm();
   MCInstPrinter *IP = DC->getIP();
   MCDisassembler::DecodeStatus S;
+	if (Bytes[0] == 0) {
+		outs() << "Bytes reset to 0\n";
+		exit(1);
+	}
   S = DisAsm->getInstruction(Inst, Size, MemoryObject2, PC,
                              /*REMOVE*/ nulls(), DC->CommentStream);
   switch (S) {
@@ -173,56 +180,72 @@ size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
 
   case MCDisassembler::Success: {
 	StringRef Name;
+	StringRef Reg;
 	DC->CommentStream.flush();
 	StringRef Comments = DC->CommentsToEmit.str();
 
 	SmallVector<char, 64> InsnStr;
 	InsnStr.empty();
 	raw_svector_ostream OS(InsnStr);
-	//IP->printInst(&Inst, OS, Comments);
 	OS.flush();
-	OS.str();
+	SmallVector<char, 64> RegStr;
+	RegStr.empty();
 	const MCInstrInfo *MII = DC->getInstInfo();
 	int num_opcodes = MII->getNumOpcodes();
 	*opcode = Inst.getOpcode();
 	const MCInstrDesc Desc = MII->get(*opcode);
 	*TSFlags = Desc.TSFlags;
+	int opcode_form = *TSFlags & X86II::FormMask;
 	Name = IP->getOpcodeName(Inst.getOpcode());
 	*opcode_name = Name.data();
-	printf("opcode_name = %p\n", opcode_name);
+	outs() << "Opcode name: " << *opcode_name << "\n";
 	int num_operands = Inst.getNumOperands();
-	printf("num_operands = 0x%x\n", num_operands);
+	outs() << format("opcode_form = 0x%x", opcode_form) << format(", num_operands = 0x%x", num_operands) << "\n";
 	MCOperand *Operand;
+	switch (opcode_form) {
+	default:
+		outs() << "Unrecognised form\n";
+		break;
+	case 6:
+		if (num_operands != 6) {
+			outs() << "Unrecognised num_operands\n";
+			break;
+		}
+
+	}
 	for (n = 0; n < num_operands; n++) {
 		Operand = &Inst.getOperand(n);
-		printf("Operand = %p\n", Operand);
-		printf("Valid = %d, isReg = %d, isImm = %d, isFPImm = %d, isExpr = %d, isInst = %d\n",
-			Operand->isValid(),
-			Operand->isReg(),
-			Operand->isImm(),
-			Operand->isFPImm(),
-			Operand->isExpr(),
-			Operand->isInst());
-		//printf("Operand.Kind = 0x%x\n", Operand->Kind);
+		outs() << "Operand = " << Operand << "\n";
+		outs() << "Valid = " << Operand->isValid(); 
+		outs() << ",isReg = " << Operand->isReg();
+		outs() << ",isImm = " << Operand->isImm();
+		outs() << ",isFPImm = " << Operand->isFPImm();
+		outs() << ",isExpr = " << Operand->isExpr();
+		outs() << "isInst = " << Operand->isInst() << "\n";
+		//outs() << format("Operand.Kind = 0x%x\n", Operand->Kind);
 		if (Operand->isImm()) {
-			printf("Imm = 0x%lx\n", Operand->getImm());
+			outs() << format("Imm = 0x%lx, ", Operand->getImm());
+			int size_of_imm = X86II::getSizeOfImm(*TSFlags);
+			outs() << format("sizeof(Imm) = 0x%x", size_of_imm) << "\n";
 		}
 		if (Operand->isReg()) {
 			uint32_t reg;
 			reg = Operand->getReg();
-			printf("Reg = 0x%x\n", reg);
+			outs() << format("Reg = 0x%x\n", reg);
 			if (reg) {
-				IP->printRegName(OS, reg);
-				OS.flush();
-				InsnStr.data()[InsnStr.size()] = '\0'; // Terminate string.
-				printf("RegName = %s\n", InsnStr.data());
+				std::string Buf2;
+				raw_string_ostream OS2(Buf2);
+				IP->printRegName(OS2, reg);
+				OS2.flush();
+				Reg = OS2.str();
+				outs() << "Reg: " << Reg << "\n";
 			}
 		}
 	}
 	SmallVector<char, 6400> Buffer2;
-	raw_svector_ostream OS2(Buffer2);
-	Inst.dump_pretty(OS2);
-	OS2.flush();
+	raw_svector_ostream OS3(Buffer2);
+	Inst.dump_pretty(OS3);
+	OS3.flush();
 	
 
 	// Tell the comment stream that the vector changed underneath it.
@@ -233,6 +256,10 @@ size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
 	size_t OutputSize = std::min(OutStringSize-1, InsnStr.size());
 	std::memcpy(OutString, InsnStr.data(), OutputSize);
 	OutString[OutputSize] = '\0'; // Terminate string.
+	if (Bytes[0] == 0) {
+		outs() << "Bytes reset to 0\n";
+		exit(1);
+	}
 
 	return Size;
 	}
@@ -257,13 +284,13 @@ uint64_t LLVMDecodeAsmGetTSFlags(LLVMDecodeAsmContextRef DCR, uint64_t opcode) {
 	const MCInstrInfo *MII = DC->getInstInfo();
 	const MCInstrDesc Desc = MII->get(opcode);
 	uint64_t TSFlags = Desc.TSFlags;
-	printf("OpcodeByteShift = 0x%lx:0x%x\n", X86II::OpcodeShift, X86II::getBaseOpcodeFor(TSFlags));
-	printf("OpSizeMask = 0x%lx:0x%lx\n", X86II::OpSize, TSFlags & X86II::OpSize);
-	printf("AdSizeMask = 0x%lx:0x%lx\n", X86II::AdSize, TSFlags & X86II::AdSize);
-	printf("Op0Mask = 0x%lx:0x%lx\n", X86II::Op0Mask, (TSFlags & X86II::Op0Mask) >> X86II::Op0Shift);
-	printf("REX_W_Mask = 0x%lx:0x%lx\n", X86II::REX_W, (TSFlags & X86II::REX_W) >> X86II::REXShift);
-	printf("Imm_Mask = 0x%lx:0x%lx\n", X86II::ImmMask, (TSFlags & X86II::ImmMask) >> X86II::ImmShift);
-	printf("FormMask = 0x%lx:0x%lx\n", X86II::FormMask, TSFlags & X86II::FormMask);
+	outs() << format("OpcodeByteShift = 0x%lx:0x%x\n", (int)X86II::OpcodeShift, X86II::getBaseOpcodeFor(TSFlags));
+	outs() << format("OpSizeMask = 0x%lx:0x%lx\n", (int)X86II::OpSize, TSFlags & X86II::OpSize);
+	outs() << format("AdSizeMask = 0x%lx:0x%lx\n", (int)X86II::AdSize, TSFlags & X86II::AdSize);
+	outs() << format("Op0Mask = 0x%lx:0x%lx\n", (int)X86II::Op0Mask, (TSFlags & X86II::Op0Mask) >> X86II::Op0Shift);
+	outs() << format("REX_W_Mask = 0x%lx:0x%lx\n", (int)X86II::REX_W, (TSFlags & X86II::REX_W) >> X86II::REXShift);
+	outs() << format("Imm_Mask = 0x%lx:0x%lx\n", (int)X86II::ImmMask, (TSFlags & X86II::ImmMask) >> X86II::ImmShift);
+	outs() << format("FormMask = 0x%lx:0x%lx\n", (int)X86II::FormMask, TSFlags & X86II::FormMask);
 	return TSFlags;
 }
 
@@ -278,10 +305,10 @@ int LLVMDecodeAsmPrintOpcodes(LLVMDecodeAsmContextRef DCR) {
 	for (n = 0; n < num_opcodes; n++) {
 		const MCInstrDesc Desc = MII->get(n);
 		uint64_t TSFlags = Desc.TSFlags;
-		printf("n = 0x%x:", n);
+		outs() << format("n = 0x%x:", n);
 		Name = IP->getOpcodeName(n);
 		opcode_name = Name.data();
-		printf("opcode_name = %p:%s, 0x%lx\n", Name.data(), opcode_name, TSFlags);
+		outs() << format("opcode_name = %p:%s, 0x%lx\n", Name.data(), opcode_name, TSFlags);
 	};
 	return 0;
 }
