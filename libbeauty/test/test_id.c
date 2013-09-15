@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 	printf("num_opcodes = 0x%x\n", num_opcodes);
 
 	//LLVMDecodeAsmPrintOpcodes(DC); 
-	//LLVMDecodeAsmOpcodesSource(DC); 
+	LLVMDecodeAsmOpcodesSource(DC); 
 
 	for (l = 0; l < test_data_no; l++) {
 //	for (l = 3; l < 4; l++) {
