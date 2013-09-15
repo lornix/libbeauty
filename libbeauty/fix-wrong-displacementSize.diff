@@ -1,0 +1,14 @@
+diff --git a/lib/Target/X86/Disassembler/X86DisassemblerDecoder.c b/lib/Target/X86/Disassembler/X86DisassemblerDecoder.c
+index 20e61da..1907ff1 100644
+--- a/lib/Target/X86/Disassembler/X86DisassemblerDecoder.c
++++ b/lib/Target/X86/Disassembler/X86DisassemblerDecoder.c
+@@ -1115,6 +1115,9 @@ static int readModRM(struct InternalInstruction* insn) {
+   rm      = rmFromModRM(insn->modRM);
+   reg     = regFromModRM(insn->modRM);
+ 
++  if (1 == mod) {
++    insn->displacementSize = 1;
++  }
+   /*
+    * This goes by insn->registerSize to pick the correct register, which messes
+    * up if we're using (say) XMM or 8-bit register operands.  That gets fixed in
