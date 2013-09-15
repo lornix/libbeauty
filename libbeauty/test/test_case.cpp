@@ -34,7 +34,6 @@ int LLVMDecodeOpInfoCallback(void *DisInfo, uint64_t PC,
                                   int TagType, void *TagBuf) {
 	struct dis_info_s *dis_info = (struct dis_info_s *) DisInfo;
 	MCInst *Inst = dis_info->Inst;
-	outs() << "DisInfo = " << DisInfo << "\n";
 	int num_operands = Inst->getNumOperands();
 	if (num_operands >= 16) {
 		outs() << "num_operands >= 16\n";
