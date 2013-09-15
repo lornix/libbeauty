@@ -6,7 +6,7 @@ AM_CFLAGS = -I$(top_srcdir)/test -I/usr/local/include/llvm-c -I/usr/local/includ
 AM_CXXFLAGS = -I$(top_srcdir)/test -I/usr/local/include/llvm-c -I/usr/local/include/llvm -O0 -g3 -Wall -fno-rtti
 
 #bin_PROGRAMS = dis32 dis64 bf
-noinst_PROGRAMS = dis64 test_id mem
+noinst_PROGRAMS = dis64 test_id mem test_case
 
 #noinst_HEADERS = \
 #	dis.h \
@@ -25,6 +25,9 @@ dis64_SOURCES = \
 test_id_SOURCES = \
 	test_id.c decode_inst.cpp
 
+test_case_SOURCES = \
+	test_case.cpp
+
 mem_SOURCES = \
 	mem.cpp
 
@@ -32,10 +35,12 @@ mem_SOURCES = \
 dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lz -ldl
 #test_id_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib -lstdc++
 test_id_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -L/usr/local/lib/llvm/lib -lstdc++
+test_case_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -L/usr/local/lib/llvm/lib -lstdc++
 mem_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib -lstdc++
 
 dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall
 test_id_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
+test_case_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
 mem_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
 
 #bf_SOURCES = \
