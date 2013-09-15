@@ -82,8 +82,9 @@ enum {
 #define BC 0x24 /* Branch Conditional. Similar to LLVM ICMP */
 #define LOAD 0x25 /* Load from memory/stack */
 #define STORE 0x26 /* Store to memory/stack */
+#define LEA 0x27 /* Used at the MC Inst low level */
 
-#define OVERFLOW 0
+#define FLAG_OVERFLOW 0
 #define NOT_OVERFLOW 1
 #define BELOW 2
 #define NOT_BELOW 3

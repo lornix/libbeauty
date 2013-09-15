@@ -70,15 +70,16 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#include <rev.h>
-#include <bfl.h>
+//#include <rev.h>
+//#include <bfl.h>
 
 #include <llvm-c/Disassembler.h>
+#include <llvm-c/Target.h>
 #include "decode_inst.h"
 
 #define EIP_START 0x40000000
 
-struct dis_instructions_s dis_instructions;
+//struct dis_instructions_s dis_instructions;
 uint8_t *inst;
 size_t inst_size = 0;
 uint8_t *data;
@@ -88,7 +89,16 @@ size_t rodata_size = 0;
 void *handle_void;
 char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
-struct self_s *self = NULL;
+//struct self_s *self = NULL;
+
+#define DEBUG_MAIN 1
+#define DEBUG_INPUT_BFD 2
+#define DEBUG_INPUT_DIS 3
+#define DEBUG_OUTPUT 4
+#define DEBUG_EXE 5
+#define DEBUG_ANALYSE 6
+#define DEBUG_ANALYSE_PATHS 7
+#define DEBUG_ANALYSE_PHI 8
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
@@ -115,6 +125,7 @@ struct test_data_s {
 struct test_data_s test_data[] = {
 	{
 		.valid = 1,
+		// addl    %edi, %eax
 		.bytes = {0x01, 0xf8},
 		.bytes_size = 2,
 		.opcode = ADDL,
@@ -123,6 +134,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// addb    $2, %al
 		.bytes = {0x04, 0x02},
 		.bytes_size = 2,
 		.opcode = ADDL,
@@ -131,6 +143,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// leal    291(%rdi), %eax
 		.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
 		.bytes_size = 6,
 		.opcode = LEAL,
@@ -139,6 +152,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// movzbl  -96(%rbp), %esi
 		.bytes = {0x0f, 0xb6, 0x75, 0xa0},
 		.bytes_size = 6,
 		.opcode = LEAL,
@@ -147,6 +161,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// movzbl  1061(%rbx), %edx
 		.bytes = {0x0f, 0xb6, 0x93, 0x25, 0x04, 0x00, 0x00},
 		.bytes_size = 7,
 		.opcode = LEAL,
@@ -155,6 +170,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// movq    $0, %rdx
 		.bytes = {0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00},
 		.bytes_size = 7,
 		.opcode = LEAL,
@@ -163,6 +179,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// movl    $4294967201, -104(%rbp)
 		.bytes = {0xc7, 0x45, 0x98, 0xa1, 0xff, 0xff, 0xff},
 		.bytes_size = 7,
 		.opcode = LEAL,
@@ -171,6 +188,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
+		// movb    $12, 1046(%r12)
 		.bytes = {0x41, 0xc6, 0x84, 0x24, 0x16, 0x04, 0x00, 0x00, 0x0c},
 		.bytes_size = 9,
 		.opcode = LEAL,
@@ -242,12 +260,13 @@ void debug_print(int module, int level, const char *format, ...)
 	va_end(ap);
 }
 
+#if 0
 int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
 	int tmp;
 	tmp = disassemble_amd64(handle_void, dis_instructions, base_address, offset);
 	return tmp;
 }
-
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -257,12 +276,13 @@ int main(int argc, char *argv[])
 	const char *file;
 	LLVMDisasmContextRef DC;
 	LLVMDecodeAsmContextRef DC2;
-	char buffer1[1024];
+	uint8_t buffer1[1024];
 	uint8_t *buffer;
 	size_t buffer_size = 0;
 	uint64_t opcode;
 	const char *opcode_name = NULL;
 	uint64_t TSFlags;
+	void *inst;
 
 	if (argc != 2) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -278,25 +298,45 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "number of test_data entries = 0x%lx\n", sizeof(test_data) / sizeof(struct test_data_s));
 	debug_print(DEBUG_MAIN, 1, "test_data_no = 0x%lx\n", test_data_no);
 
-	self = malloc(sizeof *self);
-	debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
+	//self = malloc(sizeof *self);
+	//debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
 	/* Open file is only used to enable the disassemler */
 //	handle_void = bf_test_open_file(file);
 //	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
+	LLVMInitializeAllTargetInfos();
+	LLVMInitializeAllTargetMCs();
+	LLVMInitializeAllAsmParsers();
+	LLVMInitializeAllDisassemblers();
+
+//	LLVMPrintTargets();
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
 		0, NULL,
 		NULL);
-	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", NULL,
+	printf("DC = %p\n", DC);
+	if (!DC) {
+		printf("LLVMCreateDisasm() failed\n");
+		exit(1);
+	}
+	inst = LLVMCreateMCInst();
+	printf("inst %p\n", inst);
+//	LLVMPrintTargets();
+	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", inst,
 		0, NULL,
 		NULL);
+	if (!DC2) {
+		printf("LLVMCreateDecodeAsm() failed\n");
+		exit(1);
+	}
+//	LLVMPrintTargets();
 //const MCInstrInfo *MII = LLVMDisasmGetMII(DC2);
 	int num_opcodes = LLVMDecodeAsmGetNumOpcodes(DC2);
-	debug_print(DEBUG_MAIN, 1, "num_opcodes = 0x%x\n", num_opcodes);
+	printf("num_opcodes = 0x%x\n", num_opcodes);
 
 	//LLVMDecodeAsmPrintOpcodes(DC); 
+	//LLVMDecodeAsmOpcodesSource(DC); 
 
-//	for (l = 0; l < test_data_no; l++) {
-	for (l = 3; l < 4; l++) {
+	for (l = 0; l < test_data_no; l++) {
+//	for (l = 3; l < 4; l++) {
 		if (!test_data[l].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
@@ -321,14 +361,15 @@ int main(int argc, char *argv[])
 #endif
 		octets = LLVMDisasmInstruction(DC, buffer,
 			buffer_size, offset,
-			buffer1, 1023);
-		printf("LLVM DIS octets = 0x%x:", octets);
-		for (n = 0; n < octets; n++) {
-			printf("%02x ", buffer[n]);
-		}
-		printf(":%s\n", buffer1);
+			(char *)buffer1, 1023);
+		LLVMDisasmInstructionPrint(octets, buffer, buffer_size, buffer1);
+//		printf("LLVM DIS octets = 0x%x:", octets);
+//		for (n = 0; n < octets; n++) {
+//			printf("%02x ", buffer[n]);
+//		}
+//		printf(":%s\n", buffer1);
 		opcode_name = NULL;
-		octets = LLVMDecodeAsmInstruction(DC2, buffer,
+		octets = LLVMDecodeAsmInstruction(inst, DC2, buffer,
 			buffer_size, offset,
 			buffer1, 1023, &opcode, &opcode_name, &TSFlags);
 		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
