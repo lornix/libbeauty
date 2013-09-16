@@ -101,8 +101,7 @@ enum {
 #define LESS_EQUAL 14
 #define GREATER 15
 
-
-extern char * opcode_table[];
+extern const char * opcode_table[];
 /* FIXME: The values are currently set to 64bit, so can handle 64bit and 32bit, but not 128bit regs. */
 #define REG_AX 0x08
 #define REG_CX 0x10

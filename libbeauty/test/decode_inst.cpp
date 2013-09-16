@@ -571,17 +571,34 @@ int LLVMDecodeAsmOpcodesSource(LLVMDecodeAsmContextRef DCR) {
 	const MCInstrInfo *MII = DC->getInstInfo();
 	MCInstPrinter *IP = DC->getIP();
 	StringRef Name;
+	int n,m;
+	int tmp;
 	const char *opcode_name;
 	int num_opcodes = MII->getNumOpcodes();
-	int n;
+	int inst_helper_size = sizeof(decode_inst_helper) / sizeof(struct decode_inst_helper_s);
+	struct decode_inst_helper_s *new_helper = (struct decode_inst_helper_s *)calloc(num_opcodes, sizeof(struct decode_inst_helper_s));
+	if (!new_helper) {
+		return 1;
+	}
 	for (n = 0; n < num_opcodes; n++) {
 		const MCInstrDesc Desc = MII->get(n);
-		uint64_t TSFlags = Desc.TSFlags;
 		Name = IP->getOpcodeName(n);
-		opcode_name = Name.data();
+		new_helper[n].mc_inst = Name.data();
+		for (m = 0; m < inst_helper_size; m++) {
+			tmp = strcmp(Name.data(), decode_inst_helper[m].mc_inst);
+			if (tmp == 0) {
+				new_helper[n].opcode = decode_inst_helper[m].opcode;
+				break;
+			}
+		}
+	}
+	
+	for (n = 0; n < num_opcodes; n++) {
 		/* OpcodeID, Operand, offset, size, Operand, offset, size, OpcodeName */
-		outs() << format("	{ 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, \"%s\" },  // 0x%04x\n", opcode_name, n);
+		outs() << format("	{ %s, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, \"%s\" },  // 0x%04x\n",
+			opcode_table[new_helper[n].opcode], new_helper[n].mc_inst, n);
 	};
+	free (new_helper);
 	return 0;
 }
 

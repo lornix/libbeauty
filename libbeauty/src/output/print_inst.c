@@ -35,7 +35,7 @@ int reg_params_order[] = {
         REG_09 /* R09 */
 };
 
-char * opcode_table[] = {
+const char * opcode_table[] = {
 	"NOP",   // 0x00
 	"MOV",   // 0x01
 	"ADD",   // 0x02
@@ -72,9 +72,10 @@ char * opcode_table[] = {
 	"CALLT",  // 0x21
 	"PHI",  // 0x22
 	"ICMP",  // 0x23
-	"BC"  // 0x24
-	"LOAD"  // 0x25
-	"STORE"  // 0x26`
+	"BC",  // 0x24
+	"LOAD",  // 0x25
+	"STORE",  // 0x26
+	"LEA",  // 0x27
 };
 
 char *store_table[] = { "i", "r", "m", "s" };
