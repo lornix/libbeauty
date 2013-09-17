@@ -581,13 +581,24 @@ int LLVMDecodeAsmOpcodesSource(LLVMDecodeAsmContextRef DCR) {
 		return 1;
 	}
 	for (n = 0; n < num_opcodes; n++) {
+		int start;
 		const MCInstrDesc Desc = MII->get(n);
 		Name = IP->getOpcodeName(n);
 		new_helper[n].mc_inst = Name.data();
-		for (m = 0; m < inst_helper_size; m++) {
+		start = 0;
+		if ((n < inst_helper_size) &&
+			(0 == strcmp(Name.data(), decode_inst_helper[n].mc_inst))) {
+			/* Small optimization if the table is not changing */
+			start = n;
+		}
+		for (m = start; m < inst_helper_size; m++) {
 			tmp = strcmp(Name.data(), decode_inst_helper[m].mc_inst);
 			if (tmp == 0) {
 				new_helper[n].opcode = decode_inst_helper[m].opcode;
+				new_helper[n].predicate = decode_inst_helper[m].predicate;
+				new_helper[n].srcA_size = decode_inst_helper[m].srcA_size;
+				new_helper[n].srcB_size = decode_inst_helper[m].srcB_size;
+				new_helper[n].dstA_size = decode_inst_helper[m].dstA_size;
 				break;
 			}
 		}
@@ -595,8 +606,16 @@ int LLVMDecodeAsmOpcodesSource(LLVMDecodeAsmContextRef DCR) {
 	
 	for (n = 0; n < num_opcodes; n++) {
 		/* OpcodeID, Operand, offset, size, Operand, offset, size, OpcodeName */
-		outs() << format("	{ %s, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, \"%s\" },  // 0x%04x\n",
-			opcode_table[new_helper[n].opcode], new_helper[n].mc_inst, n);
+		outs() << format("	{ %s, ", helper_opcode_table[new_helper[n].opcode]);
+		outs() << format("0x%x, ", new_helper[n].predicate);
+		outs() << format("0x%x, ", new_helper[n].srcA_size);
+		outs() << format("0x%x, ", new_helper[n].srcB_size);
+		outs() << format("0x%x, ", new_helper[n].dstA_size);
+		outs() << format("0x%x, ", 0);
+		outs() << format("0x%x, ", 0);
+		outs() << format("\"%s\" },  // 0x%04x\n",
+			new_helper[n].mc_inst,
+			n);
 	};
 	free (new_helper);
 	return 0;
