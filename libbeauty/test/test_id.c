@@ -303,10 +303,14 @@ int main(int argc, char *argv[])
 	/* Open file is only used to enable the disassemler */
 //	handle_void = bf_test_open_file(file);
 //	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
-	LLVMInitializeAllTargetInfos();
-	LLVMInitializeAllTargetMCs();
-	LLVMInitializeAllAsmParsers();
-	LLVMInitializeAllDisassemblers();
+//	LLVMInitializeAllTargetInfos();
+//	LLVMInitializeAllTargetMCs();
+//	LLVMInitializeAllAsmParsers();
+//	LLVMInitializeAllDisassemblers();
+	LLVMInitializeX86TargetInfo();
+	LLVMInitializeX86TargetMC();
+	LLVMInitializeX86AsmParser();
+	LLVMInitializeX86Disassembler();
 
 //	LLVMPrintTargets();
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
