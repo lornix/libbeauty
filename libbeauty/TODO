@@ -40,11 +40,26 @@ TODO:
 	the body of the for loop.
 		This could be a list of containers.
 
+2) Might need to separate out types. One index into the type/struct, and another for the pointer or not.
+   Also have a separate out for if it is likely to be signed or unsigned int
     
 
 WIP
-2) Might need to separate out types. One index into the type/struct, and another for the pointer or not.
-   Also have a separate out for if it is likely to be signed or unsigned int
+16) Turn the LLVM instruction decoder into a Class.
+17) Build an intermediate instruction so we can generallise the final conversion to RTL.
+E.g. Binary -> MCInst -> Low_Level_Inst -> RTL -> LLVM IR
+Binary -> MCInst 1:1
+MCInst ->  Low_Level_Inst 1:1
+Low_Level_Inst -> RTL 1:Many
+RTL -> LLVM IR 1:1
+
+Need to decide if it is better to go straight from MCInst -> LLVM IR.
+The advantage of the Low_Level_Inst intermediate step is that it is slightly higher than MCInst, but not quite RTL.
+E.g. All the different MCInst ADD instructions are generalised into a single Low_Level_Inst ADD.
+
+
+
+
 
 DONE
 1) For call(), need to search back for the local_regNNNN name, from the param_regNNNN in the function params.
