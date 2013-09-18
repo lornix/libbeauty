@@ -67,8 +67,8 @@ void *LLVMCreateMCInst(void) {
 	MCInst *inst = new MCInst;
 	struct dis_info_s *dis_info = (struct dis_info_s*) calloc (1, sizeof (struct dis_info_s));
 	dis_info->Inst = inst;
-	DebugFlag = true;
-	EnableDebugBuffering = true;
+//	DebugFlag = true;
+//	EnableDebugBuffering = true;
 	outs() << "Debug flag set true\n";
 	return (void*)dis_info;
 }
