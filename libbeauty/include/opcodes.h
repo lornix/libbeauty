@@ -84,22 +84,23 @@ enum {
 #define STORE 0x26 /* Store to memory/stack */
 #define LEA 0x27 /* Used at the MC Inst low level */
 
-#define FLAG_OVERFLOW 0
-#define NOT_OVERFLOW 1
-#define BELOW 2
-#define NOT_BELOW 3
-#define EQUAL 4
-#define NOT_EQUAL 5
-#define BELOW_EQUAL 6
-#define ABOVE 7
-#define rSIGNED 8
-#define NO_SIGNED 9
-#define PARITY 10
-#define NOT_PARITY 11
-#define LESS 12
-#define GREATER_EQUAL 13
-#define LESS_EQUAL 14
-#define GREATER 15
+#define FLAG_NONE 0
+#define FLAG_OVERFLOW 1
+#define NOT_OVERFLOW 2
+#define BELOW 3
+#define NOT_BELOW 4
+#define EQUAL 5
+#define NOT_EQUAL 6
+#define BELOW_EQUAL 7
+#define ABOVE 8
+#define rSIGNED 9
+#define NO_SIGNED 10
+#define PARITY 11
+#define NOT_PARITY 12
+#define LESS 13
+#define GREATER_EQUAL 14
+#define LESS_EQUAL 15
+#define GREATER 16
 
 extern const char * opcode_table[];
 /* FIXME: The values are currently set to 64bit, so can handle 64bit and 32bit, but not 128bit regs. */

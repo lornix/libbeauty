@@ -121,6 +121,7 @@ struct test_data_s {
 
 #define ADDL 1
 #define LEAL 2
+#define PUSH 3
 
 struct test_data_s test_data[] = {
 	{
@@ -194,7 +195,25 @@ struct test_data_s test_data[] = {
 		.opcode = LEAL,
 		.operands_type = 1,
 		.operands = NULL
-	}
+	},
+	{
+		.valid = 1,
+		// push   %rbp
+		.bytes = {0x55},
+		.bytes_size = 1,
+		.opcode = PUSH,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		// sarl	$2, %esi
+		.bytes = {0xc1, 0xfe, 0x02},
+		.bytes_size = 3,
+		.opcode = LEAL,
+		.operands_type = 1,
+		.operands = NULL
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

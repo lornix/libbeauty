@@ -113,6 +113,13 @@ LLVMDecodeAsmContextRef LLVMCreateDecodeAsm(const char *TripleName, void *DisInf
 //  llvm::InitializeAllAsmParsers();
 //  llvm::InitializeAllDisassemblers();
 
+	outs() << helper_reg_table[0].reg_name << ", ";
+	outs() << helper_reg_table[0].size << ", ";
+	outs() << helper_reg_table[0].reg_number << "\n";
+	outs() << helper_reg_table[1].reg_name << ", ";
+	outs() << helper_reg_table[1].size << ", ";
+	outs() << helper_reg_table[1].reg_number << "\n";
+
 	// Get the target.
 	std::string Error;
 //	TargetRegistry::printRegisteredTargetsForVersion();
@@ -218,6 +225,39 @@ public:
     return 0;
   }
 };
+
+
+int get_reg_size_helper(LLVMDisasmContext *DC, int value, int *reg_index) {
+	MCInstPrinter *IP = DC->getIP();
+	std::string buf;
+	StringRef reg_name;
+	int helper_size = sizeof(helper_reg_table) / sizeof(struct helper_reg_table_s);
+	int n;
+	int tmp;
+	raw_string_ostream OS(buf);
+	//outs() << format("get_reg_size_helper value = 0x%x\n", value);
+	if (value == 0) {
+		return 1;
+	}
+	IP->printRegName(OS, value);
+	OS.flush();
+	reg_name = OS.str();
+	for (n = 0; n < helper_size; n++) {
+		tmp = strcmp(reg_name.data(),helper_reg_table[n].reg_name);
+		if (tmp == 0) {
+//			outs() << n << ":";
+//			outs() << helper_reg_table[n].reg_name << ", ";
+//			outs() << helper_reg_table[n].size << ", ";
+//			outs() << helper_reg_table[n].reg_number << "\n";
+			*reg_index = n;
+			return 0;
+		}
+	}
+	return 1;
+}
+
+
+
 } // end anonymous namespace
 
 //
@@ -302,7 +342,25 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			value = Operand->getImm();
 			outs() << format("SRC0 index multiplier Imm = 0x%x\n", value);
 			outs() << format("SRC0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[0], dis_info->size[0], Bytes[dis_info->offset[0]]);
-			outs() << format("SRC0 bytes at inst offset = 1 octets, size = 8 bits, value = 0x%x\n", Bytes[1]);
+		}
+		break;
+	case 2: // AddRegFrm
+		if (num_operands != 1) {
+			outs() << "Unrecognised num_operands\n";
+			break;
+		}
+		Operand = &Inst->getOperand(0);
+		if (Operand->isValid() &&
+			Operand->isReg()) {
+			uint32_t value;
+			int reg_index = 0;
+			int tmp;
+			value = Operand->getReg();
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		break;
 	case 3: // MRMDestReg
@@ -314,22 +372,40 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg()) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("DST0 Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(1);
 		if (Operand->isValid() &&
 			Operand->isReg()) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("SRC0 Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(2);
 		if (Operand->isValid() &&
 			Operand->isReg()) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("SRC1 Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC1 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		break;
 	case 6: // MRMSrcMem
@@ -341,15 +417,27 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg()) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("DST0 Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(1);
 		if (Operand->isValid() &&
 			Operand->isReg() ) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("SRC0 pointer Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC0 pointer Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(2);
 		if (Operand->isValid() &&
@@ -363,8 +451,14 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg() ) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("SRC2 index Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC2 index Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(4);
 		if (Operand->isValid() &&
@@ -373,7 +467,6 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			value = Operand->getImm();
 			outs() << format("SRC3 offset Imm  = 0x%x\n", value);
 			outs() << format("SRC3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[4], dis_info->size[4], Bytes[dis_info->offset[4]]);
-			outs() << format("SRC3 bytes at inst offset = 3 octets, size = 8 bits, value = 0x%x\n", Bytes[3]);
 		}
 		Operand = &Inst->getOperand(5);
 		if (Operand->isValid() &&
@@ -392,8 +485,14 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg()) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("DST0 Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(1);
 		if (Operand->isValid() &&
@@ -402,7 +501,46 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			value = Operand->getImm();
 			outs() << format("SRC0 index multiplier Imm = 0x%x\n", value);
 			outs() << format("SRC0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[1], dis_info->size[1], Bytes[dis_info->offset[1]]);
-			outs() << format("SRC0 bytes at inst offset = 1 octets, size = 8 bits, value = 0x%x\n", Bytes[1]);
+		}
+		break;
+	case 0x17: // MRM7r
+		if (num_operands != 3) {
+			outs() << "Unrecognised num_operands\n";
+			break;
+		}
+		Operand = &Inst->getOperand(0);
+		if (Operand->isValid() &&
+			Operand->isReg()) {
+			uint32_t value;
+			int reg_index = 0;
+			int tmp;
+			value = Operand->getReg();
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+		}
+		Operand = &Inst->getOperand(1);
+		if (Operand->isValid() &&
+			Operand->isReg()) {
+			uint32_t value;
+			int reg_index = 0;
+			int tmp;
+			value = Operand->getReg();
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("SRC0 Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+		}
+		Operand = &Inst->getOperand(2);
+		if (Operand->isValid() &&
+			Operand->isImm() ) {
+			uint32_t value;
+			value = Operand->getImm();
+			outs() << format("SRC1 offset Imm = 0x%x\n", value);
+			outs() << format("SRC1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[2], dis_info->size[2], Bytes[dis_info->offset[2]]);
 		}
 		break;
 	case 0x18: // MRM2r
@@ -414,8 +552,14 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg() ) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("DST0 pointer Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST0 pointer Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(1);
 		if (Operand->isValid() &&
@@ -429,8 +573,14 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		if (Operand->isValid() &&
 			Operand->isReg() ) {
 			uint32_t value;
+			int reg_index = 0;
+			int tmp;
 			value = Operand->getReg();
-			outs() << format("DST2 index Reg = 0x%x\n", value);
+			tmp = get_reg_size_helper(DC, value, &reg_index);
+			outs() << format("DST2 index Reg: value = 0x%x, ", value);
+			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
 		Operand = &Inst->getOperand(3);
 		if (Operand->isValid() &&
@@ -439,7 +589,6 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			value = Operand->getImm();
 			outs() << format("DST3 offset Imm  = 0x%x\n", value);
 			outs() << format("DST3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
-			outs() << format("DST3 bytes at inst offset = 3 octets, size = %d bits, value = 0x%x\n", 1 * 8, Bytes[3]);
 		}
 		Operand = &Inst->getOperand(4);
 		if (Operand->isValid() &&
@@ -456,7 +605,6 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			outs() << format("SRC0 offset Imm  = 0x%x\n", value);
 			int size_of_imm = X86II::getSizeOfImm(*TSFlags);
 			outs() << format("SRC0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
-			outs() << format("SRC0 bytes at inst offset = 4 octets, size = %d bits, value = 0x%x\n", size_of_imm * 8, Bytes[4]);
 		}
 		break;
 	default:

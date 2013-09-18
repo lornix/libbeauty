@@ -93,6 +93,50 @@ const char * helper_opcode_table[] = {
 #define H_POP 0x2B /* Used at the MC Inst low level */
 #define H_PUSH 0x2C /* Used at the MC Inst low level */
 
+struct helper_reg_table_s {
+	const char *reg_name;
+	int size;
+	int reg_number;
+};
+
+struct helper_reg_table_s helper_reg_table[] = {
+	{"none", 0, 0},
+	{"%eax", 32, REG_AX},
+	{"%ecx", 32, REG_CX},
+	{"%edx", 32, REG_DX},
+	{"%ebx", 32, REG_BX},
+	{"%esp", 32, REG_SP},
+	{"%ebp", 32, REG_BP},
+	{"%esi", 32, REG_SI},
+	{"%edi", 32, REG_DI},
+	{"%eip", 32, REG_IP},
+	{"%e08", 32, REG_08},
+	{"%e09", 32, REG_09},
+	{"%e10", 32, REG_10},
+	{"%e11", 32, REG_11},
+	{"%e12", 32, REG_12},
+	{"%e13", 32, REG_13},
+	{"%e14", 32, REG_14},
+	{"%e15", 32, REG_15},
+	{"%rax", 64, REG_AX},
+	{"%rcx", 64, REG_CX},
+	{"%rdx", 64, REG_DX},
+	{"%rbx", 64, REG_BX},
+	{"%rsp", 64, REG_SP},
+	{"%rbp", 64, REG_BP},
+	{"%rsi", 64, REG_SI},
+	{"%rdi", 64, REG_DI},
+	{"%rip", 64, REG_IP},
+	{"%r08", 64, REG_08},
+	{"%r09", 64, REG_09},
+	{"%r10", 64, REG_10},
+	{"%r11", 64, REG_11},
+	{"%r12", 64, REG_12},
+	{"%r13", 64, REG_13},
+	{"%r14", 64, REG_14},
+	{"%r15", 64, REG_15},
+};
+
 struct decode_inst_helper_s {
 	int opcode;
 	int predicate;
@@ -2249,7 +2293,7 @@ struct decode_inst_helper_s decode_inst_helper[] = {
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64i16" },  // 0x085c
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64i32" },  // 0x085d
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64i8" },  // 0x085e
-	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64r" },  // 0x085f
+	{ H_PUSH, 0x0, 64, 0x0, 0x0, 0x0, 0x0, "PUSH64r" },  // 0x085f
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64rmm" },  // 0x0860
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSH64rmr" },  // 0x0861
 	{ H_PUSH, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, "PUSHA32" },  // 0x0862

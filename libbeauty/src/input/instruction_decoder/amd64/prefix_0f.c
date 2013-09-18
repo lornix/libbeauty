@@ -98,7 +98,7 @@ int prefix_0f(void *handle_void, struct dis_instructions_s *dis_instructions, ui
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 64;
-		instruction->srcA.index = (byte & 0xf) ^ 0x01; /* CONDITION to skip mov instruction */
+		instruction->srcA.index = ((byte & 0xf) ^ 0x01) + 1; /* CONDITION to skip mov instruction */
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 32;
 		debug_print(DEBUG_INPUT_DIS, 1, "JCD7: Before: %d\n", dis_instructions->instruction_number);
@@ -140,7 +140,7 @@ int prefix_0f(void *handle_void, struct dis_instructions_s *dis_instructions, ui
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 64;
-		instruction->srcA.index = byte & 0xf; /* CONDITION */
+		instruction->srcA.index = (byte & 0xf) + 1; /* CONDITION */
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 32;
 		dis_instructions->instruction_number++;
@@ -179,7 +179,7 @@ int prefix_0f(void *handle_void, struct dis_instructions_s *dis_instructions, ui
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 64;
-		instruction->srcA.index = (byte & 0xf) ^ 0x01; /* CONDITION to skip mov instruction */
+		instruction->srcA.index = ((byte & 0xf) ^ 0x01) + 1; /* CONDITION to skip mov instruction */
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 32;
 		dis_instructions->instruction_number++;
