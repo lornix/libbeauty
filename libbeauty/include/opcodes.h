@@ -139,7 +139,8 @@ extern const char * opcode_table[];
 #define REG_GREATER_EQUAL 0xad
 #define REG_LESS_EQUAL 0xae
 #define REG_GREATER 0xaf
-#define MAX_REG 0xb0
+#define REG_CS 0xb0
+#define MAX_REG 0xb8
 
 typedef struct reg_s reg_t;
 

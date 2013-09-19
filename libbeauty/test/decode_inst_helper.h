@@ -101,6 +101,7 @@ struct helper_reg_table_s {
 
 struct helper_reg_table_s helper_reg_table[] = {
 	{"none", 0, 0},
+	{"%cs", 16, REG_CS},
 	{"%eax", 32, REG_AX},
 	{"%ecx", 32, REG_CX},
 	{"%edx", 32, REG_DX},
