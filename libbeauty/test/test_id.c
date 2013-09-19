@@ -374,9 +374,7 @@ int main(int argc, char *argv[])
 	uint8_t buffer1[1024];
 	uint8_t *buffer;
 	size_t buffer_size = 0;
-	uint64_t opcode;
 	const char *opcode_name = NULL;
-	uint64_t TSFlags;
 	void *inst;
 
 	if (argc != 2) {
@@ -418,6 +416,8 @@ int main(int argc, char *argv[])
 	}
 	inst = LLVMCreateMCInst();
 	printf("inst %p\n", inst);
+	struct instruction_low_level_s *ll_inst = calloc(1, sizeof(struct instruction_low_level_s));
+
 //	LLVMPrintTargets();
 	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", inst,
 		0, NULL,
@@ -468,16 +468,16 @@ int main(int argc, char *argv[])
 //		}
 //		printf(":%s\n", buffer1);
 		opcode_name = NULL;
-		octets = LLVMDecodeAsmInstruction(inst, DC2, buffer,
+		octets = LLVMDecodeAsmInstruction(DC2, inst, buffer,
 			buffer_size, offset,
-			buffer1, 1023, &opcode, &opcode_name, &TSFlags);
-		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
+			ll_inst);
+//		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
 		printf("LLVM DIS2 octets = 0x%x:", octets);
 		for (n = 0; n < octets; n++) {
 			printf("%02x ", buffer[n]);
 		}
 		printf(":%s\n", buffer1);
-		printf("LLVM DIS2 opcode = 0x%lx:%s TSFlags = 0x%lx\n\n", opcode, opcode_name, TSFlags);
+		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 	}
 
 	return 0;

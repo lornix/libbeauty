@@ -62,7 +62,6 @@ void LLVMDisasmInstructionPrint(int octets, uint8_t *buffer, int buffer_size, ui
 		outs() << format(":%s\n", buffer1);
 }
 
-
 void *LLVMCreateMCInst(void) {
 	MCInst *inst = new MCInst;
 	struct dis_info_s *dis_info = (struct dis_info_s*) calloc (1, sizeof (struct dis_info_s));
@@ -260,6 +259,14 @@ int get_reg_size_helper(LLVMDisasmContext *DC, int value, int *reg_index) {
 
 } // end anonymous namespace
 
+#define KIND_EMPTY 0
+#define KIND_REG 1
+#define KIND_IMM 2
+#define KIND_IND_REG 3
+#define KIND_IND_IMM 4
+#define KIND_IND_SCALE 5
+
+
 //
 // LLVMDecodeAsmInstruction() disassembles a single instruction using the
 // disassembler context specified in the parameter DC.  The bytes of the
@@ -272,9 +279,9 @@ int get_reg_size_helper(LLVMDisasmContext *DC, int value, int *reg_index) {
 // returns zero the caller will have to pick how many bytes they want to step
 // over by printing a .byte, .long etc. to continue.
 //
-size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
-                             uint64_t BytesSize, uint64_t PC, uint8_t *OutString,
-                             size_t OutStringSize, uint64_t *opcode, const char **opcode_name, uint64_t *TSFlags){
+size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, void *DisInfo, uint8_t *Bytes,
+                             uint64_t BytesSize, uint64_t PC,
+                             struct instruction_low_level_s *ll_inst){
   LLVMDisasmContext *DC = (LLVMDisasmContext *)DCR;
   int n;
   // Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
@@ -307,6 +314,7 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
   case MCDisassembler::Success: {
 	StringRef Name;
 	StringRef Reg;
+	uint32_t value = 0;
 	DC->CommentStream.flush();
 	StringRef Comments = DC->CommentsToEmit.str();
 
@@ -318,13 +326,13 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 	RegStr.empty();
 	const MCInstrInfo *MII = DC->getInstInfo();
 	int num_opcodes = MII->getNumOpcodes();
-	*opcode = Inst->getOpcode();
-	const MCInstrDesc Desc = MII->get(*opcode);
-	*TSFlags = Desc.TSFlags;
-	int opcode_form = *TSFlags & X86II::FormMask;
-	Name = IP->getOpcodeName(Inst->getOpcode());
-	*opcode_name = Name.data();
-	outs() << format("Opcode 0x%x:", Inst->getOpcode()) << format("%s", *opcode_name) << "\n";
+	int opcode = Inst->getOpcode();
+	const MCInstrDesc Desc = MII->get(opcode);
+	int TSFlags = Desc.TSFlags;
+	int opcode_form = TSFlags & X86II::FormMask;
+	Name = IP->getOpcodeName(opcode);
+	const char *opcode_name = Name.data();
+	outs() << format("Opcode 0x%x:", opcode) << format("%s", opcode_name) << "\n";
 	int num_operands = Inst->getNumOperands();
 	outs() << format("opcode_form = 0x%x", opcode_form) << format(", num_operands = 0x%x", num_operands) << "\n";
 	MCOperand *Operand;
@@ -338,11 +346,16 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			Operand = &Inst->getOperand(0);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
 				value = Operand->getImm();
 				outs() << format("SRC0.1 index multiplier Imm = 0x%x\n", value);
 				outs() << format("SRC0.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[0], dis_info->size[0], Bytes[dis_info->offset[0]]);
 			}
+			ll_inst->srcA.kind = KIND_EMPTY;
+			ll_inst->srcB.kind = KIND_EMPTY;
+			ll_inst->dstA.kind = KIND_IMM;
+			ll_inst->dstA.operand[0].value = value;
+			ll_inst->dstA.operand[0].size = dis_info->size[0];
+			ll_inst->dstA.operand[0].offset = dis_info->offset[0];
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
@@ -807,7 +820,7 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 				uint32_t value;
 				value = Operand->getImm();
 				outs() << format("SRC0.1 offset Imm  = 0x%x\n", value);
-				int size_of_imm = X86II::getSizeOfImm(*TSFlags);
+				int size_of_imm = X86II::getSizeOfImm(TSFlags);
 				outs() << format("SRC0.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 			}
 			break;
@@ -834,7 +847,7 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 		//outs() << format("Operand.Kind = 0x%x\n", Operand->Kind);
 		if (Operand->isImm()) {
 			outs() << format("Imm = 0x%lx, ", Operand->getImm());
-			int size_of_imm = X86II::getSizeOfImm(*TSFlags);
+			int size_of_imm = X86II::getSizeOfImm(TSFlags);
 			outs() << format("sizeof(Imm) = 0x%x", size_of_imm) << "\n";
 		}
 		if (Operand->isReg()) {
@@ -851,24 +864,24 @@ size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DCR, uint
 			}
 		}
 	}
-	SmallVector<char, 6400> Buffer2;
-	raw_svector_ostream OS3(Buffer2);
-	Inst->dump_pretty(OS3);
-	OS3.flush();
+//	SmallVector<char, 6400> Buffer2;
+//	raw_svector_ostream OS3(Buffer2);
+//	Inst->dump_pretty(OS3);
+//	OS3.flush();
 	
 
 	// Tell the comment stream that the vector changed underneath it.
 	DC->CommentsToEmit.clear();
 	DC->CommentStream.resync();
 
-	assert(OutStringSize != 0 && "Output buffer cannot be zero size");
-	size_t OutputSize = std::min(OutStringSize-1, InsnStr.size());
-	std::memcpy(OutString, InsnStr.data(), OutputSize);
-	OutString[OutputSize] = '\0'; // Terminate string.
-	if (Bytes[0] == 0) {
-		outs() << "Bytes reset to 0\n";
-		exit(1);
-	}
+//	assert(OutStringSize != 0 && "Output buffer cannot be zero size");
+//	size_t OutputSize = std::min(OutStringSize-1, InsnStr.size());
+//	std::memcpy(OutString, InsnStr.data(), OutputSize);
+//	OutString[OutputSize] = '\0'; // Terminate string.
+//	if (Bytes[0] == 0) {
+//		outs() << "Bytes reset to 0\n";
+//		exit(1);
+//	}
 
 	return Size;
 	}

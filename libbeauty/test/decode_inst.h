@@ -85,10 +85,9 @@ LLVMDecodeAsmContextRef LLVMCreateDecodeAsm(const char *TripleName, void *DisInf
  * function returns the number of bytes in the instruction or zero if there was
  * no valid instruction.
  */
-size_t LLVMDecodeAsmInstruction(void *DisInfo, LLVMDecodeAsmContextRef DC, uint8_t *Bytes,
+size_t LLVMDecodeAsmInstruction(LLVMDecodeAsmContextRef DCR, void *DisInfo, uint8_t *Bytes,
                              uint64_t BytesSize, uint64_t PC,
-                             uint8_t *OutString, size_t OutStringSize, uint64_t *opcode, const char **opcode_name,
-                             uint64_t *TSFlags);
+                             struct instruction_low_level_s *ll_inst);
 
 
 LLVMDecodeAsmMIIRef LLVMDecodeAsmGetMII(LLVMDecodeAsmContextRef DCR);
