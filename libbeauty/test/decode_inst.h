@@ -31,14 +31,24 @@
 typedef void *LLVMDecodeAsmContextRef;
 typedef void *LLVMDecodeAsmMIIRef;
 
+struct sub_operand_low_level_s {
+	uint64_t value;
+	int size;
+	uint64_t offset;
+};
+
+struct operand_low_level_s {
+	int kind;
+	struct sub_operand_low_level_s operand[16];
+};
+	
+
+
 struct instruction_low_level_s {
 	int opcode;
-	int src_kind;
-	int dst_kind; // For now, this should always be == 1
-	int src_operands[16];
-	int imm_offset[16];
-	int imm_size[16];
-	int dst_operands[2];
+	struct operand_low_level_s srcA;
+	struct operand_low_level_s srcB;
+	struct operand_low_level_s dstA;
 };
 
 #ifdef __cplusplus
