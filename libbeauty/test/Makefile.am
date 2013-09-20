@@ -23,7 +23,7 @@ dis64_SOURCES = \
 	dis64.c
 
 test_id_SOURCES = \
-	test_id.c decode_inst.cpp
+	test_id.c decode_inst.cpp decode_asm_X86_64.cpp
 
 test_id_arm_SOURCES = \
 	test_id_arm.c decode_inst.cpp
