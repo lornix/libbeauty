@@ -46,6 +46,8 @@ struct operand_low_level_s {
 
 struct instruction_low_level_s {
 	int opcode;
+	uint64_t address;
+	int octets;
 	int predicate;
 	struct operand_low_level_s srcA;
 	struct operand_low_level_s srcB;
