@@ -44,6 +44,8 @@ int setup();
 int DecodeInstruction(uint8_t *Bytes,
 	uint64_t BytesSize, uint64_t PC,
 	struct instruction_low_level_s *ll_inst);
+int PrintOperand(struct operand_low_level_s *operand);
+int PrintInstruction(struct instruction_low_level_s *ll_inst);
 
 private:
 const llvm::Target *TheTarget;

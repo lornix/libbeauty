@@ -32,29 +32,6 @@ typedef void *LLVMDecodeAsmContextRef;
 typedef void *LLVMDecodeAsmMIIRef;
 typedef void *LLVMDecodeAsmX86_64Ref;
 
-struct sub_operand_low_level_s {
-	uint64_t value;
-	int size;
-	uint64_t offset;
-};
-
-struct operand_low_level_s {
-	int kind;
-	struct sub_operand_low_level_s operand[16];
-};
-	
-
-
-struct instruction_low_level_s {
-	int opcode;
-	uint64_t address;
-	int octets;
-	int predicate;
-	struct operand_low_level_s srcA;
-	struct operand_low_level_s srcB;
-	struct operand_low_level_s dstA;
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* !defined(__cplusplus) */
@@ -67,6 +44,7 @@ int LLVMSetupDecodeAsmX86_64(void *DC);
 int LLVMInstructionDecodeAsmX86_64(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
 		uint64_t BytesSize, uint64_t PC,
 		struct instruction_low_level_s *ll_inst);
+int LLVMPrintInstructionDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR, struct instruction_low_level_s *ll_inst);
 
 
 /**

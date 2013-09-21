@@ -79,6 +79,12 @@ int LLVMInstructionDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR, uint8_t *Bytes,
 //	outs() << "DisInfo = " << da->DisInfo << "\n";
 	return 0;
 }
+int LLVMPrintInstructionDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR, struct instruction_low_level_s *ll_inst) {
+	int tmp;
+	DecodeAsmX86_64 *da = (DecodeAsmX86_64*)DCR;
+	tmp = da->PrintInstruction(ll_inst);
+	return 0;
+}
 
 //
 // LLVMDecodeAsmDispose() disposes of the disassembler specified by the context.
@@ -88,13 +94,6 @@ void LLVMDecodeAsmDispose(LLVMDecodeAsmX86_64Ref DCR){
 //FIXME: Get delete working
 	//delete da;
 }
-
-#define KIND_EMPTY 0
-#define KIND_REG 1
-#define KIND_IMM 2
-#define KIND_IND_REG 3
-#define KIND_IND_IMM 4
-#define KIND_IND_SCALE 5
 
 #if 0
 LLVMDecodeAsmMIIRef LLVMDecodeAsmGetMII(LLVMDecodeAsmContextRef DCR) {

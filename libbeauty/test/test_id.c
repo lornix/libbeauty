@@ -75,6 +75,7 @@
 
 #include <llvm-c/Disassembler.h>
 #include <llvm-c/Target.h>
+#include "instruction_low_level.h"
 #include "decode_inst.h"
 
 #define EIP_START 0x40000000
@@ -473,6 +474,10 @@ int main(int argc, char *argv[])
 //		}
 //		printf(":%s\n", buffer1);
 		opcode_name = NULL;
+		ll_inst->opcode = 0;
+		ll_inst->srcA.kind = KIND_EMPTY;
+		ll_inst->srcB.kind = KIND_EMPTY;
+		ll_inst->dstA.kind = KIND_EMPTY;
 		octets = LLVMInstructionDecodeAsmX86_64(DA, buffer,
 			buffer_size, offset,
 			ll_inst);
@@ -483,6 +488,7 @@ int main(int argc, char *argv[])
 		}
 		printf("\n");
 		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
+		tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
 	}
 
 	return 0;
