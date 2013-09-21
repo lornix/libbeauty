@@ -89,31 +89,6 @@ void LLVMDecodeAsmDispose(LLVMDecodeAsmX86_64Ref DCR){
 	//delete da;
 }
 
-namespace llvm {
-//
-// The memory object created by LLVMDecodeAsmInstruction().
-//
-class DecodeAsmMemoryObject : public llvm::MemoryObject {
-  uint8_t *Bytes;
-  uint64_t Size;
-  uint64_t BasePC;
-public:
-  DecodeAsmMemoryObject(uint8_t *bytes, uint64_t size, uint64_t basePC) :
-                     Bytes(bytes), Size(size), BasePC(basePC) {}
- 
-  uint64_t getBase() const { return BasePC; }
-  uint64_t getExtent() const { return Size; }
-
-  int readByte(uint64_t Addr, uint8_t *Byte) const {
-    if (Addr - BasePC >= Size)
-      return -1;
-    *Byte = Bytes[Addr - BasePC];
-    return 0;
-  }
-};
-
-} // end anonymous namespace
-
 #define KIND_EMPTY 0
 #define KIND_REG 1
 #define KIND_IMM 2

@@ -294,7 +294,8 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	int opcode_form = TSFlags & X86II::FormMask;
 	Name = IP->getOpcodeName(opcode);
 	const char *opcode_name = Name.data();
-	outs() << format("Opcode 0x%x:", opcode) << format("%s", opcode_name) << "\n";
+	outs() << format("Opcode 0x%x:", opcode) << format("0x%x:", new_helper[opcode].opcode) << format("%s", opcode_name) << "\n";
+	ll_inst->opcode = new_helper[opcode].opcode;
 	int num_operands = Inst->getNumOperands();
 	outs() << format("opcode_form = 0x%x", opcode_form) << format(", num_operands = 0x%x", num_operands) << "\n";
 	MCOperand *Operand;
