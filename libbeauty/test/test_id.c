@@ -368,9 +368,11 @@ int main(int argc, char *argv[])
 	int n,l;
 	int octets = 0;
 	int offset = 0;
+	int tmp;
 	const char *file;
 	LLVMDisasmContextRef DC;
 	LLVMDecodeAsmContextRef DC2;
+	LLVMDecodeAsmX86_64Ref DA;
 	uint8_t buffer1[1024];
 	uint8_t *buffer;
 	size_t buffer_size = 0;
@@ -405,6 +407,9 @@ int main(int argc, char *argv[])
 	LLVMInitializeX86AsmParser();
 	LLVMInitializeX86Disassembler();
 
+	
+	DA = LLVMNewDecodeAsmX86_64();
+	tmp = LLVMSetupDecodeAsmX86_64(DA);
 //	LLVMPrintTargets();
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
 		0, NULL,
@@ -414,25 +419,25 @@ int main(int argc, char *argv[])
 		printf("LLVMCreateDisasm() failed\n");
 		exit(1);
 	}
-	inst = LLVMCreateMCInst();
-	printf("inst %p\n", inst);
+//	inst = LLVMCreateMCInst();
+//	printf("inst %p\n", inst);
 	struct instruction_low_level_s *ll_inst = calloc(1, sizeof(struct instruction_low_level_s));
 
 //	LLVMPrintTargets();
-	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", inst,
-		0, NULL,
-		NULL);
-	if (!DC2) {
-		printf("LLVMCreateDecodeAsm() failed\n");
-		exit(1);
-	}
+//	DC2 = LLVMCreateDecodeAsm("x86_64-pc-linux-gnu", inst,
+//		0, NULL,
+//		NULL);
+//	if (!DC2) {
+//		printf("LLVMCreateDecodeAsm() failed\n");
+//		exit(1);
+//	}
 //	LLVMPrintTargets();
 //const MCInstrInfo *MII = LLVMDisasmGetMII(DC2);
-	int num_opcodes = LLVMDecodeAsmGetNumOpcodes(DC2);
-	printf("num_opcodes = 0x%x\n", num_opcodes);
+//	int num_opcodes = LLVMDecodeAsmGetNumOpcodes(DC2);
+//	printf("num_opcodes = 0x%x\n", num_opcodes);
 
 	//LLVMDecodeAsmPrintOpcodes(DC); 
-	LLVMDecodeAsmOpcodesSource(DC); 
+//	LLVMDecodeAsmOpcodesSource(DC); 
 
 	for (l = 0; l < test_data_no; l++) {
 //	for (l = 3; l < 4; l++) {
@@ -468,7 +473,7 @@ int main(int argc, char *argv[])
 //		}
 //		printf(":%s\n", buffer1);
 		opcode_name = NULL;
-		octets = LLVMDecodeAsmInstruction(DC2, inst, buffer,
+		octets = LLVMInstructionDecodeAsmX86_64(DA, buffer,
 			buffer_size, offset,
 			ll_inst);
 //		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
@@ -476,7 +481,7 @@ int main(int argc, char *argv[])
 		for (n = 0; n < octets; n++) {
 			printf("%02x ", buffer[n]);
 		}
-		printf(":%s\n", buffer1);
+		printf("\n");
 		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 	}
 

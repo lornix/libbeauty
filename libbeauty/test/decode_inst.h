@@ -30,6 +30,7 @@
  */
 typedef void *LLVMDecodeAsmContextRef;
 typedef void *LLVMDecodeAsmMIIRef;
+typedef void *LLVMDecodeAsmX86_64Ref;
 
 struct sub_operand_low_level_s {
 	uint64_t value;
@@ -60,6 +61,13 @@ extern "C" {
 
 
 void *LLVMCreateMCInst(void);
+
+LLVMDecodeAsmX86_64Ref LLVMNewDecodeAsmX86_64();
+int LLVMSetupDecodeAsmX86_64(void *DC);
+int LLVMInstructionDecodeAsmX86_64(LLVMDecodeAsmContextRef DCR, uint8_t *Bytes,
+		uint64_t BytesSize, uint64_t PC,
+		struct instruction_low_level_s *ll_inst);
+
 
 /**
  * Create a disassembler for the TripleName.  Symbolic disassembly is supported
