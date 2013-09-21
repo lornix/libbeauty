@@ -9,12 +9,13 @@
 #include <sstream>
 #include <global_struct.h>
 #include <output.h>
-#include "llvm/LLVMContext.h"
-#include "llvm/Module.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Constants.h"
-#include "llvm/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
@@ -299,7 +300,7 @@ int LLVM_ir_export::output(struct self_s *self)
 #endif
 			}
 			std::string ErrorInfo;
-			raw_fd_ostream OS(output_filename, ErrorInfo, raw_fd_ostream::F_Binary);
+			raw_fd_ostream OS(output_filename, ErrorInfo, sys::fs::F_Binary);
 
 			if (!ErrorInfo.empty())
 				return -1;

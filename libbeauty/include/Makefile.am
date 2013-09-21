@@ -9,6 +9,8 @@ include_HEADERS = \
 	analyse.h \
 	global_struct.h \
 	output.h \
+	instruction_low_level.h \
+	decode_inst.h \
 	rev.h
 
 
