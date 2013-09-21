@@ -36,9 +36,9 @@ test_case_SOURCES = \
 #	mem.cpp
 
 #dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lopcodes -liberty -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lbfd -lz -ldl
-dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lbeauty_exe -lbeauty_analyse -lbeauty_output -lbeauty_llvm -lz -ldl
+dis64_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lbeauty_exe -lbeauty_analyse -lbeauty_output_cfg -lbeauty_output_llvm -lz -ldl
 #test_id_LDADD = -L$(libdir) -lbeauty_input_bfd -lbeauty_decoder_amd64 -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib -lstdc++
-test_id_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -lbeauty_output -L/usr/local/lib/llvm/lib -lstdc++
+test_id_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -lbeauty_output_cfg -L/usr/local/lib/llvm/lib -lstdc++
 #test_id_arm_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -lbeauty_output -L/usr/local/lib/llvm/lib -lstdc++
 test_case_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.4svn -L/usr/local/lib/llvm/lib -lstdc++
 #mem_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib -lstdc++

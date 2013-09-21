@@ -1,6 +1,6 @@
 include $(top_srcdir)/misc/Makefile.common
 
-SUBDIRS = ia32 amd64
+SUBDIRS = ia32 amd64 llvm
 
 #noinst_LTLIBRARIES = libInstruction_Decoder.la
 

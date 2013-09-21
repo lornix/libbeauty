@@ -104,10 +104,13 @@ src/input/binary_file_decoder/libbfd/Makefile
 src/input/instruction_decoder/Makefile
 src/input/instruction_decoder/ia32/Makefile
 src/input/instruction_decoder/amd64/Makefile
+src/input/instruction_decoder/llvm/Makefile
+src/input/instruction_decoder/llvm/amd64/Makefile
 src/execute/Makefile
 src/analyse/Makefile
 src/output/Makefile
-src/llvm/Makefile
+src/output/cfg/Makefile
+src/output/llvm/Makefile
 test/Makefile
 include/Makefile
 ])
