@@ -83,6 +83,11 @@ enum {
 #define LOAD 0x25 /* Load from memory/stack */
 #define STORE 0x26 /* Store to memory/stack */
 #define LEA 0x27 /* Used at the MC Inst low level */
+#define CMOV 0x28 /* Used at the MC Inst low level */
+#define DEC 0x29 /* Used at the MC Inst low level */
+#define INC 0x2A /* Used at the MC Inst low level */
+#define POP 0x2B /* Used at the MC Inst low level */
+#define PUSH 0x2C /* Used at the MC Inst low level */
 
 #define FLAG_NONE 0
 #define FLAG_OVERFLOW 1

@@ -106,6 +106,7 @@ src/input/instruction_decoder/ia32/Makefile
 src/input/instruction_decoder/amd64/Makefile
 src/input/instruction_decoder/llvm/Makefile
 src/input/instruction_decoder/llvm/amd64/Makefile
+src/input/convert_ll_inst_to_rtl/Makefile
 src/execute/Makefile
 src/analyse/Makefile
 src/output/Makefile

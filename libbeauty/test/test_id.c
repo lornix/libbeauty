@@ -77,6 +77,9 @@
 #include <llvm-c/Target.h>
 #include "instruction_low_level.h"
 #include "decode_inst.h"
+#include <rev.h>
+#include <dis.h>
+#include <convert_ll_inst_to_rtl.h>
 
 #define EIP_START 0x40000000
 
@@ -120,13 +123,13 @@ struct test_data_s {
 	int	*operands;
 };
 
-#define ADD 1
-#define LEA 2
-#define PUSH 3
-#define MOV 4
-#define SHL 5
-#define NOP 6
-#define SAR 7
+//#define ADD 1
+//#define LEA 2
+//#define PUSH 3
+//#define MOV 4
+//#define SHL 5
+//#define NOP 6
+//#define SAR 7
 
 struct test_data_s test_data[] = {
 	{
@@ -374,6 +377,7 @@ int main(int argc, char *argv[])
 	LLVMDisasmContextRef DC;
 	LLVMDecodeAsmContextRef DC2;
 	LLVMDecodeAsmX86_64Ref DA;
+	struct dis_instructions_s dis_instructions;
 	uint8_t buffer1[1024];
 	uint8_t *buffer;
 	size_t buffer_size = 0;
@@ -489,6 +493,7 @@ int main(int argc, char *argv[])
 		printf("\n");
 		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 		tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
+		tmp = convert_ll_inst_to_rtl(ll_inst, &dis_instructions);
 	}
 
 	return 0;
