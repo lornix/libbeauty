@@ -286,6 +286,9 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	const char *opcode_name = Name.data();
 	outs() << format("Opcode 0x%x:", opcode) << format("0x%x:", new_helper[opcode].opcode) << format("%s", opcode_name) << "\n";
 	ll_inst->opcode = new_helper[opcode].opcode;
+	ll_inst->srcA.size = new_helper[opcode].srcA_size;
+	ll_inst->srcB.size = new_helper[opcode].srcB_size;
+	ll_inst->dstA.size = new_helper[opcode].dstA_size;
 	int num_operands = Inst->getNumOperands();
 	outs() << format("opcode_form = 0x%x", opcode_form) << format(", num_operands = 0x%x", num_operands) << "\n";
 	MCOperand *Operand;
@@ -710,8 +713,8 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			value = Operand->getImm();
 			ll_inst->srcA.kind = KIND_IMM;
 			ll_inst->srcA.operand[0].value = value;
-			ll_inst->srcA.operand[0].size = dis_info->size[0] * 8;
-			ll_inst->srcA.operand[0].offset = dis_info->offset[0];
+			ll_inst->srcA.operand[0].size = dis_info->size[1] * 8;
+			ll_inst->srcA.operand[0].offset = dis_info->offset[1];
 			outs() << format("SRC0.0 index multiplier Imm = 0x%x\n", value);
 			outs() << format("SRC0.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[1], dis_info->size[1], Bytes[dis_info->offset[1]]);
 		}
@@ -1011,12 +1014,12 @@ int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 }
 
 int llvm::DecodeAsmX86_64::PrintInstruction(struct instruction_low_level_s *ll_inst) {
-	outs() << format("Opcode 0x%x\n", ll_inst->opcode);
-	outs() << "srcA\n";
+	outs() << format("Opcode 0x%x:%s\n", ll_inst->opcode, helper_opcode_table[ll_inst->opcode]);
+	outs() << format("srcA:size=0x%x\n", ll_inst->srcA.size);
 	PrintOperand(&(ll_inst->srcA));
-	outs() << "srcB\n";
+	outs() << format("srcB:size=0x%x\n", ll_inst->srcB.size);
 	PrintOperand(&(ll_inst->srcB));
-	outs() << "dstA\n";
+	outs() << format("dstA:size=0x%x\n", ll_inst->dstA.size);
 	PrintOperand(&(ll_inst->dstA));
 	return 0;
 }

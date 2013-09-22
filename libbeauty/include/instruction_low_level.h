@@ -15,6 +15,7 @@ struct sub_operand_low_level_s {
 
 struct operand_low_level_s {
 	int kind;
+	int size;
 	struct sub_operand_low_level_s operand[16];
 };
 	
