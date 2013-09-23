@@ -29,8 +29,69 @@
 #include <rev.h>
 #include <instruction_low_level.h>
 
+
+const char * dis_opcode_table[] = {
+	"NOP",   // 0x00
+	"MOV",   // 0x01
+	"ADD",   // 0x02
+	"ADC",   // 0x03
+	"SUB",   // 0x04
+	"SBB",   // 0x05
+	"OR ",   // 0x06
+	"XOR",   // 0x07
+	"AND",   // 0x08
+	"NOT",   // 0x09
+	"TEST",  // 0x0A
+	"NEG",   // 0x0B
+	"CMP",   // 0x0C
+	"MUL",   // 0x0D
+	"IMUL",  // 0x0E
+	"DIV",   // 0x0F
+	"IDIV",  // 0x10
+	"JMP",   // 0x11
+	"CALL",  // 0x12
+	"IF ",   // 0x13
+	"ROL",   // 0x14  /* ROL,ROR etc. might be reduced to simpler equivalents. */
+	"ROR",   // 0x15
+	"RCL",   // 0x16
+	"RCR",   // 0x17
+	"SHL",   // 0x18
+	"SHR",   // 0x19
+	"SAL",   // 0x1A
+	"SAR",   // 0x1B
+	"IN ",   // 0x1C
+	"OUT",   // 0x1D
+	"RET",   // 0x1E
+	"SEX",   // 0x1F   /* Signed extension */
+	"JMPT",	 // 0x20
+	"CALLT",  // 0x21
+	"PHI",  // 0x22
+	"ICMP",  // 0x23
+	"BC",  // 0x24
+	"LOAD",  // 0x25
+	"STORE",  // 0x26
+	"LEA",  // 0x27
+	"CMOV",  // 0x28
+	"DEC",  // 0x29
+	"INC",  // 0x2a
+	"POP",  // 0x2b
+	"PUSH",  // 0x2c
+	""
+};
+
+
+
+
 int convert_operand(struct operand_low_level_s *ll_operand, struct operand_s *inst_operand) {
 	switch(ll_operand->kind) {
+	case KIND_EMPTY:
+		inst_operand->store = 0;
+		inst_operand->indirect = 0;
+		inst_operand->indirect_size = 0;
+		inst_operand->index = 0;
+		inst_operand->relocated = 0;
+		inst_operand->value_size = 0;
+		break;
 	case KIND_REG:
 		inst_operand->store = STORE_REG;
 		inst_operand->indirect = IND_DIRECT;
@@ -180,6 +241,8 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
 	for (n = 0; n < dis_instructions->instruction_number; n++) {
 		instruction = &dis_instructions->instruction[n];
+		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: opcode = 0x%x:%s\n",
+			n, instruction->opcode, dis_opcode_table[instruction->opcode]);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: flags = 0x%x\n", n, instruction->flags);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.store = 0x%x\n", n, instruction->srcA.store);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: srcA.indirect = 0x%x\n", n, instruction->srcA.indirect);
