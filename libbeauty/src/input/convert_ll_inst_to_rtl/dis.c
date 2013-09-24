@@ -308,6 +308,10 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 		dis_instructions->instruction_number++;
 	} else {
 		/* Handle the indirect case */
+		if (dstA_operand->kind == KIND_IND_SCALE) {
+			scale_operand = dstA_operand;
+			/* Let srcA and srcB override this */
+		}
 		if (srcA_operand->kind == KIND_IND_SCALE) {
 			scale_operand = srcA_operand;
 		}
@@ -370,14 +374,17 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			dis_instructions->instruction_number++;
 			previous_operand = &operand_reg_tmp1;
 		}
-		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-		instruction->opcode = LOAD;
-		instruction->flags = 0;
-		convert_operand(previous_operand, 0, &(instruction->srcA));
-		instruction->srcA.indirect = IND_MEM;
-		convert_operand(&operand_empty, 0, &(instruction->srcB));
-		convert_operand(&operand_reg_tmp2, 0, &(instruction->dstA));
-		dis_instructions->instruction_number++;
+		if ((srcA_operand->kind == KIND_IND_SCALE) ||
+			(srcB_operand->kind == KIND_IND_SCALE)) {
+			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+			instruction->opcode = LOAD;
+			instruction->flags = 0;
+			convert_operand(previous_operand, 0, &(instruction->srcA));
+			instruction->srcA.indirect = IND_MEM;
+			convert_operand(&operand_empty, 0, &(instruction->srcB));
+			convert_operand(&operand_reg_tmp2, 0, &(instruction->dstA));
+			dis_instructions->instruction_number++;
+		}
 		previous_operand = &operand_reg_tmp2;
 		
 		if (ll_inst->srcA.kind == KIND_IND_SCALE) {
