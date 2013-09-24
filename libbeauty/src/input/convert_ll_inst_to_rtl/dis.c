@@ -175,16 +175,14 @@ struct operand_low_level_s operand_reg_tmp2 = {
 };
 
 
-int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_instructions_s *dis_instructions) {
+int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_instructions_s *dis_instructions) {
 	int tmp;
 	struct instruction_s *instruction;
 	int n;
 	int indirect = 0;
-	int kind;
 	int srcA_ind = 0;
 	int srcB_ind = 0;
 	int dstA_ind = 0;
-	int flags = 0;
 	int result = 0;
 	int final_opcode = 0;
 	struct operand_low_level_s *previous_operand;
@@ -214,53 +212,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	if (srcA_ind || srcB_ind || dstA_ind) 
 		indirect = 1;
 	final_opcode = ll_inst->opcode;
-	switch (ll_inst->opcode) {
-	case NOP:
-	case MOV:
-	case LEA: /* Used at the MC Inst low level */
-	case JMPT: /* Jump Table */
-	case CALLT: /* Call jump table */
-	case JMP: /* Relative */
-	case CALL: /* non-relative */ 
-	case IF:
-	case IN:
-	case OUT:
-	case ICMP: /* ICMP. Similar to LLVM ICMP */
-	case BC: /* Branch Conditional. Similar to LLVM ICMP */
-	case LOAD: /* Load from memory/stack */
-	case STORE: /* Store to memory/stack */
-	case SEX: /* Signed Extention */
-	case PHI: /* A PHI point */
-	case RET: /* Special instruction for helping to print the "return local_regNNNN;" */
-		flags = 0;
-		break;
-	case ADD:
-	case ADC:
-	case SUB:
-	case SBB:
-	case OR:
-	case XOR:
-	case rAND:
-	case NOT:
-	case TEST:
-	case NEG:
-	case CMP:
-	case MUL:
-	case IMUL:
-	case DIV:
-	case IDIV:
-	case ROL:
-	case ROR:
-	case RCL:
-	case RCR:
-	case SHL:
-	case SHR:
-	case SAL:
-	case SAR:
-		/* Affects flags */
-		flags = 1;
-		break;
-	}
+
 	previous_operand = &operand_empty;
 	srcA_operand = &(ll_inst->srcA);
 	srcB_operand = &(ll_inst->srcB);
@@ -456,8 +408,162 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 			dis_instructions->instruction_number++;
 		}
 	}
+	result = 0;
+	return result;
+}
 
+int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_instructions_s *dis_instructions) {
+	int tmp;
+	//int n;
+	int result = 1;
+	dis_instructions->instruction_number = 0;
+
+	switch (ll_inst->opcode) {
+	case NOP:
+		/* Do nothing */
+		result = 0;
+		break;
+	case MOV:
+		tmp  = convert_base(ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case LEA: /* Used at the MC Inst low level */
+		tmp  = convert_base(ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case JMPT: /* Jump Table */
+		break;
+	case CALLT: /* Call jump table */
+		break;
+	case JMP: /* Relative */
+		break;
+	case CALL: /* non-relative */ 
+		break;
+	case IF:
+		break;
+	case IN:
+		break;
+	case OUT:
+		break;
+	case ICMP: /* ICMP. Similar to LLVM ICMP */
+		break;
+	case BC: /* Branch Conditional. Similar to LLVM ICMP */
+		break;
+	case LOAD: /* Load from memory/stack */
+		tmp  = convert_base(ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case STORE: /* Store to memory/stack */
+		tmp  = convert_base(ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case SEX: /* Signed Extention */
+		tmp  = convert_base(ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case PHI: /* A PHI point */
+		break;
+	case RET: /* Special instruction for helping to print the "result local_regNNNN;" */
+		break;
+	case ADD:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case ADC:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SUB:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SBB:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case OR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case XOR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case rAND:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case NOT:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case TEST:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case NEG:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case CMP:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case MUL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case IMUL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case DIV:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case IDIV:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case ROL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case ROR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case RCL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case RCR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SHL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SHR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SAL:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case SAR:
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	default:
+		debug_print(DEBUG_INPUT_DIS, 1, "convert: Unrecognised opcode %x\n", ll_inst->opcode);
+		result = 0;
+		break;
+	}
 	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
+#if 0
 	for (n = 0; n < dis_instructions->instruction_number; n++) {
 		instruction = &dis_instructions->instruction[n];
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: opcode = 0x%x:%s\n",
@@ -482,5 +588,6 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.index = 0x%"PRIx64"\n", n, instruction->dstA.index);
 		debug_print(DEBUG_INPUT_DIS, 1, "0x%x: dstA.value_size = 0x%x\n", n, instruction->dstA.value_size);
 	}
+#endif
 	return result;
 }
