@@ -445,7 +445,7 @@ int main(int argc, char *argv[])
 //	LLVMDecodeAsmOpcodesSource(DC); 
 
 //	for (l = 0; l < test_data_no; l++) {
-	for (l = 5; l < 6; l++) {
+	for (l = 2; l < 3; l++) {
 		if (!test_data[l].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}

@@ -506,7 +506,11 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 			}
-			ll_inst->srcA.kind = KIND_IND_SCALE;
+			if (ll_inst->opcode == H_LEA) {
+				ll_inst->srcA.kind = KIND_SCALE;
+			} else {
+				ll_inst->srcA.kind = KIND_IND_SCALE;
+			}
 			Operand = &Inst->getOperand(1);
 			if (Operand->isValid() &&
 				Operand->isReg() ) {
@@ -984,6 +988,17 @@ int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 			operand->operand[0].offset);
 		break;
 	case KIND_SCALE:
+		outs() << format("SCALE_POINTER_REG:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
+		outs() << format("SCALE_IMM_INDEX_MUL:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+			operand->operand[1].value,
+			operand->operand[1].size,
+			operand->operand[1].offset);
+		outs() << format("SCALE_INDEX_REG:0x%x:size = 0x%x\n", operand->operand[2].value, operand->operand[2].size);
+		outs() << format("SCALE_IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+			operand->operand[3].value,
+			operand->operand[3].size,
+			operand->operand[3].offset);
+		outs() << format("SCALE_SEGMENT_REG:0x%x:size = 0x%x\n", operand->operand[4].value, operand->operand[4].size);
 		break;
 	case KIND_IND_REG:
 		outs() << format("REG_IND:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
@@ -996,12 +1011,12 @@ int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 		break;
 	case KIND_IND_SCALE:
 		outs() << format("IND_SCALE_POINTER_REG:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
-		outs() << format("IMM_INDEX_MUL:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		outs() << format("IND_SCALE_IMM_INDEX_MUL:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
 			operand->operand[1].value,
 			operand->operand[1].size,
 			operand->operand[1].offset);
 		outs() << format("IND_SCALE_INDEX_REG:0x%x:size = 0x%x\n", operand->operand[2].value, operand->operand[2].size);
-		outs() << format("IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		outs() << format("IND_SCALE_IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
 			operand->operand[3].value,
 			operand->operand[3].size,
 			operand->operand[3].offset);

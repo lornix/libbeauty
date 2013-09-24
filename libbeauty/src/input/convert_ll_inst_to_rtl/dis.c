@@ -82,7 +82,7 @@ const char * dis_opcode_table[] = {
 
 
 
-int convert_operand(struct operand_low_level_s *ll_operand, struct operand_s *inst_operand) {
+int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, struct operand_s *inst_operand) {
 	switch(ll_operand->kind) {
 	case KIND_EMPTY:
 		inst_operand->store = 0;
@@ -96,17 +96,17 @@ int convert_operand(struct operand_low_level_s *ll_operand, struct operand_s *in
 		inst_operand->store = STORE_REG;
 		inst_operand->indirect = IND_DIRECT;
 		inst_operand->indirect_size = ll_operand->size;
-		inst_operand->index = ll_operand->operand[0].value;
+		inst_operand->index = ll_operand->operand[operand_number].value;
 		inst_operand->relocated = 0;
-		inst_operand->value_size = ll_operand->operand[0].size;
+		inst_operand->value_size = ll_operand->operand[operand_number].size;
 		break;
 	case KIND_IMM:
 		inst_operand->store = STORE_DIRECT;
 		inst_operand->indirect = IND_DIRECT;
 		inst_operand->indirect_size = ll_operand->size;
-		inst_operand->index = ll_operand->operand[0].value;
+		inst_operand->index = ll_operand->operand[operand_number].value;
 		inst_operand->relocated = 0;
-		inst_operand->value_size = ll_operand->operand[0].size;
+		inst_operand->value_size = ll_operand->operand[operand_number].size;
 //		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 //		if (!tmp) {
 //			inst_operand->relocated = 1;
@@ -116,18 +116,59 @@ int convert_operand(struct operand_low_level_s *ll_operand, struct operand_s *in
 //		dis_instructions->bytes_used += 1;
 		break;
 	case KIND_SCALE:
-		inst_operand->store = STORE_REG;
-		inst_operand->indirect = IND_DIRECT;
-		inst_operand->indirect_size = ll_operand->size;
-		inst_operand->index = REG_TMP1;
-		inst_operand->relocated = 0;
-		inst_operand->value_size = ll_operand->size;
+		switch (operand_number) {
+		case 0:
+		case 2:
+		case 4:
+			/* IMM */
+			inst_operand->store = STORE_DIRECT;
+			inst_operand->indirect = IND_DIRECT;
+			inst_operand->indirect_size = ll_operand->size;
+			inst_operand->index = ll_operand->operand[operand_number].value;
+			inst_operand->relocated = 0;
+			inst_operand->value_size = ll_operand->operand[operand_number].size;
+			break;
+		case 1:
+		case 3:
+			/* REG */
+			inst_operand->store = STORE_REG;
+			inst_operand->indirect = IND_DIRECT;
+			inst_operand->indirect_size = ll_operand->size;
+			inst_operand->index = ll_operand->operand[operand_number].value;
+			inst_operand->relocated = 0;
+			inst_operand->value_size = ll_operand->operand[operand_number].size;
+			break;
+		default:
+			// FAILURE EXIT
+			printf("FAILED: KIND_SCALE operand_number out of range\n");
+			exit(1);
+			break;
+		}
 		break;
 	default:
 		break;
 	}
 	return 0;
 }
+
+struct operand_low_level_s operand_empty = {
+	.kind = KIND_EMPTY,
+};
+
+struct operand_low_level_s operand_reg_tmp1 = {
+	.kind = KIND_REG,
+	.size = 64,
+	.operand = {{.value = REG_TMP1,.size = 64, .offset = 0}},
+//	.operand.operand[0].size = 64,
+//	.operand.operand[0].offset = 0,
+};
+
+struct operand_low_level_s operand_reg_tmp2 = {
+	.kind = KIND_REG,
+	.size = 64,
+	.operand = {{.value = REG_TMP2,.size = 64, .offset = 0}},
+};
+
 
 int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_instructions_s *dis_instructions) {
 	int tmp;
@@ -140,6 +181,10 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	int dstA_ind = 0;
 	int flags = 0;
 	int result = 0;
+	int final_opcode = 0;
+	struct operand_low_level_s *previous_operand;
+	struct operand_low_level_s operand_imm;
+	struct operand_low_level_s *srcA_operand;
 
 	dis_instructions->instruction_number = 0;
 	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:start inst_number = 0x%x\n", dis_instructions->instruction_number);
@@ -159,7 +204,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		dstA_ind = 1;
 	if (srcA_ind || srcB_ind || dstA_ind) 
 		indirect = 1;
-
+	final_opcode = ll_inst->opcode;
 	switch (ll_inst->opcode) {
 	case NOP:
 	case MOV:
@@ -209,6 +254,9 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	}
 	/* FIXME: Need to handle special instructions as well */
 	if (!indirect) {
+		struct operand_low_level_s operand_tmp;
+		previous_operand = &operand_empty;
+		srcA_operand = &(ll_inst->srcA);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		if ((ll_inst->srcA.kind == KIND_SCALE) &&
 			(ll_inst->srcB.kind == KIND_SCALE)) {
@@ -222,19 +270,80 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 			exit(1);
 		}
 		if (ll_inst->srcA.kind == KIND_SCALE) {
-			// Deal with scale, put result in REG_TMP1
+			// Most likely opcode LEA. Deal with scale, put result in REG_TMP1
+			if (ll_inst->srcA.operand[2].value == 0) {
+				previous_operand = &operand_empty;
+			} else if ((ll_inst->srcA.operand[2].value != 0) && (ll_inst->srcA.operand[1].value == 1)) {
+				operand_tmp.kind = KIND_REG;
+				operand_tmp.size = 64;
+				operand_tmp.operand[0].value = ll_inst->srcA.operand[2].value;
+				operand_tmp.operand[0].size = ll_inst->srcA.operand[2].size;
+				operand_tmp.operand[0].offset = ll_inst->srcA.operand[2].offset;
+				previous_operand = &operand_tmp;
+			} else if ((ll_inst->srcA.operand[2].value != 0) && (ll_inst->srcA.operand[1].value > 1)) {
+				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+				instruction->opcode = MUL;
+				instruction->flags = 0;
+				convert_operand(&(ll_inst->srcA), 2, &(instruction->srcA));
+				convert_operand(&(ll_inst->srcA), 1, &(instruction->srcB));
+				convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
+				dis_instructions->instruction_number++;
+				previous_operand = &operand_reg_tmp1;
+			}
+			if ((ll_inst->srcA.operand[3].value > 0) && (previous_operand == &operand_empty)) {
+				operand_imm.kind = KIND_IMM;
+				operand_imm.size = 64;
+				operand_imm.operand[0].value = ll_inst->srcA.operand[3].value;
+				operand_imm.operand[0].size = ll_inst->srcA.operand[3].size;
+				operand_imm.operand[0].offset = ll_inst->srcA.operand[3].offset;
+				previous_operand = &operand_imm;
+			} else if ((ll_inst->srcA.operand[3].value > 0) && (previous_operand != &operand_empty)) {
+				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+				instruction->opcode = ADD;
+				instruction->flags = 0;
+				convert_operand(previous_operand, 0, &(instruction->srcA));
+				convert_operand(&(ll_inst->srcA), 3, &(instruction->srcB));
+				convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
+				dis_instructions->instruction_number++;
+				previous_operand = &operand_reg_tmp1;
+			}
+			if (previous_operand == &operand_empty) {
+				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+				instruction->opcode = MOV;
+				instruction->flags = 0;
+				convert_operand(&(ll_inst->srcA), 0, &(instruction->srcA));
+				convert_operand(&operand_empty, 0, &(instruction->srcB));
+				convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
+				dis_instructions->instruction_number++;
+				previous_operand = &operand_reg_tmp1;
+				srcA_operand = &operand_reg_tmp1;
+			} else {
+				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+				instruction->opcode = ADD;
+				instruction->flags = 0;
+				convert_operand(&(ll_inst->srcA), 0, &(instruction->srcA));
+				convert_operand(previous_operand, 0, &(instruction->srcB));
+				convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
+				dis_instructions->instruction_number++;
+				previous_operand = &operand_reg_tmp1;
+				srcA_operand = &operand_reg_tmp1;
+			}
+			final_opcode = MOV;
 		}
 		if (ll_inst->srcB.kind == KIND_SCALE) {
 			// Deal with scale, put result in REG_TMP1
+			printf("FAILED: srcB KIND_IND_SCALE\n");
+			exit(1);
 		}
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-		instruction->opcode = ll_inst->opcode;
+		instruction->opcode = final_opcode;ll_inst->opcode;
 		instruction->flags = flags;
-		convert_operand(&(ll_inst->srcA),&(instruction->srcA));
-		convert_operand(&(ll_inst->srcB),&(instruction->srcB));
-		convert_operand(&(ll_inst->dstA),&(instruction->dstA));
+		convert_operand(srcA_operand, 0, &(instruction->srcA));
+		convert_operand(&(ll_inst->srcB), 0, &(instruction->srcB));
+		convert_operand(&(ll_inst->dstA), 0, &(instruction->dstA));
 		dis_instructions->instruction_number++;
 	} else {
+		/* Handle the indirect case */
 		dis_instructions->instruction_number = 0; /* Tag unimplemented dis_instructions. */
 	}
 
