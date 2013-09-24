@@ -83,6 +83,7 @@ const char * dis_opcode_table[] = {
 
 
 int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, struct operand_s *inst_operand) {
+	printf("convert_operand: kind = 0x%x\n", ll_operand->kind);
 	switch(ll_operand->kind) {
 	case KIND_EMPTY:
 		inst_operand->store = 0;
@@ -116,6 +117,7 @@ int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, 
 //		dis_instructions->bytes_used += 1;
 		break;
 	case KIND_SCALE:
+	case KIND_IND_SCALE:
 		switch (operand_number) {
 		case 0:
 		case 2:
@@ -146,6 +148,9 @@ int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, 
 		}
 		break;
 	default:
+		// FAILURE EXIT
+		printf("FAILED: KIND not recognised\n");
+		exit(1);
 		break;
 	}
 	return 0;
@@ -351,10 +356,10 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		dis_instructions->instruction_number++;
 	} else {
 		/* Handle the indirect case */
-		if (srcA_operand->kind == KIND_SCALE) {
+		if (srcA_operand->kind == KIND_IND_SCALE) {
 			scale_operand = srcA_operand;
 		}
-		if (srcB_operand->kind == KIND_SCALE) {
+		if (srcB_operand->kind == KIND_IND_SCALE) {
 			scale_operand = srcB_operand;
 		}
 
@@ -423,10 +428,10 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		dis_instructions->instruction_number++;
 		previous_operand = &operand_reg_tmp2;
 		
-		if (ll_inst->srcA.kind == KIND_SCALE) {
+		if (ll_inst->srcA.kind == KIND_IND_SCALE) {
 			srcA_operand = previous_operand;
 		}
-		if (ll_inst->srcB.kind == KIND_SCALE) {
+		if (ll_inst->srcB.kind == KIND_IND_SCALE) {
 			srcB_operand = previous_operand;
 		}
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -434,13 +439,13 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->flags = flags;
 		convert_operand(srcA_operand, 0, &(instruction->srcA));
 		convert_operand(srcB_operand, 0, &(instruction->srcB));
-		if (ll_inst->dstA.kind == KIND_SCALE) {
+		if (ll_inst->dstA.kind == KIND_IND_SCALE) {
 			convert_operand(previous_operand, 0, &(instruction->dstA));
 		} else {
 			convert_operand(dstA_operand, 0, &(instruction->dstA));
 		}
 		dis_instructions->instruction_number++;
-		if (ll_inst->dstA.kind == KIND_SCALE) {
+		if (ll_inst->dstA.kind == KIND_IND_SCALE) {
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 			instruction->opcode = STORE;
 			instruction->flags = 0;
@@ -450,8 +455,6 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 			instruction->dstA.indirect = IND_MEM;
 			dis_instructions->instruction_number++;
 		}
-
-
 	}
 
 	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);

@@ -447,7 +447,7 @@ int main(int argc, char *argv[])
 
 	self = malloc(sizeof *self);
 //	for (l = 0; l < test_data_no; l++) {
-	for (l = 2; l < 3; l++) {
+	for (l = 3; l < 4; l++) {
 		if (!test_data[l].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
