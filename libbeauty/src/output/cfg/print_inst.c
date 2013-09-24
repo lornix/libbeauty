@@ -76,6 +76,11 @@ const char * opcode_table[] = {
 	"LOAD",  // 0x25
 	"STORE",  // 0x26
 	"LEA",  // 0x27
+	"CMOV",  // 0x28
+	"DEC",  // 0x29
+	"INC",  // 0x2A
+	"POP",  // 0x2B
+	"PUSH",  // 0x2C
 };
 
 char *store_table[] = { "i", "r", "m", "s" };
@@ -98,6 +103,8 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 
 	switch (instruction->opcode) {
 	case MOV:
+	case LOAD:
+	case STORE:
 		if (instruction->srcA.indirect) {
 			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],

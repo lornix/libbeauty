@@ -369,10 +369,11 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 
 int main(int argc, char *argv[])
 {
-	int n,l;
+	int n,m,l;
 	int octets = 0;
 	int offset = 0;
 	int tmp;
+	struct self_s *self = NULL;
 	const char *file;
 	LLVMDisasmContextRef DC;
 	LLVMDecodeAsmContextRef DC2;
@@ -444,8 +445,9 @@ int main(int argc, char *argv[])
 	//LLVMDecodeAsmPrintOpcodes(DC); 
 //	LLVMDecodeAsmOpcodesSource(DC); 
 
-//	for (l = 0; l < test_data_no; l++) {
-	for (l = 2; l < 3; l++) {
+	self = malloc(sizeof *self);
+	for (l = 0; l < test_data_no; l++) {
+//	for (l = 2; l < 3; l++) {
 		if (!test_data[l].valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
@@ -494,6 +496,10 @@ int main(int argc, char *argv[])
 		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 		tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
 		tmp = convert_ll_inst_to_rtl(ll_inst, &dis_instructions);
+		for (m = 0; m < dis_instructions.instruction_number; m++) {
+			tmp = print_inst(self, &(dis_instructions.instruction[m]), m, NULL);
+		}
+	
 	}
 
 	return 0;
