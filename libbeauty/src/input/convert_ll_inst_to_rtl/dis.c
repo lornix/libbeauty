@@ -120,8 +120,8 @@ int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, 
 		case 0:
 		case 2:
 		case 4:
-			/* IMM */
-			inst_operand->store = STORE_DIRECT;
+			/* REG */
+			inst_operand->store = STORE_REG;
 			inst_operand->indirect = IND_DIRECT;
 			inst_operand->indirect_size = ll_operand->size;
 			inst_operand->index = ll_operand->operand[operand_number].value;
@@ -130,8 +130,8 @@ int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, 
 			break;
 		case 1:
 		case 3:
-			/* REG */
-			inst_operand->store = STORE_REG;
+			/* IMM */
+			inst_operand->store = STORE_DIRECT;
 			inst_operand->indirect = IND_DIRECT;
 			inst_operand->indirect_size = ll_operand->size;
 			inst_operand->index = ll_operand->operand[operand_number].value;
