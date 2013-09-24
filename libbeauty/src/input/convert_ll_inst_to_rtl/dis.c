@@ -471,6 +471,8 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	case PHI: /* A PHI point */
 		break;
 	case RET: /* Special instruction for helping to print the "result local_regNNNN;" */
+		tmp  = convert_base(ll_inst, 1, dis_instructions);
+		result = tmp;
 		break;
 	case ADD:
 		tmp  = convert_base(ll_inst, 1, dis_instructions);
