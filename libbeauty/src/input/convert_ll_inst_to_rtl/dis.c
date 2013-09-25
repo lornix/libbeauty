@@ -76,6 +76,7 @@ const char * dis_opcode_table[] = {
 	"INC",  // 0x2a
 	"POP",  // 0x2b
 	"PUSH",  // 0x2c
+	"LEAVE", // 0x2d
 	""
 };
 

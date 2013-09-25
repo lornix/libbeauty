@@ -88,6 +88,7 @@ enum {
 #define INC 0x2A /* Used at the MC Inst low level */
 #define POP 0x2B /* Used at the MC Inst low level */
 #define PUSH 0x2C /* Used at the MC Inst low level */
+#define LEAVE 0x2D /* Used at the MC Inst low level */
 
 #define FLAG_NONE 0
 #define FLAG_OVERFLOW 1
