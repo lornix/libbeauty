@@ -2925,6 +2925,8 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 		case NOP:
 			break;
 		case MOV:
+		case LOAD:
+		case STORE:
 			switch (instruction->srcA.store) {
 			case STORE_DIRECT:
 				memset(&label, 0, sizeof(struct label_s));
@@ -4286,6 +4288,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	case NOP:
 		break;
 	case MOV:
+	case LOAD:
+	case STORE:
 	case ADD:
 	case ADC:
 	case SUB:
@@ -5736,6 +5740,8 @@ int main(int argc, char *argv[])
 		value_id2 = inst_log1->value2.value_id;
 		switch (instruction->opcode) {
 		case MOV:
+		case LOAD:
+		case STORE:
 		case ADD:
 		case ADC:
 		case MUL:
@@ -5832,6 +5838,8 @@ int main(int argc, char *argv[])
 		}
 		switch (instruction->opcode) {
 		case MOV:
+		case LOAD:
+		case STORE:
 		case ADD:
 		case ADC:
 		case SUB:
