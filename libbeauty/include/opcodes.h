@@ -43,7 +43,7 @@ enum {
 	IND_IO,
 };
 
-#define NOP 0x00
+#define NONE 0x00  /* Used for instructions that are not yet supported */
 #define MOV 0x01
 #define ADD 0x02
 #define ADC 0x03
@@ -89,6 +89,7 @@ enum {
 #define POP 0x2B /* Used at the MC Inst low level */
 #define PUSH 0x2C /* Used at the MC Inst low level */
 #define LEAVE 0x2D /* Used at the MC Inst low level */
+#define NOP 0x2E /* The NOP instructions */
 
 #define FLAG_NONE 0
 #define FLAG_OVERFLOW 1

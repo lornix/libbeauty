@@ -36,7 +36,7 @@ int reg_params_order[] = {
 };
 
 const char * opcode_table[] = {
-	"NOP",   // 0x00
+	"NONE",   // 0x00
 	"MOV",   // 0x01
 	"ADD",   // 0x02
 	"ADC",   // 0x03
@@ -81,6 +81,8 @@ const char * opcode_table[] = {
 	"INC",  // 0x2A
 	"POP",  // 0x2B
 	"PUSH",  // 0x2C
+	"LEAVE",  // 0x2D
+	"NOP",  // 0x2E
 };
 
 char *store_table[] = { "i", "r", "m", "s" };
