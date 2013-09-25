@@ -773,7 +773,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Currently, do the same as NOP */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "CMP\n");
@@ -795,12 +795,10 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case STORE:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "MOV\n");
-		debug_print(DEBUG_EXE, 1, "MOV dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
-		inst->value3.start_address = inst->value2.start_address;
+		debug_print(DEBUG_EXE, 1, "MOV dest length = %d %d\n", inst->value1.length, inst->value3.length);
+		inst->value3.start_address = inst->value1.start_address;
 		inst->value3.length = inst->value1.length;
 		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = inst->value1.init_value;
@@ -808,11 +806,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -820,13 +818,13 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			inst->value1.ref_log;
 		/* Note: value_scope stays from the dst, not the src. */
 		/* FIXME Maybe Exception is the MOV instruction */
-		inst->value3.value_scope = inst->value2.value_scope;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* MOV param to local */
 		/* When the destination is a param_reg,
 		 * Change it to a local_reg */
 		if ((inst->value3.value_scope == 1) &&
 			(STORE_REG == instruction->dstA.store) &&
-			(1 == inst->value2.value_scope) &&
+			(1 == inst->value1.value_scope) &&
 			(0 == instruction->dstA.indirect)) {
 			inst->value3.value_scope = 2;
 		}
@@ -835,7 +833,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
 		inst->value3.value_id = 0;
-		inst->value2.value_id = 0;
+		inst->value1.value_id = 0;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -847,14 +845,12 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		put_value_RTL_instruction(self, process_state, inst);
 		break;
 	case SEX:
-		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
+		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d\n", inst->value1.length, inst->value3.length);
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SEX\n");
-		inst->value3.start_address = inst->value2.start_address;
+		inst->value3.start_address = inst->value1.start_address;
 		/* Special case for SEX instruction. */
 		/* FIXME: Stored value in reg store should be size modified */
 		value = search_store(process_state->memory_reg,
@@ -863,7 +859,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		value->length = instruction->dstA.value_size;
 		//inst->value3.length = inst->value2.length;
 		inst->value3.length = instruction->dstA.value_size;
-		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
+		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d\n", inst->value1.length, inst->value3.length);
 		inst->value3.init_value_type = inst->value1.init_value_type;
 		if (64 == inst->value3.length) {
 			tmp32s = inst->value1.init_value;
@@ -877,7 +873,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			debug_print(DEBUG_EXE, 1, "SEX length failure\n");
 			return 1;
 		}
-		inst->value3.init_value =tmp64u;
+		inst->value3.init_value = tmp64u;
 		if (64 == inst->value3.length) {
 			tmp32s = inst->value1.offset_value;
 			tmp64s = tmp32s;
@@ -894,11 +890,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -906,13 +902,13 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			inst->value1.ref_log;
 		/* Note: value_scope stays from the dst, not the src. */
 		/* FIXME Maybe Exception is the MOV instruction */
-		inst->value3.value_scope = inst->value2.value_scope;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* MOV param to local */
 		/* When the destination is a param_reg,
 		 * Change it to a local_reg */
 		if ((inst->value3.value_scope == 1) &&
 			(STORE_REG == instruction->dstA.store) &&
-			(1 == inst->value2.value_scope) &&
+			(1 == inst->value1.value_scope) &&
 			(0 == instruction->dstA.indirect)) {
 			inst->value3.value_scope = 2;
 		}
@@ -921,7 +917,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			/* Only value_id preserves the value2 values */
 		//inst->value3.value_id = inst->value2.value_id;
 		inst->value3.value_id = 0;
-		inst->value2.value_id = 0;
+		inst->value1.value_id = 0;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -935,33 +931,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case ADD:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "ADD\n");
 		debug_print(DEBUG_EXE, 1, "ADD dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
-		inst->value3.init_value = inst->value2.init_value;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
 		inst->value3.offset_value =
-			inst->value2.offset_value + inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+			inst->value1.offset_value + inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -974,7 +970,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case ADC:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "ADC\n");
@@ -988,30 +984,30 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "MUL\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
-		inst->value3.init_value = inst->value2.init_value;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
 		inst->value3.offset_value =
 			((inst->value1.offset_value + inst->value1.init_value) 
 			* (inst->value2.offset_value + inst->value2.init_value))
-			 - inst->value2.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+			 - inst->value1.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1024,32 +1020,32 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case SUB:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SUB\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
-		inst->value3.init_value = inst->value2.init_value;
-		inst->value3.offset_value = inst->value2.offset_value -
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
+		inst->value3.offset_value = inst->value1.offset_value -
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1063,32 +1059,32 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* FIXME: Add support for the Carry bit */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SUB\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
-		inst->value3.init_value = inst->value2.init_value;
-		inst->value3.offset_value = inst->value2.offset_value -
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
+		inst->value3.offset_value = inst->value1.offset_value -
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1101,33 +1097,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case TEST:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "TEST \n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
+		inst->value3.offset_value = (inst->value1.offset_value +
 			inst->value2.init_value) &
 			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1141,33 +1137,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case rAND:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "AND \n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) &
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) &
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1180,33 +1176,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case OR:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "OR \n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) |
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) |
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1227,33 +1223,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		tmp = source_equals_dest(&(instruction->srcA), &(instruction->srcB));
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), tmp); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "XOR\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) ^
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) ^
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1265,35 +1261,32 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		break;
 	case NEG:
 		/* Get value of srcA */
-		/* FIXME: There is no srcA value to work with */
 		/* Could be replaced with a SUB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOT\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = 0 - (inst->value2.offset_value +
-			inst->value2.init_value);
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = 0 - (inst->value1.offset_value +
+			inst->value1.init_value);
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1305,34 +1298,31 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		break;
 	case NOT:
 		/* Get value of srcA */
-		/* FIXME: There is no srcA value to work with */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "NOT\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = !(inst->value2.offset_value +
-			inst->value2.init_value);
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = !(inst->value1.offset_value +
+			inst->value1.init_value);
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1346,33 +1336,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* This is an UNSIGNED operation */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SHL\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) <<
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) <<
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1386,33 +1376,33 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* This is an UNSIGNED operation */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SHR\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) >>
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) >>
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1426,34 +1416,34 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* This is an UNSIGNED operation */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SAL\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
 		/* FIXME: This is currently doing unsigned SHL instead of SAL */
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) <<
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) <<
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1467,34 +1457,34 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* This is an UNSIGNED operation */
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcB), &(inst->value2), 0); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "SAR\n");
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = 0;
 		/* FIXME: This is currently doing unsigned SHR instead of SAR */
-		inst->value3.offset_value = (inst->value2.offset_value +
-			inst->value2.init_value) >>
-			inst->value1.init_value;
-		inst->value3.value_type = inst->value2.value_type;
+		inst->value3.offset_value = (inst->value1.offset_value +
+			inst->value1.init_value) >>
+			inst->value2.init_value;
+		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
-		inst->value3.value_id = inst->value2.value_id;
+		inst->value3.value_id = inst->value1.value_id;
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
@@ -1507,7 +1497,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case IF:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "IF\n");
@@ -1520,7 +1510,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.init_value_type = value->init_value_type;
 		inst->value3.init_value = value->init_value;
 		inst->value3.offset_value = value->offset_value +
-			inst->value2.init_value;
+			inst->value1.init_value;
 		inst->value3.value_type = value->value_type;
 		inst->value3.ref_memory =
 			value->ref_memory;
@@ -1536,12 +1526,12 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 	case JMPT:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
-		/* Get value of dstA */
+		/* Get value of srcB */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
 		/* Create result */
 		debug_print(DEBUG_EXE, 1, "JMPT\n");
 		debug_print(DEBUG_EXE, 1, "JMPT dest length = %d %d %d\n", inst->value1.length, inst->value2.length, inst->value3.length);
-		inst->value3.start_address = inst->value2.start_address;
+		inst->value3.start_address = inst->value1.start_address;
 		inst->value3.length = inst->value1.length;
 		inst->value3.init_value_type = inst->value1.init_value_type;
 		inst->value3.init_value = inst->value1.init_value;
@@ -1549,11 +1539,11 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1561,22 +1551,22 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 			inst->value1.ref_log;
 		/* Note: value_scope stays from the dst, not the src. */
 		/* FIXME Maybe Exception is the MOV instruction */
-		inst->value3.value_scope = inst->value2.value_scope;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* MOV param to local */
 		/* When the destination is a param_reg,
 		 * Change it to a local_reg */
 		if ((inst->value3.value_scope == 1) &&
 			(STORE_REG == instruction->dstA.store) &&
-			(1 == inst->value2.value_scope) &&
+			(1 == inst->value1.value_scope) &&
 			(0 == instruction->dstA.indirect)) {
 			inst->value3.value_scope = 2;
 		}
 		/* Counter */
 		//if (inst->value3.value_scope == 2) {
-			/* Only value_id preserves the value2 values */
-		//inst->value3.value_id = inst->value2.value_id;
+			/* Only value_id preserves the value1 values */
+		//inst->value3.value_id = inst->value1.value_id;
 		inst->value3.value_id = 0;
-		inst->value2.value_id = 0;
+		inst->value1.value_id = 0;
 		//}
 		/* 1 - Entry Used */
 		inst->value3.valid = 1;
@@ -1620,6 +1610,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		value->offset_value = inst->value3.offset_value;
 		break;
 	case CALL:
+		/* FIXME */
 		/* On entry:
 		 * srcA = relative offset which is value 1.
 		 * dstA is destination EAX register which is value 2.
@@ -1641,39 +1632,37 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value1.offset_value = inst->value1.init_value;
 		inst->value1.init_value = value->offset_value;
  
-		/* Get value of dstA */
-		ret = get_value_RTL_instruction(self, process_state, &(instruction->dstA), &(inst->value2), 1); 
 		/* FIXME: Currently this is a NOP. */
 		/* Get value of dstA */
-		inst->value3.start_address = inst->value2.start_address;
-		inst->value3.length = inst->value2.length;
-		inst->value3.init_value_type = inst->value2.init_value_type;
-		inst->value3.init_value = inst->value2.init_value;
-		inst->value3.offset_value = inst->value2.offset_value;
-		//inst->value3.value_type = inst->value2.value_type;
+		inst->value3.start_address = inst->value1.start_address;
+		inst->value3.length = inst->value1.length;
+		inst->value3.init_value_type = inst->value1.init_value_type;
+		inst->value3.init_value = inst->value1.init_value;
+		inst->value3.offset_value = inst->value1.offset_value;
+		//inst->value3.value_type = inst->value1.value_type;
 		inst->value3.value_type = 0;
 		inst->value3.indirect_init_value =
-			inst->value2.indirect_init_value;
+			inst->value1.indirect_init_value;
 		inst->value3.indirect_offset_value =
-			inst->value2.indirect_offset_value;
+			inst->value1.indirect_offset_value;
 		if (inst->instruction.dstA.indirect) {
 			inst->value3.indirect_init_value =
-				inst->value2.indirect_init_value;
+				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
-				inst->value2.indirect_offset_value;
+				inst->value1.indirect_offset_value;
 			inst->value3.indirect_value_id =
-				inst->value2.indirect_value_id;
+				inst->value1.indirect_value_id;
 		}
 		inst->value3.ref_memory =
-			inst->value2.ref_memory;
+			inst->value1.ref_memory;
 		inst->value3.ref_log =
-			inst->value2.ref_log;
-		inst->value3.value_scope = inst->value2.value_scope;
+			inst->value1.ref_log;
+		inst->value3.value_scope = inst->value1.value_scope;
 		/* Counter */
 		inst->value3.value_id = 0;
-		inst->value2.value_id = 0;
+		inst->value1.value_id = 0;
 		/* 1 - Entry Used */
-		inst->value2.valid = 1;
+		inst->value1.valid = 1;
 		inst->value3.valid = 1;
 			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
 				inst->value3.init_value,
@@ -1681,7 +1670,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value3.init_value +
 					inst->value3.offset_value);
 		put_value_RTL_instruction(self, process_state, inst);
-		/* Once value3 is written, over write value2 with ESP */
+		/* Once value3 is written, over write value1 with ESP */
 		/* Get the current ESP value so one can convert function params to locals */
 		operand.indirect = IND_DIRECT;
 		operand.store = STORE_REG;
@@ -1689,7 +1678,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Need to find out if the reg is 32bit or 64bit. Use the REG_AX return value size */
 		operand.value_size = instruction->dstA.value_size;
 
-		ret = get_value_RTL_instruction(self, process_state, &(operand), &(inst->value2), 1); 
+		ret = get_value_RTL_instruction(self, process_state, &(operand), &(inst->value1), 1); 
 		break;
 
 	default:
