@@ -186,6 +186,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 	int dstA_ind = 0;
 	int result = 0;
 	int final_opcode = 0;
+	int imm_sign = 0;
 	struct operand_low_level_s *previous_operand;
 	struct operand_low_level_s operand_imm;
 	struct operand_low_level_s *srcA_operand;
@@ -256,18 +257,35 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 				previous_operand = &operand_reg_tmp1;
 			}
 			if ((scale_operand->operand[3].value > 0) && (previous_operand == &operand_empty)) {
+				int64_t value = scale_operand->operand[3].value;
+				if (value < 0) {
+					imm_sign = 1;
+					value = 0 - value;
+				}
 				operand_imm.kind = KIND_IMM;
 				operand_imm.size = 64;
-				operand_imm.operand[0].value = scale_operand->operand[3].value;
+				operand_imm.operand[0].value = value;
 				operand_imm.operand[0].size = scale_operand->operand[3].size;
 				operand_imm.operand[0].offset = scale_operand->operand[3].offset;
 				previous_operand = &operand_imm;
 			} else if ((scale_operand->operand[3].value > 0) && (previous_operand != &operand_empty)) {
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-				instruction->opcode = ADD;
+				int64_t value = scale_operand->operand[3].value;
+				if (value < 0) {
+					imm_sign = 1;
+					value = 0 - value;
+					instruction->opcode = SUB;
+				} else {
+					instruction->opcode = ADD;
+				}
+				operand_imm.kind = KIND_IMM;
+				operand_imm.size = 64;
+				operand_imm.operand[0].value = value;
+				operand_imm.operand[0].size = scale_operand->operand[3].size;
+				operand_imm.operand[0].offset = scale_operand->operand[3].offset;
 				instruction->flags = 0;
 				convert_operand(previous_operand, 0, &(instruction->srcA));
-				convert_operand(scale_operand, 3, &(instruction->srcB));
+				convert_operand(&operand_imm, 0, &(instruction->srcB));
 				convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
 				dis_instructions->instruction_number++;
 				previous_operand = &operand_reg_tmp1;
@@ -283,8 +301,12 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 				previous_operand = &operand_reg_tmp1;
 				srcA_operand = &operand_reg_tmp1;
 			} else {
-				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-				instruction->opcode = ADD;
+				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
+				if (imm_sign) {	
+					instruction->opcode = SUB;
+				} else {
+					instruction->opcode = ADD;
+				}
 				instruction->flags = 0;
 				convert_operand(scale_operand, 0, &(instruction->srcA));
 				convert_operand(previous_operand, 0, &(instruction->srcB));
@@ -340,18 +362,35 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			previous_operand = &operand_reg_tmp1;
 		}
 		if ((scale_operand->operand[3].value > 0) && (previous_operand == &operand_empty)) {
+			int64_t value = scale_operand->operand[3].value;
+			if (value < 0) {
+				imm_sign = 1;
+				value = 0 - value;
+			}
 			operand_imm.kind = KIND_IMM;
 			operand_imm.size = 64;
-			operand_imm.operand[0].value = scale_operand->operand[3].value;
+			operand_imm.operand[0].value = value;
 			operand_imm.operand[0].size = scale_operand->operand[3].size;
 			operand_imm.operand[0].offset = scale_operand->operand[3].offset;
 			previous_operand = &operand_imm;
 		} else if ((scale_operand->operand[3].value > 0) && (previous_operand != &operand_empty)) {
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-			instruction->opcode = ADD;
+			int64_t value = scale_operand->operand[3].value;
+			if (value < 0) {
+				imm_sign = 1;
+				value = 0 - value;
+				instruction->opcode = SUB;
+			} else {
+				instruction->opcode = ADD;
+			}
+			operand_imm.kind = KIND_IMM;
+			operand_imm.size = 64;
+			operand_imm.operand[0].value = value;
+			operand_imm.operand[0].size = scale_operand->operand[3].size;
+			operand_imm.operand[0].offset = scale_operand->operand[3].offset;
 			instruction->flags = 0;
 			convert_operand(previous_operand, 0, &(instruction->srcA));
-			convert_operand(scale_operand, 3, &(instruction->srcB));
+			convert_operand(&operand_imm, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
 			dis_instructions->instruction_number++;
 			previous_operand = &operand_reg_tmp1;
@@ -367,7 +406,11 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			previous_operand = &operand_reg_tmp1;
 		} else {
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-			instruction->opcode = ADD;
+			if (imm_sign) {	
+				instruction->opcode = SUB;
+			} else {
+				instruction->opcode = ADD;
+			}
 			instruction->flags = 0;
 			convert_operand(scale_operand, 0, &(instruction->srcA));
 			convert_operand(previous_operand, 0, &(instruction->srcB));
