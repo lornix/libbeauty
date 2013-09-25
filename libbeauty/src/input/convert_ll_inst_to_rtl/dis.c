@@ -532,7 +532,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	case RET: /* Special instruction for helping to print the "result local_regNNNN;" */
                 /* POP -> IP=[SP]; SP=SP+4; */
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-		instruction->opcode = MOV;
+		instruction->opcode = LOAD;
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
