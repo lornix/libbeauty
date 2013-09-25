@@ -505,7 +505,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 		Operand = &Inst->getOperand(3);
 		if (Operand->isValid() &&
 			Operand->isImm() ) {
-			uint32_t value;
+			int64_t value;
 			value = Operand->getImm();
 			ll_inst->dstA.operand[3].value = value;
 			ll_inst->dstA.operand[3].size = dis_info->size[3] * 8;
@@ -658,7 +658,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			Operand = &Inst->getOperand(4);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
+				int64_t value;
 				value = Operand->getImm();
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[4] * 8;
@@ -763,7 +763,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			Operand = &Inst->getOperand(5);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
+				int64_t value;
 				value = Operand->getImm();
 				ll_inst->srcB.operand[3].value = value;
 				ll_inst->srcB.operand[3].size = dis_info->size[5] * 8;
@@ -873,7 +873,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 		Operand = &Inst->getOperand(2);
 		if (Operand->isValid() &&
 			Operand->isImm() ) {
-			uint32_t value;
+			int64_t value;
 			value = Operand->getImm();
 			ll_inst->srcB.kind = KIND_IMM;
 			ll_inst->srcB.operand[0].value = value;
@@ -934,7 +934,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			Operand = &Inst->getOperand(3);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
+				int64_t value;
 				value = Operand->getImm();
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
@@ -1008,7 +1008,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			Operand = &Inst->getOperand(3);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
+				int64_t value;
 				value = Operand->getImm();
 				ll_inst->dstA.operand[3].value = value;
 				ll_inst->dstA.operand[3].size = dis_info->size[3] * 8;
@@ -1032,7 +1032,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			Operand = &Inst->getOperand(5);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
-				uint32_t value;
+				int64_t value;
 				value = Operand->getImm();
 				ll_inst->srcA.kind = KIND_IMM;
 				ll_inst->srcA.operand[0].value = value;
