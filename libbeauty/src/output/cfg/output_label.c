@@ -600,6 +600,8 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		switch (instruction->opcode) {
 		case MOV:
 		case SEX:
+		case LOAD:
+		case STORE:
 			if (inst_log1->value1.value_type == 6) {
 				debug_print(DEBUG_OUTPUT, 1, "ERROR1 %d\n", instruction->opcode);
 				//break;
@@ -1477,7 +1479,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			break;
 		default:
 			debug_print(DEBUG_OUTPUT, 1, "Unhandled output instruction1 opcode=0x%x\n", instruction->opcode);
-			tmp = fprintf(fd, "Unhandled output instruction\n");
+			tmp = fprintf(fd, "//Unhandled output instruction\\l");
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			return 1;
