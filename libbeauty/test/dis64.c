@@ -2248,6 +2248,8 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				break;
 			/* DSTA, SRCA, SRCB == nothing */
 			case MOV:
+			case LOAD:
+			case STORE:
 				/* If SRC and DST in same instruction, let SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
