@@ -829,7 +829,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 32;
+		instruction->srcA.value_size = ll_inst->srcA.size;
 		convert_operand(&(operand_empty), 0, &(instruction->srcB));
 		/* Form 2 puts the dest in the src. So correct it here */
 		convert_operand(&(ll_inst->srcA), 0, &(instruction->dstA));
@@ -843,13 +843,13 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 32;
+		instruction->dstA.value_size = 64;
 		instruction->srcA.store = STORE_REG;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 64;
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 32;
+		instruction->srcA.value_size = 64;
 		instruction->srcB.store = STORE_DIRECT;
 		instruction->srcB.indirect = IND_DIRECT;
 		instruction->srcB.indirect_size = 64;
