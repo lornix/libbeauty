@@ -380,14 +380,15 @@ struct operand_s {
 } ;
 
 /* A single RTL instruction */
+/* E.g. A = B + C. See below to operands assignment ordering. */
 struct instruction_s {
 	int opcode;
 	/* Set to 1 if this instruction should effect flags. */
 	int flags;
 	int predicate;
-	struct operand_s srcA; /* Used */
-	struct operand_s srcB; /* Not currently used */
-	struct operand_s dstA; /* Used */
+	struct operand_s srcA; /* E.g. B */
+	struct operand_s srcB; /* E.g. C */
+	struct operand_s dstA; /* E.g. A */
 } ;
 
 struct inst_log_entry_s {
