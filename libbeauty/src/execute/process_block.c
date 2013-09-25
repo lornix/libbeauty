@@ -118,12 +118,14 @@ int process_block(struct self_s *self, struct process_state_s *process_state, ui
 		/* the calling program must define this function. This is a callback. */
 		result = disassemble(self, &dis_instructions, inst, inst_size, offset);
 		debug_print(DEBUG_EXE, 1, "bytes used = %d\n", dis_instructions.bytes_used);
+		debug_print(DEBUG_EXE, 1, "eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
+			memory_reg[2].offset_value, offset);
 		/* Memory not used yet */
 		if (0 == memory_used[offset]) {
 			debug_print(DEBUG_EXE, 1, "Memory not used yet\n");
 			for (n = 0; n < dis_instructions.bytes_used; n++) {
 				memory_used[offset + n] = -n;
-				debug_print(DEBUG_EXE, 1, " 0x%02x", inst[offset + n]);
+				debug_print(DEBUG_EXE, 1, " 0x%02x\n", inst[offset + n]);
 			}
 			debug_print(DEBUG_EXE, 1, "\n");
 			memory_used[offset] = inst_log;
@@ -199,7 +201,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, ui
 
 		debug_print(DEBUG_EXE, 1, "Number of RTL dis_instructions=%d\n",
 			dis_instructions.instruction_number);
-		if (result == 0) {
+		if (result != 0) {
 			debug_print(DEBUG_EXE, 1, "Unhandled instruction. Exiting\n");
 			return 1;
 		}

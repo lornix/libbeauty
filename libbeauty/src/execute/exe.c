@@ -791,6 +791,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		//put_value_RTL_instruction(self, inst);
 		break;
 	case MOV:
+	case LOAD:
+	case STORE:
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Get value of dstA */

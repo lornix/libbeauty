@@ -239,7 +239,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
                              struct instruction_low_level_s *ll_inst) {
 	int n;
 	// Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
-	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, PC);
+	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, 0);
 
 	outs() << "DECODE INST\n";
 	uint64_t Size;

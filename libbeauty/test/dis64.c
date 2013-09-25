@@ -173,6 +173,7 @@ int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions
 int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t buffer_size, uint64_t offset) {
 	struct instruction_low_level_s *ll_inst = (struct instruction_low_level_s *)self->ll_inst;
 	int tmp = 0;
+	int m;
 	LLVMDecodeAsmX86_64Ref da = self->decode_asm;
 
 	ll_inst->opcode = 0;
@@ -182,10 +183,14 @@ int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions
 	tmp = LLVMInstructionDecodeAsmX86_64(da, base_address,
 		buffer_size, offset,
 		ll_inst);
+	tmp = LLVMPrintInstructionDecodeAsmX86_64(da, ll_inst);
 	tmp = convert_ll_inst_to_rtl(ll_inst, dis_instructions);
 	if (ll_inst->octets != dis_instructions->bytes_used) {
 		printf("octets mismatch 0x%x:0x%x\n", ll_inst->octets, dis_instructions->bytes_used);
 		exit(1);
+	}
+	for (m = 0; m < dis_instructions->instruction_number; m++) {
+		tmp = print_inst(self, &(dis_instructions->instruction[m]), m, NULL);
 	}
 	return tmp;
 }
