@@ -183,8 +183,20 @@ int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions
 	tmp = LLVMInstructionDecodeAsmX86_64(da, base_address,
 		buffer_size, offset,
 		ll_inst);
+	if (tmp) {
+		printf("LLVMInstructionDecodeAsmX86_64 failed. offset = 0x%"PRIx64"\n", offset);
+		exit(1);
+	}
 	tmp = LLVMPrintInstructionDecodeAsmX86_64(da, ll_inst);
+	if (tmp) {
+		printf("LLVMPrintInstructionDecodeAsmX86_64() failed. offset = 0x%"PRIx64"\n", offset);
+		exit(1);
+	}
 	tmp = convert_ll_inst_to_rtl(ll_inst, dis_instructions);
+	if (tmp) {
+		printf("convert_ll_inst_to_rtl() failed. offset = 0x%"PRIx64"\n", offset);
+		exit(1);
+	}
 	if (ll_inst->octets != dis_instructions->bytes_used) {
 		printf("octets mismatch 0x%x:0x%x\n", ll_inst->octets, dis_instructions->bytes_used);
 		exit(1);
