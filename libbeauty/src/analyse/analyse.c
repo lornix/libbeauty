@@ -1885,10 +1885,6 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			case LOAD:
 			case STORE:
 				debug_print(DEBUG_ANALYSE, 1, "SEX or MOV\n");
-				if (inst_log1->value1.value_type == 6) {
-					debug_print(DEBUG_ANALYSE, 1, "ERROR1 %d\n", instruction->opcode);
-					//break;
-				}
 				if (inst_log1->value1.value_type == 5) {
 					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
 					//break;

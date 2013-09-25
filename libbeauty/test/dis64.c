@@ -1388,6 +1388,8 @@ int get_value_id_from_node_reg(struct self_s *self, int entry_point, int node, i
 	instruction =  &inst_log1->instruction;
 	switch (instruction->opcode) {
 	case MOV:
+	case LOAD:
+	case STORE:
 	case ADD:
 	case ADC:
 	case SUB:
@@ -5356,6 +5358,10 @@ int main(int argc, char *argv[])
 					continue;
 				}
 				tmp = fill_reg_dependency_table(self, &external_entry_points[l], n);
+				if (tmp) {
+					printf("fill_reg_dependency_table() failed\n");
+					exit(1);
+				}
 			}
 		}
 	}
@@ -5418,6 +5424,10 @@ int main(int argc, char *argv[])
 					continue;
 				}
 				tmp = assign_labels_to_src(self, &external_entry_points[l], n);
+				if (tmp) {
+					printf("assign_labels_to_src() failed\n");
+					exit(1);
+				}
 			}
 		}
 	}
@@ -5430,6 +5440,10 @@ int main(int argc, char *argv[])
 					continue;
 				}
 				tmp = redirect_mov_reg_reg_labels(self, &external_entry_points[l], n);
+				if (tmp) {
+					printf("redirect_mov_reg_reg() failed\n");
+					exit(1);
+				}
 			}
 		}
 	}
