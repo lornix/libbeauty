@@ -49,7 +49,7 @@ uint64_t read_data(struct self_s *self, uint64_t offset, int size_bits) {
 	uint64_t tmp, tmp2, tmp3, limit;
 	int n;
 	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
-	int size = (size_bits + 7) << 3;
+	int size = (size_bits + 7) >> 3;
 
 	tmp = 0;
 	debug_print(DEBUG_EXE, 1, "read_data:offset = 0x%"PRIx64", size = %d\n", offset, size);
@@ -82,7 +82,7 @@ struct memory_s *search_store(
 	//uint64_t memory_end;
 	struct memory_s *result = NULL;
 	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
-	int size = (size_bits + 7) << 3;
+	int size = (size_bits + 7) >> 3;
 
 	debug_print(DEBUG_EXE, 1, "memory=%p, index=%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
@@ -113,7 +113,7 @@ struct memory_s *add_new_store(
 	//uint64_t memory_end;
 	struct memory_s *result = NULL;
 	/* Convert bits to bytes. Round up. Make sure 1 bit turns into 1 byte */
-	int size = (size_bits + 7) << 3;
+	int size = (size_bits + 7) >> 3;
 
 	debug_print(DEBUG_EXE, 1, "add_new_store: memory=%p, index=0x%"PRIx64", size=%d\n", memory, index, size);
 	while (memory[n].valid == 1) {
@@ -243,8 +243,12 @@ static int get_value_RTL_instruction(
 					source->index,
 					source->value_size);
 			debug_print(DEBUG_EXE, 1, "GET:EXE value=%p\n", value);
-			if (value)
+			if (value) {
 				debug_print(DEBUG_EXE, 1, "value_id = 0x%"PRIx64"\n", value->value_id);
+				debug_print(DEBUG_EXE, 1, "init_value = 0x%"PRIx64", offset_value = 0x%"PRIx64", start_address = 0x%"PRIx64", length = 0x%x\n",
+					value->init_value, value->offset_value,
+					value->start_address, value->length);
+			}
 			/* FIXME what to do in NULL */
 			if (!value) {
 				value = add_new_store(memory_reg,
@@ -662,7 +666,7 @@ static int put_value_RTL_instruction(
 		value = search_store(memory_reg,
 				instruction->dstA.index,
 				instruction->dstA.indirect_size);
-		debug_print(DEBUG_EXE, 1, "EXE value=%p\n", value);
+		debug_print(DEBUG_EXE, 1, "dstA reg 0x%"PRIx64" value = 0x%"PRIx64" + 0x%"PRIx64"\n", instruction->dstA.index, value->init_value, value->offset_value);
 		/* FIXME what to do in NULL */
 		if (!value) {
 			value = add_new_store(memory_reg,
