@@ -77,13 +77,13 @@ int LLVMInstructionDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR, uint8_t *Bytes,
 	tmp = da->DecodeInstruction(Bytes,
 		BytesSize, PC, ll_inst);
 //	outs() << "DisInfo = " << da->DisInfo << "\n";
-	return 0;
+	return tmp;
 }
 int LLVMPrintInstructionDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR, struct instruction_low_level_s *ll_inst) {
 	int tmp;
 	DecodeAsmX86_64 *da = (DecodeAsmX86_64*)DCR;
 	tmp = da->PrintInstruction(ll_inst);
-	return 0;
+	return tmp;
 }
 
 //

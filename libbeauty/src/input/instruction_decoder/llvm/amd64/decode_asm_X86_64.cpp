@@ -238,6 +238,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
                              uint64_t BytesSize, uint64_t PC,
                              struct instruction_low_level_s *ll_inst) {
 	int n;
+	int result = 1;
 	// Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
 	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, 0);
 
@@ -253,7 +254,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	MCDisassembler::DecodeStatus S;
 	if (Bytes[0] == 0) {
 		outs() << "Bytes reset to 0\n";
-		exit(1);
+		return 1;
 	}
 	S = DisAsm->getInstruction(*Inst, Size, MemoryObject2, PC,
 		/*REMOVE*/ nulls(), nulls());
@@ -262,7 +263,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	// case MCDisassembler::Fail:
 	// case MCDisassembler::SoftFail:
 		// FIXME: Do something different for soft failure modes?
-		return 0;
+		return 1;
 	}
 
 	// case MCDisassembler::Success: {
@@ -301,6 +302,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			ll_inst->srcA.kind = KIND_EMPTY;
 			ll_inst->srcB.kind = KIND_EMPTY;
 			ll_inst->dstA.kind = KIND_EMPTY;
+			result = 0;
 			break;
 		case 1:
 			ll_inst->dstA.kind = KIND_REG;
@@ -322,16 +324,19 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcB.operand[0].offset = dis_info->offset[0];
 				outs() << format("SRC0.1 Imm = 0x%x\n", value);
 				outs() << format("SRC0.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[0], dis_info->size[0], Bytes[dis_info->offset[0]]);
+			result = 0;
 			}
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		break;
 	case 2: // AddRegFrm
 		if (num_operands != 1) {
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		Operand = &Inst->getOperand(0);
@@ -350,6 +355,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
 			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+			result = 0;
 		}
 		break;
 	case 3: // MRMDestReg
@@ -389,6 +395,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 			}
+			result = 0;
 			break;
 		case 3:
 			Operand = &Inst->getOperand(0);
@@ -442,15 +449,18 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 			}
+			result = 0;
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		break;
 	case 5: // MRMSrcReg
 		if (num_operands != 2) {
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		Operand = &Inst->getOperand(0);
@@ -487,6 +497,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 		}
+		result = 0;
 		break;
 	case 6: // MRMSrcMem
 		switch (num_operands) {
@@ -580,6 +591,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcA.operand[4].offset = 0;
 				outs() << format("SRC0.4 Segment Reg  = 0x%x\n", value);
 			}
+			result = 0;
 			break;
 		case 7:
 			Operand = &Inst->getOperand(0);
@@ -684,15 +696,18 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcB.operand[4].offset = 0;
 				outs() << format("SRC1.4 Segment Reg  = 0x%x\n", value);
 			}
+			result = 0;
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		break;
 	case 0x10: //
 		if (num_operands != 2) {
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		Operand = &Inst->getOperand(0);
@@ -724,11 +739,13 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			outs() << format("SRC0.0 index multiplier Imm = 0x%x\n", value);
 			outs() << format("SRC0.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[1], dis_info->size[1], Bytes[dis_info->offset[1]]);
 		}
+		result = 0;
 		break;
 	case 0x14: // MRM4r
 	case 0x17: // MRM7r
 		if (num_operands != 3) {
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		Operand = &Inst->getOperand(0);
@@ -777,6 +794,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			outs() << format("SRC1.0 offset Imm = 0x%x\n", value);
 			outs() << format("SRC1.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[2], dis_info->size[2], Bytes[dis_info->offset[2]]);
 		}
+		result = 0;
 		break;
 	case 0x18: // MRM2r
 		switch (num_operands) {
@@ -852,6 +870,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
 			}
+			result = 0;
 			break;
 		case 6:
 			ll_inst->dstA.kind = KIND_IND_SCALE;
@@ -934,14 +953,17 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				outs() << format("SRC0.0 offset Imm  = 0x%x\n", value);
 				outs() << format("SRC0.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 			}
+			result = 0;
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
+			result = 1;
 			break;
 		}
 		break;
 	default:
 		outs() << "Unrecognised form\n";
+		result = 1;
 		break;
 	}
 
@@ -975,7 +997,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			}
 		}
 	}
-	return Size;
+	return result;
 }
 
 int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
