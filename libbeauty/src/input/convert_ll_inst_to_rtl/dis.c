@@ -818,7 +818,8 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 32;
 		convert_operand(&(operand_empty), 0, &(instruction->srcB));
-		convert_operand(&(ll_inst->dstA), 0, &(instruction->dstA));
+		/* Form 2 puts the dest in the src. So correct it here */
+		convert_operand(&(ll_inst->srcA), 0, &(instruction->dstA));
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
