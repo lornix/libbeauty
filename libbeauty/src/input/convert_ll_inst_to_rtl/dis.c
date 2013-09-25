@@ -426,6 +426,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	int result = 1;
 	struct instruction_s *instruction;
 	dis_instructions->instruction_number = 0;
+	dis_instructions->bytes_used = ll_inst->octets;
 
 	switch (ll_inst->opcode) {
 	case NOP:

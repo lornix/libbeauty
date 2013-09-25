@@ -407,6 +407,9 @@ struct inst_log_entry_s {
 
 struct self_s {
 	int *section_number_mapping;
+	void *handle_void;
+	void *ll_inst;
+	void *decode_asm;
 	size_t data_size;
 	uint8_t *data;
 	size_t rodata_size;

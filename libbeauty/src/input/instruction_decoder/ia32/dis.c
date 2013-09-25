@@ -409,7 +409,7 @@ void dis_Ex_Ix(void *handle_void, int opcode, struct dis_instructions_s *dis_ins
 	dis_instructions->instruction_number++;
 }
 
-int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
+int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t buffer_size, uint64_t offset) {
 	uint8_t reg = 0;
 	int half = 0;
 	int result = 0;
@@ -417,6 +417,7 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 	int tmp;
 	struct reloc_table_s *reloc_table_entry;
 	struct instruction_s *instruction;
+	void *handle_void = self->handle_void;
 
 	printf("inst[0]=0x%x\n",base_address[offset + 0]);
 	dis_instructions->instruction[dis_instructions->instruction_number].opcode = NOP; /* Un-supported OPCODE */

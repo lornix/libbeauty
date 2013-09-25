@@ -38,6 +38,9 @@
  Appendix A. 25366713.pdf
 */
 
+#define __STDC_LIMIT_MACROS
+#define __STDC_CONSTANT_MACROS
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -50,6 +53,12 @@
 #include <assert.h>
 
 #include <rev.h>
+#include <llvm-c/Disassembler.h>
+#include <llvm-c/Target.h>
+#include "instruction_low_level.h"
+#include "decode_inst.h"
+#include <dis.h>
+#include <convert_ll_inst_to_rtl.h>
 
 #define EIP_START 0x40000000
 
@@ -60,10 +69,8 @@ uint8_t *data;
 size_t data_size = 0;
 uint8_t *rodata;
 size_t rodata_size = 0;
-void *handle_void;
 char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
-struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
@@ -155,12 +162,33 @@ int memory_used[MEMORY_USED_SIZE];
 /* Used to keep a non bfd version of the relocation entries */
 int memory_relocation[MEMORY_USED_SIZE];
 
-int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
+#if 0
+int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset) {
 	int tmp;
-	tmp = disassemble_amd64(handle_void, dis_instructions, base_address, offset);
+	tmp = disassemble_amd64(self->handle_void, dis_instructions, base_address, offset);
 	return tmp;
 }
+#endif
 
+int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t buffer_size, uint64_t offset) {
+	struct instruction_low_level_s *ll_inst = (struct instruction_low_level_s *)self->ll_inst;
+	int tmp = 0;
+	LLVMDecodeAsmX86_64Ref da = self->decode_asm;
+
+	ll_inst->opcode = 0;
+	ll_inst->srcA.kind = KIND_EMPTY;
+	ll_inst->srcB.kind = KIND_EMPTY;
+	ll_inst->dstA.kind = KIND_EMPTY;
+	tmp = LLVMInstructionDecodeAsmX86_64(da, base_address,
+		buffer_size, offset,
+		ll_inst);
+	tmp = convert_ll_inst_to_rtl(ll_inst, dis_instructions);
+	if (ll_inst->octets != dis_instructions->bytes_used) {
+		printf("octets mismatch 0x%x:0x%x\n", ll_inst->octets, dis_instructions->bytes_used);
+		exit(1);
+	}
+	return tmp;
+}
 
 int print_dis_instructions(struct self_s *self)
 {
@@ -4486,6 +4514,8 @@ int main(int argc, char *argv[])
 //	int octets = 0;
 //	int result;
 	char *filename;
+	struct self_s *self = NULL;
+	void *handle_void = NULL;
 	uint32_t arch;
 	uint64_t mach;
 	FILE *fd;
@@ -4522,6 +4552,7 @@ int main(int argc, char *argv[])
 	int loops_size = 2000;
 	struct ast_s *ast;
 	int *section_number_mapping;
+	LLVMDecodeAsmX86_64Ref decode_asm;
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 
@@ -4533,6 +4564,7 @@ int main(int argc, char *argv[])
 	}
 	file = argv[1];
 
+	self = malloc(sizeof(struct self_s));
 	expression = malloc(1000); /* Buffer for if expressions */
 
 	handle_void = bf_test_open_file(file);
@@ -4540,6 +4572,7 @@ int main(int argc, char *argv[])
 		debug_print(DEBUG_MAIN, 1, "Failed to find or recognise file\n");
 		return 1;
 	}
+	self->handle_void = handle_void;
 	tmp = bf_get_arch_mach(handle_void, &arch, &mach);
 	if ((arch != 9) ||
 		(mach != 8)) {
@@ -4590,7 +4623,6 @@ int main(int argc, char *argv[])
 	inst_log_entry = calloc(INST_LOG_ENTRY_SIZE, sizeof(struct inst_log_entry_s));
 	relocations =  calloc(RELOCATION_SIZE, sizeof(struct relocation_s));
 	external_entry_points = calloc(EXTERNAL_ENTRY_POINTS_MAX, sizeof(struct external_entry_point_s));
-	self = malloc(sizeof *self);
 	debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
 	self->section_number_mapping = section_number_mapping;
 	self->data_size = data_size;
@@ -4603,6 +4635,14 @@ int main(int argc, char *argv[])
 	self->entry_point = calloc(ENTRY_POINTS_SIZE, sizeof(struct entry_point_s));
 	self->entry_point_list_length = ENTRY_POINTS_SIZE;
 //	self->search_back_seen = calloc(INST_LOG_ENTRY_SIZE, sizeof(int));
+	self->ll_inst = (void *)calloc(1, sizeof(struct instruction_low_level_s));
+	LLVMInitializeX86TargetInfo();
+	LLVMInitializeX86TargetMC();
+	LLVMInitializeX86AsmParser();
+	LLVMInitializeX86Disassembler();
+	decode_asm = LLVMNewDecodeAsmX86_64();
+	tmp = LLVMSetupDecodeAsmX86_64(decode_asm);
+	self->decode_asm = decode_asm;
 
 	nodes = calloc(1000, sizeof(struct control_flow_node_s));
 	nodes_size = 0;
@@ -4739,7 +4779,7 @@ int main(int argc, char *argv[])
 						not_finished = 1;
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
-						err = process_block(self, process_state, handle_void, inst_log_prev, inst_size);
+						err = process_block(self, process_state, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
 						if (err) {
 							debug_print(DEBUG_MAIN, 1, "process_block failed\n");
@@ -6199,7 +6239,7 @@ int main(int argc, char *argv[])
 			tmp = output_cfg_dot(self, external_entry_points[l].label_redirect, external_entry_points[l].labels, l);
 		}
 	}
-	tmp = llvm_export(self);
+	//tmp = llvm_export(self);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/

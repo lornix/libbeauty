@@ -257,6 +257,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	}
 	S = DisAsm->getInstruction(*Inst, Size, MemoryObject2, PC,
 		/*REMOVE*/ nulls(), nulls());
+	outs() << format("getInstruction Size = 0x%x\n",Size);
 	if (S != MCDisassembler::Success) {
 	// case MCDisassembler::Fail:
 	// case MCDisassembler::SoftFail:
@@ -289,6 +290,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	ll_inst->srcA.size = new_helper[opcode].srcA_size;
 	ll_inst->srcB.size = new_helper[opcode].srcB_size;
 	ll_inst->dstA.size = new_helper[opcode].dstA_size;
+	ll_inst->octets = Size;
 	int num_operands = Inst->getNumOperands();
 	outs() << format("opcode_form = 0x%x", opcode_form) << format(", num_operands = 0x%x", num_operands) << "\n";
 	MCOperand *Operand;

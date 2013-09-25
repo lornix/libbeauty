@@ -70,7 +70,7 @@ int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t 
 	return 1;
 }
 
-int process_block(struct self_s *self, struct process_state_s *process_state, void *handle_void, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
+int process_block(struct self_s *self, struct process_state_s *process_state, uint64_t inst_log_prev, uint64_t eip_offset_limit) {
 	uint64_t offset = 0;
 	int result;
 	int n, m, l;
@@ -90,6 +90,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, vo
 	int *memory_used;
 	struct entry_point_s *entry = self->entry_point;
 	uint64_t list_length = self->entry_point_list_length;
+	void *handle_void = self->handle_void;
 
 	//memory_text = process_state->memory_text;
 	//memory_stack = process_state->memory_stack;
@@ -115,7 +116,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, vo
 		debug_print(DEBUG_EXE, 1, "eip=0x%"PRIx64", offset=0x%"PRIx64"\n",
 			memory_reg[2].offset_value, offset);
 		/* the calling program must define this function. This is a callback. */
-		result = disassemble(handle_void, &dis_instructions, inst, offset);
+		result = disassemble(self, &dis_instructions, inst, inst_size, offset);
 		debug_print(DEBUG_EXE, 1, "bytes used = %d\n", dis_instructions.bytes_used);
 		/* Memory not used yet */
 		if (0 == memory_used[offset]) {
