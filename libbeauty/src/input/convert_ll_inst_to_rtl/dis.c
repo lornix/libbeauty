@@ -474,8 +474,102 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	case PHI: /* A PHI point */
 		break;
 	case RET: /* Special instruction for helping to print the "result local_regNNNN;" */
-		tmp  = convert_base(ll_inst, 1, dis_instructions);
-		result = tmp;
+                /* POP -> IP=[SP]; SP=SP+4; */
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = MOV;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_TMP1;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+
+		instruction->srcA.store = STORE_REG;
+		instruction->srcA.indirect = IND_STACK;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = REG_SP;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 64;
+
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_STACK;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = ADD;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = 8;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 64;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_SP;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = NOP;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_AX;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		instruction->srcA.store = STORE_REG;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = REG_AX;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_AX;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = MOV;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_IP;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		instruction->srcA.store = STORE_REG;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = REG_TMP1;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_TMP1;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
+		dis_instructions->instruction_number++;
+
+		result = 0;
 		break;
 	case ADD:
 		tmp  = convert_base(ll_inst, 1, dis_instructions);
@@ -628,7 +722,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
-		result = 1;
+		result = 0;
 		break;
 	case PUSH:
                 /* PUSH -> SP=SP-4 (-2 for word); [SP]=reg; */
@@ -667,11 +761,50 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
+		result = 0;
+		break;
+	case POP:
+                /* POP -> ES=[SP]; SP=SP+4 (+2 for word); */
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = LOAD;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_REG;
+		instruction->srcA.indirect = IND_STACK;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = REG_SP;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		convert_operand(&(operand_empty), 0, &(instruction->srcB));
+		convert_operand(&(ll_inst->dstA), 0, &(instruction->dstA));
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = ADD;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = 4;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_SP;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 32;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 32;
+		dis_instructions->instruction_number++;
 		result = 1;
 		break;
 	default:
 		debug_print(DEBUG_INPUT_DIS, 1, "convert: Unrecognised opcode %x\n", ll_inst->opcode);
-		result = 0;
+		result = 1;
 		break;
 	}
 	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:end inst_number = 0x%x\n", dis_instructions->instruction_number);
