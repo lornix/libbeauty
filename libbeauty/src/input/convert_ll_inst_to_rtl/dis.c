@@ -800,7 +800,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = 32;
 		dis_instructions->instruction_number++;
-		result = 1;
+		result = 0;
 		break;
 	default:
 		debug_print(DEBUG_INPUT_DIS, 1, "convert: Unrecognised opcode %x\n", ll_inst->opcode);
