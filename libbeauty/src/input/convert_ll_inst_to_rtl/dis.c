@@ -187,6 +187,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 	int result = 0;
 	int final_opcode = 0;
 	int imm_sign = 0;
+	int ind_stack = 0;
 	struct operand_low_level_s *previous_operand;
 	struct operand_low_level_s operand_imm;
 	struct operand_low_level_s *srcA_operand;
@@ -341,6 +342,10 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 		if (srcB_operand->kind == KIND_IND_SCALE) {
 			scale_operand = srcB_operand;
 		}
+		if ((scale_operand->operand[0].value >= REG_SP) &&
+			(scale_operand->operand[0].value <= REG_BP)) {
+			ind_stack = 1;
+		}
 
 		if (scale_operand->operand[2].value == 0) {
 			previous_operand = &operand_empty;
@@ -424,7 +429,11 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			instruction->opcode = LOAD;
 			instruction->flags = 0;
 			convert_operand(previous_operand, 0, &(instruction->srcA));
-			instruction->srcA.indirect = IND_MEM;
+			if (ind_stack) {
+				instruction->srcA.indirect = IND_STACK;
+			} else {
+				instruction->srcA.indirect = IND_MEM;
+			}
 			convert_operand(&operand_empty, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp2, 0, &(instruction->dstA));
 			dis_instructions->instruction_number++;
@@ -455,7 +464,11 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			convert_operand(previous_operand, 0, &(instruction->srcA));
 			convert_operand(&operand_empty, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
-			instruction->dstA.indirect = IND_MEM;
+			if (ind_stack) {
+				instruction->dstA.indirect = IND_STACK;
+			} else {
+				instruction->dstA.indirect = IND_MEM;
+			}
 			dis_instructions->instruction_number++;
 		}
 	}
