@@ -61,7 +61,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 
 	switch (inst_log1->instruction.opcode) {
 	case 2:  // ADD
-		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
+		printf("LLVM 0x%x: OPCODE = 0x%x:ADD\n", inst, inst_log1->instruction.opcode);
 		if (inst_log1->instruction.dstA.index == 0x28) {
 			/* Skip the 0x28 reg as it is the SP reg */
 			break;
@@ -71,7 +71,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		if (!value[value_id]) {
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
 			if (tmp) {
-				printf("failed LLVM Value is NULL\n");
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x\n", value_id);
 				exit(1);
 			}
 		}
@@ -80,7 +80,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		if (!value[value_id]) {
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
 			if (tmp) {
-				printf("failed LLVM Value is NULL\n");
+				printf("failed LLVM Value is NULL. srcB value_id = 0x%x\n", value_id);
 				exit(1);
 			}
 		}
@@ -104,7 +104,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		ReturnInst::Create(Context, srcA, bb);
 		break;
 	default:
-		printf("LLVM 0x%x: OPCODE = 0x%x\n", inst, inst_log1->instruction.opcode);
+		printf("LLVM 0x%x: OPCODE = 0x%x. Not yet handled.\n", inst, inst_log1->instruction.opcode);
 		break;
 	}
 
@@ -154,6 +154,10 @@ int LLVM_ir_export::fill_value(struct self_s *self, Value **value, int value_id,
 			exit(1);
 		}
 		return 0;
+	} else {
+		printf("LLVM fill_value(): label->scope = 0x%x, label->type = 0x%x\n",
+			label->scope,
+			label->type);
 	}
 
 	return 1;
