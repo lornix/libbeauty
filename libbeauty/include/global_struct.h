@@ -281,6 +281,10 @@ struct memory_s {
 	/* init_value + offset_value = absolute value to be used */
 	uint64_t offset_value;
 	/* Indirect value */
+	/* E.g. MOV %rax, [%rsp]    The indirect_offset_value will be the value of %rsp, the 
+	 * indirect_value_id will be the stack label.
+	 * the init_value and offset_value will be %rax that fills [%rsp].
+	 */
 	uint64_t indirect_init_value;
 	/* Indirect offset */
 	uint64_t indirect_offset_value;
