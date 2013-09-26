@@ -106,7 +106,6 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	switch (instruction->opcode) {
 	case MOV:
 	case LOAD:
-	case STORE:
 		if (instruction->srcA.indirect) {
 			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
@@ -133,6 +132,7 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 		}
 		ret = 0;
 		break;
+	case STORE:
 	case ADD:
 	case SUB:
 	case SBB:

@@ -462,7 +462,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			instruction->opcode = STORE;
 			instruction->flags = 0;
 			convert_operand(previous_operand, 0, &(instruction->srcA));
-			convert_operand(&operand_empty, 0, &(instruction->srcB));
+			convert_operand(&operand_reg_tmp1, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
 			if (ind_stack) {
 				instruction->dstA.indirect = IND_STACK;
@@ -809,7 +809,12 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->opcode = STORE;
 		instruction->flags = 0;
 		convert_operand(&(ll_inst->srcA), 0, &(instruction->srcA));
-		convert_operand(&(operand_empty), 0, &(instruction->srcB));
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_STACK;
 		instruction->dstA.indirect_size = 64;
