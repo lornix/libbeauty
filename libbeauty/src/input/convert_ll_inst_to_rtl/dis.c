@@ -429,6 +429,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			instruction->opcode = LOAD;
 			instruction->flags = 0;
 			convert_operand(previous_operand, 0, &(instruction->srcA));
+			instruction->srcA.value_size = ll_inst->srcA.size;
 			if (ind_stack) {
 				instruction->srcA.indirect = IND_STACK;
 			} else {
@@ -436,6 +437,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			}
 			convert_operand(&operand_empty, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp2, 0, &(instruction->dstA));
+			instruction->dstA.value_size = ll_inst->dstA.size;
 			dis_instructions->instruction_number++;
 		}
 		previous_operand = &operand_reg_tmp2;
@@ -450,9 +452,12 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 		instruction->opcode = ll_inst->opcode;
 		instruction->flags = flags;
 		convert_operand(srcA_operand, 0, &(instruction->srcA));
+		instruction->srcA.value_size = ll_inst->srcA.size;
 		convert_operand(srcB_operand, 0, &(instruction->srcB));
+		instruction->srcB.value_size = ll_inst->srcB.size;
 		if (ll_inst->dstA.kind == KIND_IND_SCALE) {
 			convert_operand(previous_operand, 0, &(instruction->dstA));
+			instruction->dstA.value_size = ll_inst->dstA.size;
 		} else {
 			convert_operand(dstA_operand, 0, &(instruction->dstA));
 		}
@@ -462,8 +467,10 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			instruction->opcode = STORE;
 			instruction->flags = 0;
 			convert_operand(previous_operand, 0, &(instruction->srcA));
+			instruction->srcA.value_size = ll_inst->srcA.size;
 			convert_operand(&operand_reg_tmp1, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp1, 0, &(instruction->dstA));
+			instruction->dstA.value_size = ll_inst->dstA.size;
 			if (ind_stack) {
 				instruction->dstA.indirect = IND_STACK;
 			} else {
