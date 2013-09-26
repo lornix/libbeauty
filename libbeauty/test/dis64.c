@@ -4285,12 +4285,13 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	struct memory_s *memory;
 
 	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
-	debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 		n,
+		instruction->dstA.store,
 		instruction->dstA.indirect,
 		instruction->dstA.index,
-		instruction->dstA.relocated,
 		instruction->dstA.value_size,
+		instruction->dstA.relocated,
 		inst_log1->value3.value_scope,
 		inst_log1->value3.value_id,
 		inst_log1->value3.indirect_offset_value,
@@ -4324,6 +4325,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 		/* If not dstA.indirect, assign the dst label to value_id. */
 		switch (instruction->dstA.indirect) {
 		case IND_DIRECT:
+			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_DIRECT\n");
 			inst_log1->value3.value_id = variable_id;
 			/* Override the EXE setting for now */
 			if (inst_log1->value3.value_scope == 1) {
@@ -4341,15 +4343,17 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				inst_log1->value3.indirect_value_id,
 				label);
 			if (ret) {
-				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
+				debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
 			}
 			break;
 
 		case IND_MEM:
+			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_MEM\n");
 			inst_log1->value3.indirect_value_id = 0;
 			break;
 
 		case IND_STACK:
+			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_STACK\n");
 			stack_address = inst_log1->value3.indirect_init_value + inst_log1->value3.indirect_offset_value;
 			debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
 			memory = search_store(
@@ -4385,6 +4389,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 			break;
 
 		default:
+			debug_print(DEBUG_MAIN, 1, "Unknown instruction->dstA.indirect = 0x%x\n",
+				instruction->dstA.indirect);
 			break;
 		}
 		break;
@@ -4392,6 +4398,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	/* Specially handled because value3 is not assigned and writen to a destination. */
 	case TEST:
 	case CMP:
+		debug_print(DEBUG_MAIN, 1, "TEST, CMP have no DST\n");
+		ret = 0;
 		break;
 
 	case CALL:
@@ -4407,6 +4415,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	case RET:
 	case JMP:
 	case JMPT:
+		debug_print(DEBUG_MAIN, 1, "IF, BC, RET, JMP, JMPT have no DST\n");
+		ret = 0;
 		break;
 	default:
 		debug_print(DEBUG_MAIN, 1, "SSA1 failed for Inst:0x%x, OP 0x%x\n", n, instruction->opcode);
@@ -5292,13 +5302,13 @@ int main(int argc, char *argv[])
 					tmp  = assign_id_label_dst(self, l, n, inst_log1, &label);
 					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 						n,
-						instruction->srcA.indirect,
-						instruction->srcA.index,
-						instruction->srcA.relocated,
-						inst_log1->value1.value_scope,
-						inst_log1->value1.value_id,
-						inst_log1->value1.indirect_offset_value,
-						inst_log1->value1.indirect_value_id);
+						instruction->dstA.indirect,
+						instruction->dstA.index,
+						instruction->dstA.relocated,
+						inst_log1->value3.value_scope,
+						inst_log1->value3.value_id,
+						inst_log1->value3.indirect_offset_value,
+						inst_log1->value3.indirect_value_id);
 
 					if (!tmp) {
 						debug_print(DEBUG_MAIN, 1, "variable_id = %x\n", external_entry_points[l].variable_id);
@@ -5312,7 +5322,11 @@ int main(int argc, char *argv[])
 						external_entry_points[l].labels[external_entry_points[l].variable_id].lab_pointer += label.lab_pointer;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].value = label.value;
 						external_entry_points[l].variable_id++;
+					} else {
+						debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed");
+						exit(1);
 					}
+						
 					if (inst_log1->next_size) {
 						next = inst_log1->next[0];
 					} else if (n != external_entry_points[l].nodes[m].inst_end) {

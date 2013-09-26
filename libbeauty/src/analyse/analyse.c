@@ -1697,6 +1697,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN PARAMS\n");
 			}
 			break;
+		case 0: /* Unknown */
 		case 2:
 			/* locals */
 			if (IND_STACK == indirect) {
