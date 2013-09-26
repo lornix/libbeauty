@@ -60,6 +60,29 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 	char buffer[1024];
 
 	switch (inst_log1->instruction.opcode) {
+	case 1:  // MOV
+		/* 2 forms, 1) MOV REG,REG and 2) MOV IMM,REG
+		 * (1) is a NOP in LLVM IR, (2) is a fill value but no OP.
+		 */
+		printf("LLVM 0x%x: OPCODE = 0x%x:MOV\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("value_id1 = 0x%lx, value_id3 = 0x%lx\n", inst_log1->value1.value_id, inst_log1->value3.value_id);
+		if (inst_log1->instruction.srcA.store == 0) {  /* IMM */
+			value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+			if (!value[value_id]) {
+				tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+				if (tmp) {
+					printf("failed LLVM Value is NULL. dstA value_id = 0x%x\n", value_id);
+					exit(1);
+				}
+			}
+		}
+		external_entry_point->label_redirect[inst_log1->value3.value_id].redirect =
+			inst_log1->value1.value_id;
+		break;
 	case 2:  // ADD
 		printf("LLVM 0x%x: OPCODE = 0x%x:ADD\n", inst, inst_log1->instruction.opcode);
 		if (inst_log1->instruction.dstA.index == 0x28) {
@@ -155,7 +178,7 @@ int LLVM_ir_export::fill_value(struct self_s *self, Value **value, int value_id,
 		}
 		return 0;
 	} else {
-		printf("LLVM fill_value(): label->scope = 0x%x, label->type = 0x%x\n",
+		printf("LLVM fill_value(): label->scope = 0x%lx, label->type = 0x%lx\n",
 			label->scope,
 			label->type);
 	}
