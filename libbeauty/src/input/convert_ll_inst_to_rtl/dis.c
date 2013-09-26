@@ -747,7 +747,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
-		instruction->opcode = MOV;
+		instruction->opcode = LOAD;
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
