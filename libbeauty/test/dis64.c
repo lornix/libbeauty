@@ -6294,7 +6294,6 @@ int main(int argc, char *argv[])
 			tmp = output_cfg_dot(self, external_entry_points[l].label_redirect, external_entry_points[l].labels, l);
 		}
 	}
-	tmp = llvm_export(self);
 	/***************************************************
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
@@ -6461,6 +6460,9 @@ int main(int argc, char *argv[])
 	}
 
 	fclose(fd);
+
+	tmp = llvm_export(self);
+
 	bf_test_close_file(handle_void);
 	print_mem(memory_reg, 1);
 	for (n = 0; n < inst_size; n++) {

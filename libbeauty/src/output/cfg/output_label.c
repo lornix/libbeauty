@@ -596,7 +596,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 
 	write_inst(self, fd, instruction, inst_number, labels);
 	tmp = fprintf(fd, "%s", cr);
-
+#if 0
 	tmp = fprintf(fd, "// ");
 	if (inst_log1->prev_size > 0) {
 		tmp = fprintf(fd, "prev_size=0x%x: ",
@@ -615,6 +615,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		}
 	}
 	tmp = fprintf(fd, "%s", cr);
+#endif
 	/* Output labels when this is a join point */
 	/* or when the previous instruction was some sort of jump */
 	if ((inst_log1->prev_size) > 1) {
