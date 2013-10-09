@@ -108,7 +108,8 @@ int convert_operand(struct operand_low_level_s *ll_operand, int operand_number, 
 		inst_operand->indirect_size = ll_operand->size;
 		inst_operand->index = ll_operand->operand[operand_number].value;
 		inst_operand->relocated = 0;
-		inst_operand->value_size = ll_operand->operand[operand_number].size;
+//		inst_operand->value_size = ll_operand->operand[operand_number].size;
+		inst_operand->value_size = ll_operand->size;
 //		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 //		if (!tmp) {
 //			inst_operand->relocated = 1;

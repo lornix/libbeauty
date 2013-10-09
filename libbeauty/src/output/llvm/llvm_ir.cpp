@@ -69,7 +69,11 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 			/* Skip the 0x28 reg as it is the SP reg */
 			break;
 		}
-		printf("value_id1 = 0x%lx, value_id3 = 0x%lx\n", inst_log1->value1.value_id, inst_log1->value3.value_id);
+		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value3.value_id,
+			external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
 		if (inst_log1->instruction.srcA.store == 0) {  /* IMM */
 			value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
 			if (!value[value_id]) {
@@ -89,7 +93,11 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 			/* Skip the 0x28 reg as it is the SP reg */
 			break;
 		}
-		printf("value_id1 = 0x%lx, value_id2 = 0x%lx\n", inst_log1->value1.value_id, inst_log1->value2.value_id);
+		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value2.value_id,
+			external_entry_point->label_redirect[inst_log1->value2.value_id].redirect);
 		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
 		if (!value[value_id]) {
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
@@ -111,6 +119,40 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
 		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb);
+		value[inst_log1->value3.value_id] = dstA;
+		break;
+	case 4:  // SUB
+		printf("LLVM 0x%x: OPCODE = 0x%x:SUB\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value2.value_id,
+			external_entry_point->label_redirect[inst_log1->value2.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x\n", value_id);
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL. srcB value_id = 0x%x\n", value_id);
+				exit(1);
+			}
+		}
+		srcB = value[value_id];
+		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+		dstA = BinaryOperator::CreateSub(srcA, srcB, buffer, bb);
 		value[inst_log1->value3.value_id] = dstA;
 		break;
 	case 0x1e:  // RET
