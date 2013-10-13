@@ -4285,6 +4285,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	struct memory_s *memory;
 
 	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
+	debug_print(DEBUG_MAIN, 1, "opcode = 0x%x\n", instruction->opcode);
 	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
 		n,
 		instruction->dstA.store,
@@ -4301,8 +4302,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	case NOP:
 		break;
 	case MOV:
-	case LOAD:
-	case STORE:
 	case ADD:
 	case ADC:
 	case SUB:
@@ -4320,9 +4319,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	case SAR:
 	case SEX:
 	case ICMP:
-		/* If dstA.indirect, assign the dst label to indirect_value_id
-		   In the indirect case the value_id is a SRC and not a DST */
-		/* If not dstA.indirect, assign the dst label to value_id. */
+	case LOAD:
 		switch (instruction->dstA.indirect) {
 		case IND_DIRECT:
 			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_DIRECT\n");
@@ -4346,6 +4343,21 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
 			}
 			break;
+		default:
+			debug_print(DEBUG_MAIN, 1, "Unknown instruction->dstA.indirect = 0x%x\n",
+				instruction->dstA.indirect);
+			break;
+		}
+		break;
+
+	case STORE:
+		/* If dstA.indirect, assign the dst label to indirect_value_id
+		   In the indirect case the value_id is a SRC and not a DST */
+		/* If not dstA.indirect, assign the dst label to value_id. */
+		switch (instruction->dstA.indirect) {
+		case IND_DIRECT:
+			debug_print(DEBUG_MAIN, 1, "assign_id_dst: Failed: IND_DIRECT STORE should not happen\n");
+			break;
 
 		case IND_MEM:
 			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_MEM\n");
@@ -4363,6 +4375,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 			if (memory) {
 				if (memory->value_id) {
 					inst_log1->value3.indirect_value_id = memory->value_id;
+					ret = 0;
 					break;
 				} else {
 					inst_log1->value3.indirect_value_id = variable_id;
@@ -4377,6 +4390,9 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 						inst_log1->value3.indirect_offset_value,
 						inst_log1->value3.indirect_value_id,
 						label);
+					if (ret) {
+						debug_print(DEBUG_MAIN, 1, "assign_id: IND_STACK log_to_label failed\n");
+					}
 				}
 			} else {
 				debug_print(DEBUG_MAIN, 1, "assign_id: memory not found for stack address\n");
@@ -5323,7 +5339,7 @@ int main(int argc, char *argv[])
 						external_entry_points[l].labels[external_entry_points[l].variable_id].value = label.value;
 						external_entry_points[l].variable_id++;
 					} else {
-						debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed");
+						debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed\n");
 						exit(1);
 					}
 						
