@@ -92,7 +92,7 @@ int label_to_string(struct label_s *label, char *string, int size) {
 	case 2:
 		switch (label->type) {
 		case 2:
-			debug_print(DEBUG_OUTPUT, 1, "param_stack%04"PRIx64,
+			debug_print(DEBUG_OUTPUT, 1, "param_stack%04"PRIx64"\n",
 				label->value);
 			tmp = snprintf(&string[offset], size - offset, "param_stack%04"PRIx64,
 				label->value);
@@ -102,7 +102,7 @@ int label_to_string(struct label_s *label, char *string, int size) {
 			}
 			break;
 		case 1:
-			debug_print(DEBUG_OUTPUT, 1, "param_reg%04"PRIx64,
+			debug_print(DEBUG_OUTPUT, 1, "param_reg%04"PRIx64"\n",
 				label->value);
 			tmp = snprintf(&string[offset], size - offset, "param_reg%04"PRIx64,
 				label->value);
@@ -130,7 +130,7 @@ int label_to_string(struct label_s *label, char *string, int size) {
 			}
 			break;
 		case 1:
-			debug_print(DEBUG_OUTPUT, 1, "local_reg%04"PRIx64,
+			debug_print(DEBUG_OUTPUT, 1, "local_reg%04"PRIx64"\n",
 				label->value);
 			tmp = snprintf(&string[offset], size - offset, "local_reg%04"PRIx64,
 				label->value);
@@ -219,7 +219,7 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 		case 1:
 			/* FIXME: Should this be param or instead param_reg, param_stack */
 			if (IND_STACK == indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "param_stack%04"PRIx64",%04"PRIx64",%04d",
+				debug_print(DEBUG_OUTPUT, 1, "param_stack%04"PRIx64",%04"PRIx64",%04d\n",
 					index, indirect_offset_value, indirect);
 				tmp = fprintf(fd, "param_stack%04"PRIx64",%04"PRIx64",%04d",
 					index, indirect_offset_value, indirect);
@@ -233,12 +233,12 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 		case 2:
 			/* FIXME: Should this be local or instead local_reg, local_stack */
 			if (IND_STACK == indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "local_stack%04"PRIx64,
+				debug_print(DEBUG_OUTPUT, 1, "local_stack%04"PRIx64"\n",
 					value_id);
 				tmp = fprintf(fd, "local_stack%04"PRIx64,
 					value_id);
 			} else if (0 == indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "local_reg%04"PRIx64,
+				debug_print(DEBUG_OUTPUT, 1, "local_reg%04"PRIx64"\n",
 					value_id);
 				tmp = fprintf(fd, "local_reg%04"PRIx64,
 					value_id);
@@ -287,7 +287,7 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	char buffer[1024];
 
 	opcode = inst_log1_flagged->instruction.opcode;
-	debug_print(DEBUG_OUTPUT, 1, "\t if opcode=0x%x, ",inst_log1_flagged->instruction.opcode);
+	debug_print(DEBUG_OUTPUT, 1, "\t if opcode=0x%x, \n",inst_log1_flagged->instruction.opcode);
 
 	switch (opcode) {
 	case CMP:

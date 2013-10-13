@@ -291,7 +291,7 @@ int LLVM_ir_export::output(struct self_s *self)
 				std::stringstream tmp_str;
 				tmp_str << "Node_0x" << std::hex << m;
 				node_string = tmp_str.str();
-				printf("LLVM: %s\n", node_string.c_str());
+				printf("LLVM2: %s\n", node_string.c_str());
 				bb[m] = BasicBlock::Create(Context, node_string, F);
 			}
 
