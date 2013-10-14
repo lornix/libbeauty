@@ -3376,7 +3376,8 @@ int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point
 
 				value_id = inst_log1->value1.value_id;
 				value_id3 = inst_log1->value3.value_id;
-				label_redirect[value_id3].redirect = value_id;
+				/* Use the redirect as the source in case the source value_id has previously been redirected */
+				label_redirect[value_id3].redirect = label_redirect[value_id].redirect;
 			}
 			break;
 		default:

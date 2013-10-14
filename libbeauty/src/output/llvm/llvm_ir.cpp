@@ -84,8 +84,6 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 				}
 			}
 		}
-		external_entry_point->label_redirect[inst_log1->value3.value_id].redirect =
-			inst_log1->value1.value_id;
 		break;
 	case 2:  // ADD
 		printf("LLVM 0x%x: OPCODE = 0x%x:ADD\n", inst, inst_log1->instruction.opcode);
@@ -167,6 +165,62 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		}
 		srcA = value[value_id];
 		ReturnInst::Create(Context, srcA, bb);
+		break;
+	case 0x25:  // LOAD
+		printf("LLVM 0x%x: OPCODE = 0x%x:LOAD\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+			inst_log1->value1.indirect_value_id,
+			external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect,
+			inst_log1->value3.value_id,
+			external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect;
+		if (value_id) {
+			srcA = value[value_id];
+			tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+			dstA = new LoadInst(srcA, buffer, false, bb);
+		} else {
+			printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
+		}
+
+		value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+		if (value_id) {
+			value[value_id] = dstA;
+		} else {
+			printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
+		}
+		break;
+	case 0x26:  // STORE
+		printf("LLVM 0x%x: OPCODE = 0x%x:STORE\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value3.indirect_value_id,
+			external_entry_point->label_redirect[inst_log1->value3.indirect_value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (value_id) {
+			printf("LLVM 0x%x: srcA value_id 0x%x\n", inst, value_id);
+			srcA = value[value_id];
+		} else {
+			printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
+			break;
+		}
+		value_id = external_entry_point->label_redirect[inst_log1->value3.indirect_value_id].redirect;
+		if (value_id) {
+			printf("LLVM 0x%x: srcB value_id 0x%x\n", inst, value_id);
+			srcB = value[value_id];
+		} else {
+			printf("LLVM 0x%x: FIXME: Invalid srcB value_id\n", inst);
+			break;
+		}
+		dstA = new StoreInst(srcA, srcB, false, bb);
 		break;
 	default:
 		printf("LLVM 0x%x: OPCODE = 0x%x. Not yet handled.\n", inst, inst_log1->instruction.opcode);
@@ -282,6 +336,7 @@ int LLVM_ir_export::output(struct self_s *self)
 				value[index] = args;
 				args++;
 				tmp = label_to_string(&(labels[index]), buffer, 1023);
+				printf("Adding param:%s:value index=0x%x\n", buffer, index);
 				value[index]->setName(buffer);
 			}
 
@@ -299,6 +354,24 @@ int LLVM_ir_export::output(struct self_s *self)
 			Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
 			Value *Four = value[external_entry_points[n].params[0]];
 
+			/* Create the AllocaInst's */
+			for (m = 0; m < labels_size; m++) {
+				int size_bits;
+				/* param_stack or local_stack */
+				if (((labels[m].scope == 1) || 
+					(labels[m].scope == 2)) &&
+					(labels[m].type == 2)) {
+					size_bits = labels[m].size_bits;
+					/* FIXME: Make size_bits set correctly in the label */
+					if (!size_bits) size_bits = 32;
+					printf("Creating alloca for lable 0x%x, size_bits = 0x%x\n", m, size_bits);
+					tmp = label_to_string(&labels[m], buffer, 1023);
+					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(M->getContext(), size_bits), buffer, bb[1]);
+					ptr_local->setAlignment(size_bits >> 3);
+					value[m] = ptr_local;
+				}
+			}
+				
 			/* FIXME: this needs the node to follow paths so the value[] is filled in the correct order */
 			for (node = 1; node < nodes_size; node++) {
 				printf("LLVM: node=0x%x\n", node);
