@@ -340,6 +340,7 @@ int LLVM_ir_export::output(struct self_s *self)
 				value[index]->setName(buffer);
 			}
 
+			/* Create all the nodes/basic blocks */
 			BasicBlock **bb = (BasicBlock **)calloc(nodes_size + 1, sizeof (BasicBlock *));
 			for (m = 1; m < nodes_size; m++) {
 				std::string node_string;
@@ -350,9 +351,9 @@ int LLVM_ir_export::output(struct self_s *self)
 				bb[m] = BasicBlock::Create(Context, node_string, F);
 			}
 
-			Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
-			Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
-			Value *Four = value[external_entry_points[n].params[0]];
+			//Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
+			//Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
+			//Value *Four = value[external_entry_points[n].params[0]];
 
 			/* Create the AllocaInst's */
 			for (m = 0; m < labels_size; m++) {
@@ -373,9 +374,17 @@ int LLVM_ir_export::output(struct self_s *self)
 			}
 				
 			/* FIXME: this needs the node to follow paths so the value[] is filled in the correct order */
+			printf("LLVM: starting nodes\n");
 			for (node = 1; node < nodes_size; node++) {
 				printf("LLVM: node=0x%x\n", node);
 				/* FIXME: Output PHI instructions first */
+				for (m = 0; m < nodes[node].phi_size; m++) {
+					printf("LLVM:phi 0x%x\n", m);
+					// PHINode* int32_local1_0 = PHINode::Create(IntegerType::get(mod->getContext(), 32), 3, "local1.0", label_10);
+					// int32_local1_0->addIncoming(const_int32_4, label_8);
+					// int32_local1_0->addIncoming(const_int32_5, label_9);
+					// int32_local1_0->addIncoming(const_int32_5, label_7);
+				}
 				/* FIXME: Output instuctions within the node */
 				LLVM_ir_export::add_node_instructions(self, value, bb[node], node, n);
 #if 0
