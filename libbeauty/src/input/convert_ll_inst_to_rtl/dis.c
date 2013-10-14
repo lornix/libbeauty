@@ -510,6 +510,23 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	case CALLT: /* Call jump table */
 		break;
 	case JMP: /* Relative */
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = JMP;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ll_inst->srcB.operand[0].value;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_IP;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 32;
+		dis_instructions->instruction_number++;
+		result = 0;
 		break;
 	case CALL: /* non-relative */ 
 		break;
@@ -518,13 +535,14 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		debug_print(DEBUG_INPUT_DIS, 1, "address  = 0x%lx\n", ll_inst->address);
 		debug_print(DEBUG_INPUT_DIS, 1, "octets  = 0x%x\n", ll_inst->octets);
 		debug_print(DEBUG_INPUT_DIS, 1, "predicate  = 0x%x\n", ll_inst->predicate);
+		debug_print(DEBUG_INPUT_DIS, 1, "value  = 0x%lx\n", ll_inst->srcA.operand[0].value);
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = IF;
 		instruction->flags = 0;
 		instruction->dstA.store = STORE_DIRECT;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 64;
-		instruction->dstA.index = ll_inst->srcA.operand[0].value;
+		instruction->dstA.index = ll_inst->srcB.operand[0].value;
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = 32;
 		instruction->srcA.store = STORE_DIRECT;

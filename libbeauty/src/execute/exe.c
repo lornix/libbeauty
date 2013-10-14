@@ -1637,7 +1637,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.init_value_type = value->init_value_type;
 		inst->value3.init_value = value->init_value;
 		inst->value3.offset_value = value->offset_value +
-			inst->value1.init_value;
+			inst->value2.init_value;
 		inst->value3.value_type = value->value_type;
 		inst->value3.ref_memory =
 			value->ref_memory;
