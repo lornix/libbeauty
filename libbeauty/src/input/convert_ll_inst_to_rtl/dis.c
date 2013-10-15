@@ -26,6 +26,7 @@
  Naming convention taken from Intel Instruction set manual, Appendix A. 25366713.pdf
 */
 #include <stdlib.h>
+#include <stdint.h>
 #include <rev.h>
 #include <instruction_low_level.h>
 
@@ -488,6 +489,10 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 	int tmp;
 	//int n;
 	int result = 1;
+	int8_t rel8;
+	int16_t rel16;
+	int32_t rel32;
+	int64_t rel64;
 	struct instruction_s *instruction;
 	dis_instructions->instruction_number = 0;
 	dis_instructions->bytes_used = ll_inst->octets;
@@ -516,15 +521,35 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcA.store = STORE_DIRECT;
 		instruction->srcA.indirect = IND_DIRECT;
 		instruction->srcA.indirect_size = 64;
-		instruction->srcA.index = ll_inst->srcB.operand[0].value;
+		uint64_t value = ll_inst->srcB.operand[0].value;
+		switch (ll_inst->srcB.operand[0].size) {
+		case 8:
+			rel8 = value;
+			rel64 = rel8;
+			value = rel64;
+			break;
+		case 16:
+			rel16 = value;
+			rel64 = rel16;
+			value = rel64;
+			break;
+		case 32:
+			rel32 = value;
+			rel64 = rel32;
+			value = rel64;
+			break;
+		case 64:
+			break;
+		}
+		instruction->srcA.index = value;
 		instruction->srcA.relocated = 0;
-		instruction->srcA.value_size = 32;
+		instruction->srcA.value_size = 64;
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_IP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 32;
+		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 0;
 		break;
