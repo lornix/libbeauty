@@ -2815,6 +2815,47 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	return 0;
 }
 
+int fill_phi_src_value_id(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size)
+{
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	int node;
+	int n;
+	int m;
+	int l;
+	int inst;
+	int node_source;
+	int value_id;
+	printf("fill_phi_src_value_id: entered\n");
+
+	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
+		printf("node = 0x%x\n", node);
+		if (nodes[node].phi_size > 0) {
+			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
+			for (n = 0; n < nodes[node].phi_size; n++) {
+				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
+					node_source = nodes[node].phi[n].phi_node[m].node;
+					/* FIXME: What to do if node_source == 0 ? */
+					if (node_source > 0) {
+						inst = nodes[node_source].used_register[nodes[node].phi[n].reg].dst;
+						inst_log1 =  &inst_log_entry[inst];
+						value_id = inst_log1->value3.value_id;
+						printf("fill_phi_src_value_id inst = 0x%x, value_id = 0x%x\n", inst, value_id);
+						nodes[node].phi[n].phi_node[m].value_id = value_id;
+					}
+				}
+			}
+		}
+	}
+	printf("fill_phi_src_value_id: exit\n");
+	return 0;
+}
+
 int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int node, int reg, int *value_id)
 {
 	int n;
@@ -5010,6 +5051,11 @@ int main(int argc, char *argv[])
 				debug_print(DEBUG_MAIN, 1, "Failed at external entry point %d:%s\n", l, external_entry_points[l].name);
 				exit(1);
 			}
+			for (n = 1; n < external_entry_points[l].nodes_size; n++) {
+				debug_print(DEBUG_MAIN, 1, "JCD10: node:0x%x: next_size = 0x%x\n", n, external_entry_points[l].nodes[n].next_size);
+			};
+				
+
 			tmp = analyse_multi_ret(self, paths, &paths_size, &multi_ret_size, &multi_ret);
 			if (multi_ret_size) {
 				debug_print(DEBUG_MAIN, 1, "tmp = %d, multi_ret_size = %d\n", tmp, multi_ret_size);
@@ -5027,6 +5073,9 @@ int main(int argc, char *argv[])
 					exit(1);
 				}
 			}
+			for (n = 1; n < external_entry_points[l].nodes_size; n++) {
+				debug_print(DEBUG_MAIN, 1, "JCD10: node:0x%x: next_size = 0x%x\n", n, external_entry_points[l].nodes[n].next_size);
+			};
 			//tmp = print_control_flow_paths(self, paths, &paths_size);
 
 			tmp = build_control_flow_loops(self, paths, &paths_size, loops, &loops_size);
@@ -5449,13 +5498,18 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-	/* Enter value id/label id of param into phi with src node 0. */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		for (m = 0; m < MAX_REG; m++) {
 			if (self->external_entry_points[l].param_reg_label[m]) {
 				debug_print(DEBUG_MAIN, 1, "Entry Point 0x%x: Found reg 0x%x as param label 0x%x\n", l, m,
 					self->external_entry_points[l].param_reg_label[m]);
 			}
+		}
+	}
+	/* Enter value id/label id of param into phi with src node 0. */
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_phi_src_value_id(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
 		}
 	}
 	/* Enter value id/label id of param into phi with src node 0. */
@@ -6478,6 +6532,14 @@ int main(int argc, char *argv[])
 
 	fclose(fd);
 
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid &&
+			external_entry_points[l].type == 1) {
+			for (n = 1; n < external_entry_points[l].nodes_size; n++) {
+				debug_print(DEBUG_MAIN, 1, "JCD11: node:0x%x: next_size = 0x%x\n", n, external_entry_points[l].nodes[n].next_size);
+			};
+		}
+	}
 	tmp = llvm_export(self);
 
 	bf_test_close_file(handle_void);
