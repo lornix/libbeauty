@@ -19,6 +19,26 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
+		int predicate_to_llvm_table[] =  {
+			0,  /// None
+			0,  /// FLAG_OVERFLOW
+			0,  /// FLAG_NOT_OVERFLOW
+			ICmpInst::ICMP_ULT,  ///< unsigned less than. FLAG_BELOW
+			ICmpInst::ICMP_UGE,  ///< unsigned greater or equal. FLAG_NOT_BELOW
+			ICmpInst::ICMP_EQ,  ///< equal. FLAG_EQUAL
+			ICmpInst::ICMP_NE,  ///< not equal. FLAG_NOT_EQUAL
+			ICmpInst::ICMP_ULE,  ///< unsigned less or equal. FLAG_BELOW_EQUAL
+			ICmpInst::ICMP_UGT,  ///< unsigned greater than. FLAG_ABOVE
+			0, /// FLAG_SIGNED
+			0, /// FLAG_NOT_SIGNED
+			0, /// FLAG_PARITY
+			0, /// FLAG_NOT_PARITY
+			ICmpInst::ICMP_SLT,  ///< signed less than
+			ICmpInst::ICMP_SGE,  ///< signed greater or equal
+			ICmpInst::ICMP_SLE,  ///< signed less or equal
+			ICmpInst::ICMP_SGT,  ///< signed greater than. 
+		};
+
 class LLVM_ir_export
 {
 	public:
@@ -27,6 +47,8 @@ class LLVM_ir_export
 		int add_node_instructions(struct self_s *self, Value **value, BasicBlock *bb, int node, int external_entry);
 		int fill_value(struct self_s *self, Value **value, int value_id, int external_entry);
 		int output(struct self_s *self);
+
+
 	private:
 		LLVMContext Context;
 };
@@ -166,6 +188,50 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		srcA = value[value_id];
 		ReturnInst::Create(Context, srcA, bb);
 		break;
+	case 0x23:  // ICMP
+		printf("LLVM 0x%x: OPCODE = 0x%x:ICMP\n", inst, inst_log1->instruction.opcode);
+		if (inst_log1->instruction.dstA.index == 0x28) {
+			/* Skip the 0x28 reg as it is the SP reg */
+			break;
+		}
+		printf("ICMP predicate = 0x%x\n", inst_log1->instruction.predicate);
+		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value2.value_id,
+			external_entry_point->label_redirect[inst_log1->value2.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				tmp = label_to_string(&external_entry_point->labels[value_id], buffer, 1023);
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x:%s\n", value_id, buffer);
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				tmp = label_to_string(&external_entry_point->labels[value_id], buffer, 1023);
+				printf("failed LLVM Value is NULL. srcB value_id = 0x%x:%s\n", value_id, buffer);
+				exit(1);
+			}
+		}
+		srcB = value[value_id];
+		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb);
+		dstA = new ICmpInst(*bb, ICmpInst::ICMP_EQ, srcA, srcB, buffer);
+		value[inst_log1->value3.value_id] = dstA;
+		break;
+		printf("LLVM 0x%x: Not yet handled.\n", inst);
+		break;
+	case 0x24:  // BC
+		printf("LLVM 0x%x: OPCODE = 0x%x:BC\n", inst, inst_log1->instruction.opcode);
+		printf("LLVM 0x%x: Not yet handled.\n", inst);
+		break;
 	case 0x25:  // LOAD
 		printf("LLVM 0x%x: OPCODE = 0x%x:LOAD\n", inst, inst_log1->instruction.opcode);
 		if (inst_log1->instruction.dstA.index == 0x28) {
@@ -270,11 +336,12 @@ int LLVM_ir_export::fill_value(struct self_s *self, Value **value, int value_id,
 			value[value_id] = ConstantInt::get(Type::getInt64Ty(Context), label->value);
 		} else {
 			printf("LLVM fill_value() failed with size_bits = 0x%lx\n", label->size_bits);
-			exit(1);
+			return 1;
 		}
 		return 0;
 	} else {
-		printf("LLVM fill_value(): label->scope = 0x%lx, label->type = 0x%lx\n",
+		printf("LLVM fill_value(): value_id = 0x%x, label->scope = 0x%lx, label->type = 0x%lx\n",
+			value_id,
 			label->scope,
 			label->type);
 	}
@@ -331,6 +398,7 @@ int LLVM_ir_export::output(struct self_s *self)
 			Function *F = Function::Create(FT, Function::ExternalLinkage, function_name, M);
 
 			Function::arg_iterator args = F->arg_begin();
+			printf("Function: %s()  param_size = 0x%x\n", function_name, external_entry_points[n].params_size);
 			for (m = 0; m < external_entry_points[n].params_size; m++) {
 				index = external_entry_points[n].params[m];
 				value[index] = args;
