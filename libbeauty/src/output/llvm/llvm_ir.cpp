@@ -503,16 +503,19 @@ int LLVM_ir_export::output(struct self_s *self)
 						buffer, bb[node]);
 					for (l = 0; l < nodes[node].phi[m].phi_node_size; l++) {
 						int value_id;
+						int redirect_value_id;
+						int first_previous_node;
 						value_id = nodes[node].phi[m].phi_node[l].value_id;
-						printf("LLVM:phi 0x%x:0x%x FPN=0x%x, SN=0x%x, value_id=0x%x, redirected_value_id=0x%lx\n",
+						redirect_value_id = label_redirect[value_id].redirect;
+						first_previous_node = nodes[node].phi[m].phi_node[l].first_prev_node;
+						printf("LLVM:phi 0x%x:0x%x FPN=0x%x, SN=0x%x, value_id=0x%x, redirected_value_id=0x%x\n",
 							m, l,
 							nodes[node].phi[m].phi_node[l].first_prev_node,
 							nodes[node].phi[m].phi_node[l].node,
 							value_id,
-							label_redirect[value_id].redirect);
+							redirect_value_id);
 						if (value_id > 0) {
-							//phi_node->addIncoming(value[label_redirect[value_id].redirect], bb[node]);
-							phi_node->addIncoming(value[0x112], bb[node]);
+							phi_node->addIncoming(value[redirect_value_id], bb[first_previous_node]);
 						}
 					}
 
