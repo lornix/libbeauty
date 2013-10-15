@@ -1883,6 +1883,13 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			switch (instruction->opcode) {
 			case MOV:
 			case SEX:
+				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value1\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				value_id = inst_log1->value3.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value3\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				break;
 			case LOAD:
 			case STORE:
 				debug_print(DEBUG_ANALYSE, 1, "SEX or MOV\n");
@@ -1919,20 +1926,15 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			case SAL:
 			case SAR:
 			case ICMP:
-				if (IND_MEM == instruction->dstA.indirect) {
-					value_id = inst_log1->value3.indirect_value_id;
-				} else {
-					value_id = inst_log1->value3.value_id;
-				}
-				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
-				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.indirect_value_id;
-				} else {
-					value_id = inst_log1->value1.value_id;
-				}
+				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				value_id = inst_log1->value2.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value2\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
+				value_id = inst_log1->value3.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value3\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				break;
 			case JMP:
 				break;
