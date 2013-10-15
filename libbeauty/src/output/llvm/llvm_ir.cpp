@@ -43,8 +43,8 @@ class LLVM_ir_export
 {
 	public:
 		int find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node);
-		int add_instruction(struct self_s *self, Value **value, BasicBlock *bb, int external_entry, int inst);
-		int add_node_instructions(struct self_s *self, Value **value, BasicBlock *bb, int node, int external_entry);
+		int add_instruction(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry, int inst);
+		int add_node_instructions(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry);
 		int fill_value(struct self_s *self, Value **value, int value_id, int external_entry);
 		int output(struct self_s *self);
 
@@ -69,17 +69,20 @@ int LLVM_ir_export::find_function_member_node(struct self_s *self, struct extern
 	return found;
 }
 
-int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlock *bb, int external_entry, int inst)
+int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry, int inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
 	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[external_entry]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;;
 	Value *srcA;
 	Value *srcB;
 	Value *dstA;
 	int value_id;
 	int tmp;
 	char buffer[1024];
+	int node_true;
+	int node_false;
 
 	switch (inst_log1->instruction.opcode) {
 	case 1:  // MOV
@@ -138,7 +141,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		srcB = value[value_id];
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb);
+		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb[node]);
 		value[inst_log1->value3.value_id] = dstA;
 		break;
 	case 4:  // SUB
@@ -172,7 +175,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		srcB = value[value_id];
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-		dstA = BinaryOperator::CreateSub(srcA, srcB, buffer, bb);
+		dstA = BinaryOperator::CreateSub(srcA, srcB, buffer, bb[node]);
 		value[inst_log1->value3.value_id] = dstA;
 		break;
 	case 0x1e:  // RET
@@ -182,11 +185,12 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
 			if (tmp) {
 				printf("failed LLVM Value is NULL\n");
-				exit(1);
+				//exit(1);
+				break;
 			}
 		}
 		srcA = value[value_id];
-		ReturnInst::Create(Context, srcA, bb);
+		ReturnInst::Create(Context, srcA, bb[node]);
 		break;
 	case 0x23:  // ICMP
 		printf("LLVM 0x%x: OPCODE = 0x%x:ICMP\n", inst, inst_log1->instruction.opcode);
@@ -223,14 +227,28 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
 		//dstA = new ICmpInst(*bb, ICmpInst::ICMP_EQ, srcA, srcB, buffer);
-		dstA = new ICmpInst(*bb, predicate_to_llvm_table[inst_log1->instruction.predicate], srcA, srcB, buffer);
+		dstA = new ICmpInst(*bb[node], predicate_to_llvm_table[inst_log1->instruction.predicate], srcA, srcB, buffer);
 		value[inst_log1->value3.value_id] = dstA;
-		break;
-		printf("LLVM 0x%x: Not yet handled.\n", inst);
 		break;
 	case 0x24:  // BC
 		printf("LLVM 0x%x: OPCODE = 0x%x:BC\n", inst, inst_log1->instruction.opcode);
-		printf("LLVM 0x%x: Not yet handled.\n", inst);
+		printf("value_id1 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				tmp = label_to_string(&external_entry_point->labels[value_id], buffer, 1023);
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x:%s\n", value_id, buffer);
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		//BranchInst::Create(label_7, label_9, int1_11, label_6);
+		node_true = nodes[node].link_next[0].node;
+		node_false = nodes[node].link_next[1].node;
+		BranchInst::Create(bb[node_true], bb[node_false], srcA, bb[node]);
 		break;
 	case 0x25:  // LOAD
 		printf("LLVM 0x%x: OPCODE = 0x%x:LOAD\n", inst, inst_log1->instruction.opcode);
@@ -247,7 +265,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		if (value_id) {
 			srcA = value[value_id];
 			tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-			dstA = new LoadInst(srcA, buffer, false, bb);
+			dstA = new LoadInst(srcA, buffer, false, bb[node]);
 		} else {
 			printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
 		}
@@ -286,7 +304,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 			printf("LLVM 0x%x: FIXME: Invalid srcB value_id\n", inst);
 			break;
 		}
-		dstA = new StoreInst(srcA, srcB, false, bb);
+		dstA = new StoreInst(srcA, srcB, false, bb[node]);
 		break;
 	default:
 		printf("LLVM 0x%x: OPCODE = 0x%x. Not yet handled.\n", inst, inst_log1->instruction.opcode);
@@ -296,7 +314,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 	return 0;
 } 
 
-int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, BasicBlock *bb, int node, int external_entry) 
+int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, BasicBlock **bb, int node, int external_entry) 
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
@@ -313,7 +331,7 @@ int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, Ba
 	do {
 		inst = inst_next;
 		inst_log1 =  &inst_log_entry[inst];
-		add_instruction(self, value, bb, external_entry, inst);
+		add_instruction(self, value, bb, node, external_entry, inst);
 		if (inst_log1->next_size > 0) {
 			inst_next = inst_log1->next[0];
 		}
@@ -454,7 +472,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					// int32_local1_0->addIncoming(const_int32_5, label_7);
 				}
 				/* FIXME: Output instuctions within the node */
-				LLVM_ir_export::add_node_instructions(self, value, bb[node], node, n);
+				LLVM_ir_export::add_node_instructions(self, value, bb, node, n);
 #if 0
 				/* FIXME: Output terminator instructions */
 				if (nodes[node].next_size == 0) {
