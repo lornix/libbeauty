@@ -19,20 +19,20 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
-		int predicate_to_llvm_table[] =  {
-			0,  /// None
-			0,  /// FLAG_OVERFLOW
-			0,  /// FLAG_NOT_OVERFLOW
+		CmpInst::Predicate predicate_to_llvm_table[] =  {
+			ICmpInst::FCMP_FALSE,  /// None
+			ICmpInst::FCMP_FALSE,  /// FLAG_OVERFLOW
+			ICmpInst::FCMP_FALSE,  /// FLAG_NOT_OVERFLOW
 			ICmpInst::ICMP_ULT,  ///< unsigned less than. FLAG_BELOW
 			ICmpInst::ICMP_UGE,  ///< unsigned greater or equal. FLAG_NOT_BELOW
 			ICmpInst::ICMP_EQ,  ///< equal. FLAG_EQUAL
 			ICmpInst::ICMP_NE,  ///< not equal. FLAG_NOT_EQUAL
 			ICmpInst::ICMP_ULE,  ///< unsigned less or equal. FLAG_BELOW_EQUAL
 			ICmpInst::ICMP_UGT,  ///< unsigned greater than. FLAG_ABOVE
-			0, /// FLAG_SIGNED
-			0, /// FLAG_NOT_SIGNED
-			0, /// FLAG_PARITY
-			0, /// FLAG_NOT_PARITY
+			ICmpInst::FCMP_FALSE, /// FLAG_SIGNED
+			ICmpInst::FCMP_FALSE, /// FLAG_NOT_SIGNED
+			ICmpInst::FCMP_FALSE, /// FLAG_PARITY
+			ICmpInst::FCMP_FALSE, /// FLAG_NOT_PARITY
 			ICmpInst::ICMP_SLT,  ///< signed less than
 			ICmpInst::ICMP_SGE,  ///< signed greater or equal
 			ICmpInst::ICMP_SLE,  ///< signed less or equal
@@ -222,8 +222,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		srcB = value[value_id];
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb);
-		dstA = new ICmpInst(*bb, ICmpInst::ICMP_EQ, srcA, srcB, buffer);
+		//dstA = new ICmpInst(*bb, ICmpInst::ICMP_EQ, srcA, srcB, buffer);
+		dstA = new ICmpInst(*bb, predicate_to_llvm_table[inst_log1->instruction.predicate], srcA, srcB, buffer);
 		value[inst_log1->value3.value_id] = dstA;
 		break;
 		printf("LLVM 0x%x: Not yet handled.\n", inst);
