@@ -3410,6 +3410,7 @@ int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point
 		instruction =  &inst_log1->instruction;
 		switch (instruction->opcode) {
 		case MOV:
+			/* MOV reg,reg */
 			if ((IND_DIRECT == instruction->srcA.indirect) &&
 				(STORE_REG == instruction->srcA.store) &&
 				(IND_DIRECT == instruction->dstA.indirect) &&
@@ -3419,7 +3420,17 @@ int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point
 				value_id3 = inst_log1->value3.value_id;
 				/* Use the redirect as the source in case the source value_id has previously been redirected */
 				label_redirect[value_id3].redirect = label_redirect[value_id].redirect;
-			}
+			/* MOV imm,reg */
+			} else if ((IND_DIRECT == instruction->srcA.indirect) &&
+				(STORE_DIRECT == instruction->srcA.store) &&
+				(IND_DIRECT == instruction->dstA.indirect) &&
+				(STORE_REG == instruction->dstA.store)) {
+
+				value_id = inst_log1->value1.value_id;
+				value_id3 = inst_log1->value3.value_id;
+				/* Use the redirect as the source in case the source value_id has previously been redirected */
+				label_redirect[value_id3].redirect = label_redirect[value_id].redirect;
+			} 
 			break;
 		default:
 			break;
