@@ -1605,6 +1605,8 @@ int analyse_merge_nodes(struct self_s *self, int function, int node_a, int node_
 		nodes[node_b].link_next[0].node = node_new;
 	}
 
+	debug_print(DEBUG_ANALYSE, 1, "merge_nodes:  node_a = 0x%x, node_b = 0x%x\n", node_a, node_b);
+	debug_print(DEBUG_ANALYSE, 1, "merge_nodes: next_size: node_a = 0x%x, node_b = 0x%x\n", nodes[node_a].next_size, nodes[node_b].next_size);
 	return ret;
 }
 
