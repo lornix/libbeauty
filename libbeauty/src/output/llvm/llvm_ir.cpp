@@ -498,6 +498,7 @@ int LLVM_ir_export::output(struct self_s *self)
 				for (m = 0; m < nodes[node].phi_size; m++) {
 					printf("LLVM:phi 0x%x\n", m);
 					tmp = label_to_string(&labels[nodes[node].phi[m].value_id], buffer, 1023);
+					printf("LLVM phi base size = 0x%lx\n", labels[nodes[node].phi[m].value_id].size_bits);
 					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), 32),
 						nodes[node].phi[m].phi_node_size,
 						buffer, bb[node]);
@@ -508,12 +509,13 @@ int LLVM_ir_export::output(struct self_s *self)
 						value_id = nodes[node].phi[m].phi_node[l].value_id;
 						redirect_value_id = label_redirect[value_id].redirect;
 						first_previous_node = nodes[node].phi[m].phi_node[l].first_prev_node;
-						printf("LLVM:phi 0x%x:0x%x FPN=0x%x, SN=0x%x, value_id=0x%x, redirected_value_id=0x%x\n",
+						printf("LLVM:phi 0x%x:0x%x FPN=0x%x, SN=0x%x, value_id=0x%x, redirected_value_id=0x%x, size=0x%lx\n",
 							m, l,
 							nodes[node].phi[m].phi_node[l].first_prev_node,
 							nodes[node].phi[m].phi_node[l].node,
 							value_id,
-							redirect_value_id);
+							redirect_value_id,
+							labels[redirect_value_id].size_bits);
 						if (value_id > 0) {
 							phi_node->addIncoming(value[redirect_value_id], bb[first_previous_node]);
 						}

@@ -5396,8 +5396,9 @@ int main(int argc, char *argv[])
 						external_entry_points[l].label_redirect[external_entry_points[l].variable_id].redirect = external_entry_points[l].variable_id;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].scope = label.scope;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].type = label.type;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].lab_pointer += label.lab_pointer;
 						external_entry_points[l].labels[external_entry_points[l].variable_id].value = label.value;
+						external_entry_points[l].labels[external_entry_points[l].variable_id].size_bits = label.size_bits;
+						external_entry_points[l].labels[external_entry_points[l].variable_id].lab_pointer += label.lab_pointer;
 						external_entry_points[l].variable_id++;
 					} else {
 						debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed\n");
