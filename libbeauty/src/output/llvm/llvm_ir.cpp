@@ -496,10 +496,11 @@ int LLVM_ir_export::output(struct self_s *self)
 
 				/* FIXME: Output PHI instructions first */
 				for (m = 0; m < nodes[node].phi_size; m++) {
+					int size_bits = labels[nodes[node].phi[m].value_id].size_bits;
 					printf("LLVM:phi 0x%x\n", m);
 					tmp = label_to_string(&labels[nodes[node].phi[m].value_id], buffer, 1023);
-					printf("LLVM phi base size = 0x%lx\n", labels[nodes[node].phi[m].value_id].size_bits);
-					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), 32),
+					printf("LLVM phi base size = 0x%x\n", size_bits);
+					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), size_bits),
 						nodes[node].phi[m].phi_node_size,
 						buffer, bb[node]);
 					for (l = 0; l < nodes[node].phi[m].phi_node_size; l++) {

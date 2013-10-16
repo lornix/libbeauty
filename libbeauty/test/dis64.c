@@ -2856,6 +2856,48 @@ int fill_phi_src_value_id(struct self_s *self, struct control_flow_node_s *nodes
 	return 0;
 }
 
+int fill_phi_dst_size_from_src_size(struct self_s *self, int entry_point)
+{
+	struct label_s *labels = self->external_entry_points[entry_point].labels;
+	struct control_flow_node_s *nodes = self->external_entry_points[entry_point].nodes;
+	int nodes_size = self->external_entry_points[entry_point].nodes_size;
+	int node;
+	int n;
+	int m;
+	int l;
+	int value_id;
+	int first_size = 0;
+	struct label_s *label;
+	printf("fill_phi_dst_size: entered\n");
+
+	for (node = 1; node < nodes_size; node++) {
+		if (!nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
+		}
+		printf("node = 0x%x\n", node);
+		if (nodes[node].phi_size > 0) {
+			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
+			for (n = 0; n < nodes[node].phi_size; n++) {
+				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
+					value_id = nodes[node].phi[n].phi_node[m].value_id;
+					if (m == 0) {
+						first_size = labels[value_id].size_bits;
+					} else if (first_size != labels[value_id].size_bits) {
+						return 1;
+					}
+					printf("fill_phi_dst_size value_id = 0x%x, size = 0x%lx\n", value_id, labels[value_id].size_bits);
+				}
+				label = &labels[nodes[node].phi[n].value_id];
+				printf("fill_phi_dst_size setting phi dst size_bits to 0x%x\n", first_size);
+				label->size_bits = first_size;
+			}
+		}
+	}
+	printf("fill_phi_dst_size: exit\n");
+	return 0;
+}
+
 int find_reg_in_phi_list(struct self_s *self, struct control_flow_node_s *nodes, int nodes_size, int node, int reg, int *value_id)
 {
 	int n;
@@ -5522,6 +5564,11 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			tmp = fill_phi_src_value_id(self, external_entry_points[l].nodes, external_entry_points[l].nodes_size);
+		}
+	}
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			tmp = fill_phi_dst_size_from_src_size(self, l);
 		}
 	}
 	/* Enter value id/label id of param into phi with src node 0. */
