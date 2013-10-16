@@ -494,7 +494,7 @@ int LLVM_ir_export::output(struct self_s *self)
 			for (node = 1; node < nodes_size; node++) {
 				printf("LLVM: node=0x%x\n", node);
 
-				/* FIXME: Output PHI instructions first */
+				/* Output PHI instructions first */
 				for (m = 0; m < nodes[node].phi_size; m++) {
 					int size_bits = labels[nodes[node].phi[m].value_id].size_bits;
 					printf("LLVM:phi 0x%x\n", m);
@@ -503,7 +503,20 @@ int LLVM_ir_export::output(struct self_s *self)
 					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), size_bits),
 						nodes[node].phi[m].phi_node_size,
 						buffer, bb[node]);
-#if 0
+					/* The rest of the PHI instruction is added later */
+					value[nodes[node].phi[m].value_id] = phi_node;
+				}
+				LLVM_ir_export::add_node_instructions(self, value, bb, node, n);
+			}
+
+			for (node = 1; node < nodes_size; node++) {
+				printf("LLVM: node=0x%x\n", node);
+
+				for (m = 0; m < nodes[node].phi_size; m++) {
+					int size_bits = labels[nodes[node].phi[m].value_id].size_bits;
+					printf("LLVM:phi 0x%x\n", m);
+					printf("LLVM phi base size = 0x%x\n", size_bits);
+					PHINode* phi_node = (PHINode*)value[nodes[node].phi[m].value_id];
 					for (l = 0; l < nodes[node].phi[m].phi_node_size; l++) {
 						int value_id;
 						int redirect_value_id;
@@ -522,11 +535,7 @@ int LLVM_ir_export::output(struct self_s *self)
 							phi_node->addIncoming(value[redirect_value_id], bb[first_previous_node]);
 						}
 					}
-#endif
-					value[nodes[node].phi[m].value_id] = phi_node;
 				}
-				/* FIXME: Output instuctions within the node */
-				LLVM_ir_export::add_node_instructions(self, value, bb, node, n);
 			}
 			std::string ErrorInfo;
 			raw_fd_ostream OS(output_filename, ErrorInfo, sys::fs::F_Binary);
