@@ -468,10 +468,6 @@ int LLVM_ir_export::output(struct self_s *self)
 				bb[m] = BasicBlock::Create(Context, node_string, F);
 			}
 
-			//Value *Two = ConstantInt::get(Type::getInt32Ty(Context), 2);
-			//Value *Three = ConstantInt::get(Type::getInt32Ty(Context), 3);
-			//Value *Four = value[external_entry_points[n].params[0]];
-
 			/* Create the AllocaInst's */
 			for (m = 0; m < labels_size; m++) {
 				int size_bits;
@@ -527,75 +523,10 @@ int LLVM_ir_export::output(struct self_s *self)
 						}
 					}
 #endif
-					// int32_local1_0->addIncoming(const_int32_4, label_8);
-					// int32_local1_0->addIncoming(const_int32_5, label_9);
-					// int32_local1_0->addIncoming(const_int32_5, label_7);
 					value[nodes[node].phi[m].value_id] = phi_node;
 				}
 				/* FIXME: Output instuctions within the node */
 				LLVM_ir_export::add_node_instructions(self, value, bb, node, n);
-#if 0
-				/* FIXME: Output terminator instructions */
-				if (nodes[node].next_size == 0) {
-					printf("NEXT0 FOUND Add, Ret3\n");
-					//Value *Add = BinaryOperator::CreateAdd(Two, value[external_entry_points[n].params[0]], "addresult3", bb[node]);
-					Value *Add = BinaryOperator::CreateAdd(Two, Four, "addresult3", bb[node]);
-					/* FIXME: get the return correct, using value[]. */
-					ReturnInst::Create(Context, Add, bb[node]);
-				} else if (nodes[node].next_size == 1) {
-					int found = 0;
-					int branch_to_node = nodes[node].link_next[0].node;
-					printf("NEXT1 FOUND add ret2 branch_to_node = 0x%x\n", branch_to_node);
-					//tmp = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &l);
-					//if (!tmp) {
-					printf("Branch1 create: branch_to_node = 0x%x, node = 0x%x\n", branch_to_node, node);
-					Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult2", bb[node]);
-					BranchInst::Create(bb[branch_to_node], bb[node]);
-					//} else {
-					//	printf("NEXT NOT FOUND\n");
-					//}
-				} else if (nodes[node].next_size == 2) {
-					int node_false;
-					int node_true;
-					int found1 = 0;
-					int found2 = 0;
-					int branch_to_node;
-					branch_to_node = nodes[node].link_next[0].node;
-					node_false = branch_to_node;
-					//found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_false);
-					branch_to_node = nodes[node].link_next[1].node;
-					node_true = branch_to_node;
-					//found2 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_true);
-					//if ((!found1) && (!found2)) {
-					//	printf("Branch1 create: l = 0x%x, m = 0x%x\n", l, m);
-					//	printf("NEXT2 FOUND add ret1\n");
-					Value *cmpInst = BinaryOperator::CreateAdd(Two, Three, "addresult1", bb[node]);
-					BranchInst::Create(bb[node_false], bb[node_true], cmpInst, bb[node]);
-					//} else {
-					//	printf("NEXT2 NOT FOUND\n");
-					//}
-				} else {
-					int found1 = 0;
-					int branch_to_node;
-					int node_case;
-					branch_to_node = nodes[node].link_next[0].node;
-					printf("NEXT3+ HANDLED YET\n");
-					branch_to_node = nodes[node].link_next[0].node;
-					node_case = branch_to_node;
-					//found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_case);
-					Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult", bb[1]);
-					Value *cmpInst = BinaryOperator::CreateAdd(Two, Three, "addresult1", bb[node]);
-					SwitchInst *switch_inst = SwitchInst::Create(cmpInst, bb[node_case], nodes[node].next_size, bb[node]);
-					for (l = 0; l < nodes[node].next_size; l++) {
-						branch_to_node = nodes[node].link_next[l].node;
-						node_case = branch_to_node;
-						//found1 = find_function_member_node(self, &(external_entry_points[n]), branch_to_node, &node_case);
-						const APInt ap_int1 = APInt::APInt(32, l, false);
-						ConstantInt *const_int1 = ConstantInt::get(Context, ap_int1);
-						switch_inst->addCase(const_int1, bb[node_case]);
-					}
-				}
-#endif
 			}
 			std::string ErrorInfo;
 			raw_fd_ostream OS(output_filename, ErrorInfo, sys::fs::F_Binary);
@@ -605,10 +536,6 @@ int LLVM_ir_export::output(struct self_s *self)
 
 			WriteBitcodeToFile(M, OS);
 			delete M;
-
-			//Value *Add = BinaryOperator::CreateAdd(Two, Three, "addresult", bb[1]);
-			//BranchInst::Create(bb[2], bb[1]);			
-			//ReturnInst::Create(Context, Add, bb[2]);
 		}
 	}
 
