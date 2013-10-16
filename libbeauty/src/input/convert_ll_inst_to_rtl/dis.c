@@ -872,7 +872,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcB.store = STORE_DIRECT;
 		instruction->srcB.indirect = IND_DIRECT;
 		instruction->srcB.indirect_size = 64;
-		instruction->srcB.index = 8;
+		instruction->srcB.index = ll_inst->srcA.size >> 3;
 		instruction->srcB.relocated = 0;
 		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
@@ -892,7 +892,7 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->dstA.indirect_size = 64;
 		instruction->dstA.index = REG_SP;
 		instruction->dstA.relocated = 0;
-		instruction->dstA.value_size = 64;
+		instruction->dstA.value_size = ll_inst->srcA.size;
 		dis_instructions->instruction_number++;
 		result = 0;
 		break;
@@ -930,9 +930,9 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		instruction->srcB.store = STORE_DIRECT;
 		instruction->srcB.indirect = IND_DIRECT;
 		instruction->srcB.indirect_size = 64;
-		instruction->srcB.index = 4;
+		instruction->srcB.index = ll_inst->srcA.size >> 3;
 		instruction->srcB.relocated = 0;
-		instruction->srcB.value_size = 32;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 0;
 		break;
