@@ -180,10 +180,12 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		value[inst_log1->value3.value_id] = dstA;
 		break;
 	case 0x11:  // JMP
-		printf("LLVM 0x%x: OPCODE = 0x%x:JMP\n", inst, inst_log1->instruction.opcode);
-		node_true = nodes[node].link_next[0].node;
-		BranchInst::Create(bb[node_true], bb[node]);
-		result = 1;
+		printf("LLVM 0x%x: OPCODE = 0x%x:JMP node_end = 0x%x\n", inst, inst_log1->instruction.opcode, inst_log1->node_end);
+		if (inst_log1->node_end) {
+			node_true = nodes[node].link_next[0].node;
+			BranchInst::Create(bb[node_true], bb[node]);
+			result = 1;
+		}
 		break;
 	case 0x1e:  // RET
 		printf("LLVM 0x%x: OPCODE = 0x%x:RET\n", inst, inst_log1->instruction.opcode);
@@ -352,7 +354,9 @@ int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, Ba
 			inst_next = inst_log1->next[0];
 		}
 		printf("tmp = 0x%x\n", tmp);
+		/* FIXME: is tmp really needed for block_end detection? */
 		block_end = (inst_log1->node_end || !(inst_log1->next_size) || tmp);
+		//block_end = (inst_log1->node_end || !(inst_log1->next_size));
 	} while (!block_end);
 
 	if (!tmp) {
@@ -503,6 +507,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), size_bits),
 						nodes[node].phi[m].phi_node_size,
 						buffer, bb[node]);
+#if 0
 					for (l = 0; l < nodes[node].phi[m].phi_node_size; l++) {
 						int value_id;
 						int redirect_value_id;
@@ -521,7 +526,7 @@ int LLVM_ir_export::output(struct self_s *self)
 							phi_node->addIncoming(value[redirect_value_id], bb[first_previous_node]);
 						}
 					}
-
+#endif
 					// int32_local1_0->addIncoming(const_int32_4, label_8);
 					// int32_local1_0->addIncoming(const_int32_5, label_9);
 					// int32_local1_0->addIncoming(const_int32_5, label_7);
