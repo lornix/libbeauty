@@ -91,10 +91,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		 * (1) is a NOP in LLVM IR, (2) is a fill value but no OP.
 		 */
 		printf("LLVM 0x%x: OPCODE = 0x%x:MOV\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
 			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
@@ -113,10 +113,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		break;
 	case 2:  // ADD
 		printf("LLVM 0x%x: OPCODE = 0x%x:ADD\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
 			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
@@ -147,10 +147,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		break;
 	case 4:  // SUB
 		printf("LLVM 0x%x: OPCODE = 0x%x:SUB\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
 			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
@@ -205,10 +205,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		break;
 	case 0x23:  // ICMP
 		printf("LLVM 0x%x: OPCODE = 0x%x:ICMP\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("ICMP predicate = 0x%x\n", inst_log1->instruction.predicate);
 		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
@@ -264,10 +264,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		break;
 	case 0x25:  // LOAD
 		printf("LLVM 0x%x: OPCODE = 0x%x:LOAD\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
 			inst_log1->value1.indirect_value_id,
 			external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect,
@@ -291,10 +291,10 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		break;
 	case 0x26:  // STORE
 		printf("LLVM 0x%x: OPCODE = 0x%x:STORE\n", inst, inst_log1->instruction.opcode);
-		if (inst_log1->instruction.dstA.index == 0x28) {
-			/* Skip the 0x28 reg as it is the SP reg */
-			break;
-		}
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
 		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
 			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
