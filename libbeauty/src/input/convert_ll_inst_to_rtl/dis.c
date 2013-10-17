@@ -237,8 +237,8 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			printf("FAILED: dstA KIND_IND_SCALE\n");
 			exit(1);
 		}
-		if (srcA_operand->kind == KIND_SCALE) {
-			scale_operand = srcA_operand;
+		if (srcB_operand->kind == KIND_SCALE) {
+			scale_operand = srcB_operand;
 			// Most likely opcode LEA. Deal with scale, put result in REG_TMP1
 			if (scale_operand->operand[2].value == 0) {
 				previous_operand = &operand_empty;
@@ -320,9 +320,9 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			}
 			final_opcode = MOV;
 		}
-		if (ll_inst->srcB.kind == KIND_SCALE) {
+		if (ll_inst->srcA.kind == KIND_SCALE) {
 			// Deal with scale, put result in REG_TMP1
-			printf("FAILED: srcB KIND_IND_SCALE\n");
+			printf("FAILED: srcA KIND_IND_SCALE\n");
 			exit(1);
 		}
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -485,6 +485,18 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 	return result;
 }
 
+int copy_operand(struct operand_low_level_s *src, struct operand_low_level_s *dst) {
+	int n;
+	dst->kind = src->kind;
+	dst->size = src->size;
+	for (n = 0; n < 16; n++) {
+		dst->operand[n].value = src->operand[n].value;
+		dst->operand[n].size = src->operand[n].size;
+		dst->operand[n].offset = src->operand[n].offset;
+	}
+	return 0;
+}
+
 int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_instructions_s *dis_instructions) {
 	int tmp;
 	//int n;
@@ -504,6 +516,8 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		result = 0;
 		break;
 	case MOV:
+		copy_operand(&ll_inst->srcB, &ll_inst->srcA);
+		ll_inst->srcB.kind = KIND_EMPTY;
 		tmp  = convert_base(ll_inst, 0, dis_instructions);
 		result = tmp;
 		break;

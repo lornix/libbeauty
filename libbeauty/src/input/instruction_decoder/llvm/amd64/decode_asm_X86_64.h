@@ -39,11 +39,11 @@ DecodeAsmX86_64() {}
 int DecodeAsmInstruction(uint8_t *Bytes,
 	uint64_t BytesSize, uint64_t PC,
 	struct instruction_low_level_s *ll_inst);
-
 int setup();
 int DecodeInstruction(uint8_t *Bytes,
 	uint64_t BytesSize, uint64_t PC,
 	struct instruction_low_level_s *ll_inst);
+int copy_operand(struct operand_low_level_s *src, struct operand_low_level_s *dst);
 int PrintOperand(struct operand_low_level_s *operand);
 int PrintInstruction(struct instruction_low_level_s *ll_inst);
 
