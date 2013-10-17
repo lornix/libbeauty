@@ -294,6 +294,24 @@ struct test_data_s test_data[] = {
 		.operands_type = 1,
 		.operands = NULL
 	},
+	{
+		.valid = 1,
+		// subl   $0x1,-0x8(%rbp)
+		.bytes = {0x83, 0x6d, 0xf8, 0x01},
+		.bytes_size = 4,
+		.opcode = NOP,
+		.operands_type = 1,
+		.operands = NULL
+	},
+	{
+		.valid = 1,
+		// addl   $0x1,-0x4(%rbp)
+		.bytes = {0x83, 0x45, 0xfc, 0x01},
+		.bytes_size = 4,
+		.opcode = NOP,
+		.operands_type = 1,
+		.operands = NULL
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
@@ -384,6 +402,7 @@ int main(int argc, char *argv[])
 	size_t buffer_size = 0;
 	const char *opcode_name = NULL;
 	void *inst;
+	int test_result;
 
 	if (argc != 2) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -484,15 +503,18 @@ int main(int argc, char *argv[])
 		ll_inst->srcA.kind = KIND_EMPTY;
 		ll_inst->srcB.kind = KIND_EMPTY;
 		ll_inst->dstA.kind = KIND_EMPTY;
-		octets = LLVMInstructionDecodeAsmX86_64(DA, buffer,
+		test_result = LLVMInstructionDecodeAsmX86_64(DA, buffer,
 			buffer_size, offset,
 			ll_inst);
 //		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
-		printf("LLVM DIS2 octets = 0x%x:", octets);
-		for (n = 0; n < octets; n++) {
-			printf("%02x ", buffer[n]);
+		printf("LLVM DIS2 test_result = 0x%x:", test_result);
+		if (test_result == 1) {
+			printf("TEST 0x%x FAILED AT: ", l);
+			for (n = 0; n < buffer_size; n++) {
+				printf("%02x ", buffer[n]);
+			}
+			printf("\n");
 		}
-		printf("\n");
 		printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 		tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
 		tmp = convert_ll_inst_to_rtl(ll_inst, &dis_instructions);
