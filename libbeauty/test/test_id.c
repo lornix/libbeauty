@@ -161,98 +161,130 @@ struct test_data_s test_data[] = {
 		// movzbl  -96(%rbp), %esi
 		.bytes = {0x0f, 0xb6, 0x75, 0xa0},
 		.bytes_size = 6,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x60/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/8, r0x98/8",
+		.inst[2] = "// 0x0002:MOV  r0x98/8, r0x38/32",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// movzbl  1061(%rbx), %edx
 		.bytes = {0x0f, 0xb6, 0x93, 0x25, 0x04, 0x00, 0x00},
 		.bytes_size = 7,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:ADD  r0x20/64, i0x425/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  m[r0x90]/8, r0x98/8",
+		.inst[2] = "// 0x0002:MOV  r0x98/8, r0x18/32",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// movq    $0, %rdx
 		.bytes = {0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00},
 		.bytes_size = 7,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:MOV  i0x0/64, r0x18/64",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
 		// movl    $4294967201, -104(%rbp)
 		.bytes = {0xc7, 0x45, 0x98, 0xa1, 0xff, 0xff, 0xff},
 		.bytes_size = 7,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x68/64, r0x90/64",
+		.inst[1] = "// 0x0001:MOV  i0xffffffa1/32, r0x98/32",
+		.inst[2] = "// 0x0002:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// movb    $12, 1046(%r12)
 		.bytes = {0x41, 0xc6, 0x84, 0x24, 0x16, 0x04, 0x00, 0x00, 0x0c},
 		.bytes_size = 9,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:ADD  r0x70/64, i0x416/64, r0x90/64",
+		.inst[1] = "// 0x0001:MOV  i0xc/8, r0x98/8",
+		.inst[2] = "// 0x0002:STORE  r0x98/8, r0x90/64, m[r0x90]/8",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// push   %rbp
 		.bytes = {0x55},
 		.bytes_size = 1,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SUB  r0x28/64, i0x8/64, r0x28/64",
+		.inst[1] = "// 0x0001:STORE  r0x30/64, r0x28/64, s[r0x28]/64",
+		.inst_size = 2,
 	},
 	{
 		.valid = 1,
 		// sarl	$2, %esi
 		.bytes = {0xc1, 0xfe, 0x02},
 		.bytes_size = 3,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SARf r0x38/32, i0x2/8, r0x38/32",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
 		// movslq %esi,%rsi
 		.bytes = {0x48, 0x63, 0xf6},
 		.bytes_size = 3,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SEX  r0x38/32, i0x0/0, r0x38/64",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
-		// shl    $0x2,%rsi
+		// shlq    $0x2,%rsi
 		.bytes = {0x48, 0xc1, 0xe6, 0x02},
 		.bytes_size = 4,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SHLf r0x38/64, i0x2/8, r0x38/64",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
-		// mov    %rsp,%rbp
+		// movq    %rsp,%rbp
 		.bytes = {0x48, 0x89, 0xe5},
 		.bytes_size = 3,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:MOV  r0x28/64, r0x30/64",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
-		// add    0x60(%rdi),%rsi
+		// addq   0x60(%rdi),%rsi
 		.bytes = {0x48, 0x03, 0x77, 0x60},
 		.bytes_size = 4,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:ADD  r0x40/64, i0x60/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  m[r0x90]/64, r0x98/64",
+		.inst[2] = "// 0x0002:ADDf r0x38/64, r0x98/64, r0x38/64",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// mov    (%rsi),%eax
 		.bytes = {0x8b, 0x06},
 		.bytes_size = 2,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:MOV  r0x38/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  m[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:MOV  r0x98/32, r0x8/32",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// leaveq
 		.bytes = {0xc9},
 		.bytes_size = 1,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:MOV  r0x30/64, r0x28/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x28]/64, r0x30/64",
+		.inst[2] = "// 0x0002:ADD  r0x28/64, i0x8/64, r0x28/64",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
 		// retq
 		.bytes = {0xc3},
 		.bytes_size = 1,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:LOAD  s[r0x28]/64, r0x90/64",
+		.inst[1] = "// 0x0001:ADD  r0x28/64, i0x8/64, r0x28/64",
+		.inst[2] = "// 0x0002:NOP ",
+		.inst[3] = "// 0x0003:MOV  r0x90/64, r0x48/64",
+		.inst_size = 4,
 	},
 	{
 		.valid = 1,
@@ -266,14 +298,22 @@ struct test_data_s test_data[] = {
 		// subl   $0x1,-0x8(%rbp)
 		.bytes = {0x83, 0x6d, 0xf8, 0x01},
 		.bytes_size = 4,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x4/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:SUBf r0x98/32, i0x1/32, r0x98/32",
+		.inst[3] = "// 0x0003:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
+		.inst_size = 4,
 	},
 	{
 		.valid = 1,
 		// addl   $0x1,-0x4(%rbp)
 		.bytes = {0x83, 0x45, 0xfc, 0x01},
 		.bytes_size = 4,
-		.inst_size = 0,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x4/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:ADDf r0x98/32, i0x1/32, r0x98/32",
+		.inst[3] = "// 0x0003:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
+		.inst_size = 4,
 	},
 };
 
@@ -364,7 +404,7 @@ int main(int argc, char *argv[])
 	size_t buffer_size = 0;
 	const char *opcode_name = NULL;
 	void *inst;
-	int test_result;
+	int *test_result;
 	struct string_s string1;
 	string1.len = 0;
 	string1.max = 1023;
@@ -424,6 +464,8 @@ int main(int argc, char *argv[])
 //	LLVMDecodeAsmOpcodesSource(DC); 
 
 	self = malloc(sizeof *self);
+	test_result = calloc(test_data_no, sizeof(int));
+
 	for (l = 0; l < test_data_no; l++) {
 //	for (l = 3; l < 4; l++) {
 		if (!test_data[l].valid) {
@@ -462,19 +504,19 @@ int main(int argc, char *argv[])
 		ll_inst->srcA.kind = KIND_EMPTY;
 		ll_inst->srcB.kind = KIND_EMPTY;
 		ll_inst->dstA.kind = KIND_EMPTY;
-		test_result = LLVMInstructionDecodeAsmX86_64(DA, buffer,
+		tmp = LLVMInstructionDecodeAsmX86_64(DA, buffer,
 			buffer_size, offset,
 			ll_inst);
 //		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
-		printf("LLVM DIS2 test_result = 0x%x:", test_result);
-		if (test_result == 1) {
+		printf("LLVM DIS2 test_result = 0x%x:", tmp);
+		if (tmp == 1) {
 			printf("TEST 0x%x FAILED AT: ", l);
 			for (n = 0; n < buffer_size; n++) {
 				printf("%02x ", buffer[n]);
 			}
 			printf("\n");
 		}
-		if (!test_result) {
+		if (!tmp) {
 			printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 			tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
 			tmp = convert_ll_inst_to_rtl(ll_inst, &dis_instructions);
@@ -490,16 +532,24 @@ int main(int argc, char *argv[])
 					tmp = printf("test data: len=%zd:%s\n", strlen(test_data[l].inst[m]), test_data[l].inst[m]);
 					tmp = strncmp(string1.string, test_data[l].inst[m], string1.len);
 					if (tmp) {
-						printf("TEST FAILED tmp = 0x%x\n", tmp);
+						printf("FAILED TEST 0x%x: tmp = 0x%x\n", l, tmp);
+						test_result[l] = 1;
 					}
 				} else {
-					printf("TEST FAILED wrong amount of instructions\n");
+					printf("FAILED TEST 0x%x: wrong amount of instructions\n", l);
+					test_result[l] = 2;
 				}
 
 			}
 		}
 		printf("END test data 0x%x\n", l);
 	
+	}
+	
+	for (l = 0; l < test_data_no; l++) {
+		if (test_result[l]) {
+			printf("FAILED TEST 0x%x: result = 0x%x\n", l, test_result[l]);
+		}
 	}
 
 	return 0;
