@@ -580,6 +580,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	struct label_s *label;
 	char buffer[1024];
+	struct string_s string1;
+	string1.len = 0;
+	string1.max = 1023;
+	string1.string[0] = 0;
 
 	inst_log1 =  &inst_log_entry[inst_number];
 	if (!inst_log1) {
@@ -594,7 +598,8 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	instruction =  &inst_log1->instruction;
 	//instruction_prev =  &inst_log1_prev->instruction;
 
-	write_inst(self, fd, instruction, inst_number, labels);
+	write_inst(self, &string1, instruction, inst_number, labels);
+	tmp = fprintf(stderr, "%s", string1.string);
 	tmp = fprintf(fd, "%s", cr);
 #if 0
 	tmp = fprintf(fd, "// ");

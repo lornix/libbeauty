@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <rev.h>
+#include <string.h>
 
 char *dis_flags_table[] = { " ", "f" };
 
@@ -88,7 +89,21 @@ const char * opcode_table[] = {
 char *store_table[] = { "i", "r", "m", "s" };
 char *indirect_table[] = { "", "m", "s", "p" };
 
-int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels)
+int string_cat(struct string_s *string, char *src, int src_length) {
+	int result = 1;
+	if ((string->len + src_length) < string->max) {
+		memcpy(&(string->string[string->len]), src, src_length);
+		string->len += src_length;
+		string->string[string->len] = 0;
+		result = 0;
+	} else {
+		printf("string_cat: FAILED. string len = 0x%x, src_length = 0x%x\n", string->len, src_length);
+	}
+	return result;
+}
+
+
+int write_inst(struct self_s *self, struct string_s *string, struct instruction_s *instruction, int instruction_number, struct label_s *labels)
 {
 	int ret = 1; /* Default to failed */
 	int tmp;
@@ -96,39 +111,47 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	int n, l;
 	char buffer[1024];
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
+
+	printf("string len = 0x%x, max = 0x%x\n", string->len, string->max);
+
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->opcode);
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->flags);
-	tmp = fprintf(fd, "// 0x%04x:%s%s",
+	tmp = snprintf(buffer, 1023, "// 0x%04x:%s%s",
 		instruction_number,
 		opcode_table[instruction->opcode],
 		dis_flags_table[instruction->flags]);
+	tmp = string_cat(string, buffer, strlen(buffer));
 
 	switch (instruction->opcode) {
 	case MOV:
 	case LOAD:
 		if (instruction->srcA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
@@ -153,123 +176,141 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 	/* FIXME: Add DIV */
 	//case DIV:
 		if (instruction->srcA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->srcB.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcB.indirect],
 				store_table[instruction->srcB.store],
 				instruction->srcB.index,
 				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcB.store],
 				instruction->srcB.index,
 				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
 	case ICMP:
-		tmp = fprintf(fd, " COND 0x%x,",
+		tmp = snprintf(buffer, 1023, " COND 0x%x,",
 			instruction->predicate);
 		if (instruction->srcA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->srcB.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcB.indirect],
 				store_table[instruction->srcB.store],
 				instruction->srcB.index,
 				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcB.store],
 				instruction->srcB.index,
 				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
 	case JMP:
 		if (instruction->srcA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
 	case BC:
 		if (instruction->srcA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
@@ -289,34 +330,38 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 				instruction->srcA.store = 0;
 			}
 			debug_print(DEBUG_OUTPUT, 1, "JMPT 0x%x 0x%x 0x%x\n", instruction->srcA.indirect, instruction->srcA.store, instruction->srcA.value_size);
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d,",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d,",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 				store_table[instruction->srcA.store],
 				instruction->srcA.index,
 				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		if (instruction->dstA.indirect) {
-			tmp = fprintf(fd, " %s[%s0x%"PRIx64"]/%d",
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
 				indirect_table[instruction->dstA.indirect],
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " %s0x%"PRIx64"/%d",
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
 	case IF:
-		tmp = fprintf(fd, " cond=%"PRIu64"", instruction->srcA.index);
-		tmp = fprintf(fd, " JMP-REL=0x%"PRIx64"", instruction->dstA.index);
+		tmp = snprintf(buffer, 1023, " cond=%"PRIu64"", instruction->srcA.index);
+		tmp = snprintf(buffer, 1023, " JMP-REL=0x%"PRIx64"", instruction->dstA.index);
 		ret = 0;
 		break;
 	case CALL:
@@ -333,9 +378,10 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 		}
 		if ((instruction->srcA.indirect == IND_DIRECT) &&
 			(instruction->srcA.relocated == 1)) {
-			tmp = fprintf(fd, " CALL2 0x%"PRIx64":%s(",
+			tmp = snprintf(buffer, 1023, " CALL2 0x%"PRIx64":%s(",
 				instruction->srcA.index,
 				external_entry_points[instruction->srcA.index].name);
+			tmp = string_cat(string, buffer, strlen(buffer));
 			tmp_state = 0;
 			l = instruction->srcA.index;
 			for (n = 0; n < external_entry_points[l].params_size; n++) {
@@ -345,12 +391,12 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 				if ((label->scope == 2) &&
 					(label->type == 1)) {
 					if (tmp_state > 0) {
-						fprintf(fd, ", ");
+						snprintf(buffer, 1023, ", ");
 					}
-					fprintf(fd, "int%"PRId64"_t ",
+					snprintf(buffer, 1023, "int%"PRId64"_t ",
 						label->size_bits);
 					tmp = label_to_string(label, buffer, 1023);
-					tmp = fprintf(fd, "%s", buffer);
+					tmp = snprintf(buffer, 1023, "%s", buffer);
 					tmp_state++;
 				}
 			}
@@ -362,30 +408,33 @@ int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction,
 					continue;
 				}
 				if (tmp_state > 0) {
-					fprintf(fd, ", ");
+					snprintf(buffer, 1023, ", ");
 				}
-				fprintf(fd, "int%"PRId64"_t ",
+				snprintf(buffer, 1023, "int%"PRId64"_t ",
 					label->size_bits);
+				tmp = string_cat(string, buffer, strlen(buffer));
 				tmp = label_to_string(label, buffer, 1023);
-				tmp = fprintf(fd, "%s", buffer);
+				tmp = snprintf(buffer, 1023, "%s", buffer);
 				tmp_state++;
 			}
-			tmp = fprintf(fd, ");");
+			tmp = snprintf(buffer, 1023, ");");
 		} else if (instruction->srcA.indirect == IND_MEM) {
-			tmp = fprintf(fd, "(*r0x%"PRIx64") ();", 
+			tmp = snprintf(buffer, 1023, "(*r0x%"PRIx64") ();", 
 				instruction->srcA.index);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
-			tmp = fprintf(fd, " CALL FAILED index=0x%"PRIx64"",
+			tmp = snprintf(buffer, 1023, " CALL FAILED index=0x%"PRIx64"",
 				instruction->srcA.index);
+			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;
 		break;
 	case NOP:
-		//tmp = fprintf(fd, "");
+		//tmp = snprintf(buffer, 1023, "");
 		ret = 0;
 		break;
 	case RET:
-		//tmp = fprintf(fd, "");
+		//tmp = snprintf(buffer, 1023, "");
 		ret = 0;
 		break;
 	default:
@@ -399,8 +448,13 @@ int print_inst(struct self_s *self, struct instruction_s *instruction, int instr
 {
 	int ret;
 	int tmp;
-
-	ret = write_inst(self, stderr, instruction, instruction_number, labels);
+	struct string_s string1;
+	string1.len = 0;
+	string1.max = 1023;
+	string1.string[0] = 0;
+	
+	ret = write_inst(self, &string1, instruction, instruction_number, labels);
+	tmp = fprintf(stderr, "%s", string1.string);
 	tmp = fprintf(stderr, "\n");
 	return ret;
 }

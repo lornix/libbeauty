@@ -118,9 +118,8 @@ struct test_data_s {
 	int	valid;
 	uint8_t bytes[16];
 	int bytes_size;
-	int	opcode;
-	int	operands_type;
-	int	*operands;
+	char *inst[10];
+	int inst_size;
 };
 
 //#define ADD 1
@@ -137,180 +136,144 @@ struct test_data_s test_data[] = {
 		// addl    %edi, %eax
 		.bytes = {0x01, 0xf8},
 		.bytes_size = 2,
-		.opcode = ADD,
-		.operands_type = 1,
-		.operands = NULL
+		.inst[0] = "// 0x0000:ADDf r0x8/32, r0x40/32, r0x8/32",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
 		// addb    $2, %al
 		.bytes = {0x04, 0x02},
 		.bytes_size = 2,
-		.opcode = ADD,
-		.operands_type = 1,
-		.operands = NULL
+		.inst[0] = "// 0x0000:ADDf r0x8/8, i0x2/8, r0x8/8",
+		.inst_size = 1,
 	},
 	{
 		.valid = 1,
 		// leal    291(%rdi), %eax
 		.bytes = {0x8d, 0x87, 0x23, 0x01, 0, 0},
 		.bytes_size = 6,
-		.opcode = LEA,
-		.operands_type = 1,
-		.operands = NULL
+		.inst[0] = "// 0x0000:ADD  r0x40/64, i0x123/64, r0x90/64",
+		.inst[1] = "// 0x0001:MOV  r0x90/64, r0x8/32",
+		.inst_size = 2,
 	},
 	{
 		.valid = 1,
 		// movzbl  -96(%rbp), %esi
 		.bytes = {0x0f, 0xb6, 0x75, 0xa0},
 		.bytes_size = 6,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// movzbl  1061(%rbx), %edx
 		.bytes = {0x0f, 0xb6, 0x93, 0x25, 0x04, 0x00, 0x00},
 		.bytes_size = 7,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// movq    $0, %rdx
 		.bytes = {0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00},
 		.bytes_size = 7,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// movl    $4294967201, -104(%rbp)
 		.bytes = {0xc7, 0x45, 0x98, 0xa1, 0xff, 0xff, 0xff},
 		.bytes_size = 7,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// movb    $12, 1046(%r12)
 		.bytes = {0x41, 0xc6, 0x84, 0x24, 0x16, 0x04, 0x00, 0x00, 0x0c},
 		.bytes_size = 9,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// push   %rbp
 		.bytes = {0x55},
 		.bytes_size = 1,
-		.opcode = PUSH,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// sarl	$2, %esi
 		.bytes = {0xc1, 0xfe, 0x02},
 		.bytes_size = 3,
-		.opcode = SAR,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// movslq %esi,%rsi
 		.bytes = {0x48, 0x63, 0xf6},
 		.bytes_size = 3,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// shl    $0x2,%rsi
 		.bytes = {0x48, 0xc1, 0xe6, 0x02},
 		.bytes_size = 4,
-		.opcode = SHL,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// mov    %rsp,%rbp
 		.bytes = {0x48, 0x89, 0xe5},
 		.bytes_size = 3,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// add    0x60(%rdi),%rsi
 		.bytes = {0x48, 0x03, 0x77, 0x60},
 		.bytes_size = 4,
-		.opcode = ADD,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// mov    (%rsi),%eax
 		.bytes = {0x8b, 0x06},
 		.bytes_size = 2,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// leaveq
 		.bytes = {0xc9},
 		.bytes_size = 1,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// retq
 		.bytes = {0xc3},
 		.bytes_size = 1,
-		.opcode = MOV,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// nopw   %cs:0x0(%rax,%rax,1)
 		.bytes = {0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00},
 		.bytes_size = 10,
-		.opcode = NOP,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// subl   $0x1,-0x8(%rbp)
 		.bytes = {0x83, 0x6d, 0xf8, 0x01},
 		.bytes_size = 4,
-		.opcode = NOP,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 	{
 		.valid = 1,
 		// addl   $0x1,-0x4(%rbp)
 		.bytes = {0x83, 0x45, 0xfc, 0x01},
 		.bytes_size = 4,
-		.opcode = NOP,
-		.operands_type = 1,
-		.operands = NULL
+		.inst_size = 0,
 	},
 };
 
@@ -402,6 +365,10 @@ int main(int argc, char *argv[])
 	const char *opcode_name = NULL;
 	void *inst;
 	int test_result;
+	struct string_s string1;
+	string1.len = 0;
+	string1.max = 1023;
+	string1.string[0] = 0;
 
 	if (argc != 1) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -515,7 +482,20 @@ int main(int argc, char *argv[])
 				printf("Unhandled instruction, not yet implemented convert\n");
 			}
 			for (m = 0; m < dis_instructions.instruction_number; m++) {
-				tmp = print_inst(self, &(dis_instructions.instruction[m]), m, NULL);
+				string1.len = 0;
+				string1.string[0] = 0;
+				tmp = write_inst(self, &string1, &(dis_instructions.instruction[m]), m, NULL);
+				tmp = printf("result:    len=%zd:%s\n", string1.len, string1.string);
+				if (test_data[l].inst_size == dis_instructions.instruction_number) {
+					tmp = printf("test data: len=%zd:%s\n", strlen(test_data[l].inst[m]), test_data[l].inst[m]);
+					tmp = strncmp(string1.string, test_data[l].inst[m], string1.len);
+					if (tmp) {
+						printf("TEST FAILED tmp = 0x%x\n", tmp);
+					}
+				} else {
+					printf("TEST FAILED wrong amount of instructions\n");
+				}
+
 			}
 		}
 		printf("END test data 0x%x\n", l);

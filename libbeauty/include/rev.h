@@ -67,6 +67,12 @@ struct extension_call_s {
 	int *params;
 };
 
+struct string_s {
+	char string[1024];
+	int len;
+	int max;
+};
+
 /* Params order:
  * int test30(int64_t param_reg0040, int64_t param_reg0038, int64_t param_reg0018, int64_t param_reg0010, int64_t param_reg0050, int64_t param_reg0058, int64_t param_stack0008, int64_t param_stack0010)
  */
@@ -199,7 +205,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr);
 uint32_t relocated_data(void *handle, uint64_t offset, uint64_t size);
 extern int print_inst(struct self_s *self, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
-extern int write_inst(struct self_s *self, FILE *fd, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
+extern int write_inst(struct self_s *self, struct string_s *string, struct instruction_s *instruction, int instruction_number, struct label_s *labels);
 extern int print_inst_short(struct self_s *self, struct instruction_s *instruction);
 extern int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t buffer_size, uint64_t offset);
 extern void disassemble_callback_start(struct self_s *self);
