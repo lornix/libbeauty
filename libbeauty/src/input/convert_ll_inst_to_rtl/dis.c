@@ -439,7 +439,7 @@ int convert_base(struct instruction_low_level_s *ll_inst, int flags, struct dis_
 			}
 			convert_operand(&operand_empty, 0, &(instruction->srcB));
 			convert_operand(&operand_reg_tmp2, 0, &(instruction->dstA));
-			instruction->dstA.value_size = ll_inst->dstA.size;
+			instruction->dstA.value_size = ll_inst->srcA.size;
 			dis_instructions->instruction_number++;
 		}
 		previous_operand = &operand_reg_tmp2;
