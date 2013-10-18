@@ -392,7 +392,6 @@ int main(int argc, char *argv[])
 	int offset = 0;
 	int tmp;
 	struct self_s *self = NULL;
-	const char *file;
 	LLVMDisasmContextRef DC;
 	LLVMDecodeAsmContextRef DC2;
 	LLVMDecodeAsmX86_64Ref DA;
@@ -404,13 +403,11 @@ int main(int argc, char *argv[])
 	void *inst;
 	int test_result;
 
-	if (argc != 2) {
+	if (argc != 1) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
-		debug_print(DEBUG_MAIN, 1, "Usage: dis64 filename\n");
-		debug_print(DEBUG_MAIN, 1, "Where \"filename\" is the input .o file\n");
+		debug_print(DEBUG_MAIN, 1, "Usage: test_id\n");
 		exit(1);
 	}
-	file = argv[1];
 
 	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
 	debug_print(DEBUG_MAIN, 1, "size_of test_data = 0x%lx\n", sizeof(test_data));
@@ -418,11 +415,6 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "number of test_data entries = 0x%lx\n", sizeof(test_data) / sizeof(struct test_data_s));
 	debug_print(DEBUG_MAIN, 1, "test_data_no = 0x%lx\n", test_data_no);
 
-	//self = malloc(sizeof *self);
-	//debug_print(DEBUG_MAIN, 1, "sizeof struct self_s = 0x%"PRIx64"\n", sizeof *self);
-	/* Open file is only used to enable the disassemler */
-//	handle_void = bf_test_open_file(file);
-//	debug_print(DEBUG_MAIN, 1, "handle=%p\n", handle_void);
 //	LLVMInitializeAllTargetInfos();
 //	LLVMInitializeAllTargetMCs();
 //	LLVMInitializeAllAsmParsers();
