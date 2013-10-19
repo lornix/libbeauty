@@ -2843,9 +2843,17 @@ int fill_phi_src_value_id(struct self_s *self, struct control_flow_node_s *nodes
 					/* FIXME: What to do if node_source == 0 ? */
 					if (node_source > 0) {
 						inst = nodes[node_source].used_register[nodes[node].phi[n].reg].dst;
+						if (inst == 0) {
+							printf("FAILED: fill_phi_src_value_id inst should not be 0\n");
+							exit(1);
+						}
 						inst_log1 =  &inst_log_entry[inst];
 						value_id = inst_log1->value3.value_id;
 						printf("fill_phi_src_value_id inst = 0x%x, value_id = 0x%x\n", inst, value_id);
+						if (value_id == 0) {
+							printf("FAILED: fill_phi_src_value_id value_id should not be 0\n");
+							exit(1);
+						}
 						nodes[node].phi[n].phi_node[m].value_id = value_id;
 					}
 				}
@@ -2881,12 +2889,13 @@ int fill_phi_dst_size_from_src_size(struct self_s *self, int entry_point)
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
 					value_id = nodes[node].phi[n].phi_node[m].value_id;
+					printf("fill_phi_dst_size node = 0x%x, phi_reg = 0x%x, value_id = 0x%x, size = 0x%lx\n", node, nodes[node].phi[n].reg, value_id, labels[value_id].size_bits);
 					if (m == 0) {
 						first_size = labels[value_id].size_bits;
 					} else if (first_size != labels[value_id].size_bits) {
-						return 1;
+						printf("fill_phi_dst_size src sized do not match first_size 0x%x\n", first_size);
+						exit(1);
 					}
-					printf("fill_phi_dst_size value_id = 0x%x, size = 0x%lx\n", value_id, labels[value_id].size_bits);
 				}
 				label = &labels[nodes[node].phi[n].value_id];
 				printf("fill_phi_dst_size setting phi dst size_bits to 0x%x\n", first_size);
