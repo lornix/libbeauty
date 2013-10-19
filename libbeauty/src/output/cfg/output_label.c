@@ -599,7 +599,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	//instruction_prev =  &inst_log1_prev->instruction;
 
 	write_inst(self, &string1, instruction, inst_number, labels);
-	tmp = fprintf(stderr, "%s", string1.string);
+	tmp = fprintf(fd, "%s", string1.string);
 	tmp = fprintf(fd, "%s", cr);
 #if 0
 	tmp = fprintf(fd, "// ");
