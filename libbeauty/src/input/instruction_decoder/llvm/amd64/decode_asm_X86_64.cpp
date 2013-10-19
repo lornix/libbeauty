@@ -625,11 +625,11 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			int tmp;
 			value = Operand->getReg();
 			tmp = get_reg_size_helper(value, &reg_index);
-			ll_inst->srcA.kind = KIND_REG;
-			ll_inst->srcA.operand[0].value = helper_reg_table[reg_index].reg_number;
-			ll_inst->srcA.operand[0].size = helper_reg_table[reg_index].size;
-			ll_inst->srcA.operand[0].offset = 0;
-			outs() << format("SRC0.0 Reg: value = 0x%x, ", value);
+			ll_inst->srcB.kind = KIND_REG;
+			ll_inst->srcB.operand[0].value = helper_reg_table[reg_index].reg_number;
+			ll_inst->srcB.operand[0].size = helper_reg_table[reg_index].size;
+			ll_inst->srcB.operand[0].offset = 0;
+			outs() << format("SRC1.0 Reg: value = 0x%x, ", value);
 			outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
 			outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
 			outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);

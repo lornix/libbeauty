@@ -631,6 +631,8 @@ int convert_ll_inst_to_rtl(struct instruction_low_level_s *ll_inst, struct dis_i
 		result = tmp;
 		break;
 	case SEX: /* Signed Extention */
+		copy_operand(&ll_inst->srcB, &ll_inst->srcA);
+		ll_inst->srcB.kind = KIND_EMPTY;
 		tmp  = convert_base(ll_inst, 0, dis_instructions);
 		result = tmp;
 		break;

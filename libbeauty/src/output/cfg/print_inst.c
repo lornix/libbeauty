@@ -124,6 +124,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 
 	switch (instruction->opcode) {
 	case MOV:
+	case SEX:
 	case LOAD:
 		if (instruction->srcA.indirect) {
 			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
@@ -171,7 +172,6 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	case CMP:
 	case NOT:
 	case NEG:
-	case SEX:
 	case TEST:
 	/* FIXME: Add DIV */
 	//case DIV:

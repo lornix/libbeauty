@@ -226,7 +226,7 @@ struct test_data_s test_data[] = {
 		// movslq %esi,%rsi
 		.bytes = {0x48, 0x63, 0xf6},
 		.bytes_size = 3,
-		.inst[0] = "// 0x0000:SEX  r0x38/32, i0x0/0, r0x38/64",
+		.inst[0] = "// 0x0000:SEX  r0x38/32, r0x38/64",
 		.inst_size = 1,
 	},
 	{
@@ -322,6 +322,16 @@ struct test_data_s test_data[] = {
 		.bytes_size = 5,
 		.inst[0] = "// 0x0000:MOV  i0x123/32, r0x8/32",
 		.inst_size = 1,
+	},
+	{
+		.valid = 1,
+		// movslq -0x4(%rsp),%rax
+		.bytes = {0x48, 0x63, 0x44, 0x24, 0xfc},
+		.bytes_size = 5,
+		.inst[0] = "// 0x0000:SUB  r0x28/64, i0x4/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:SEX  r0x98/32, r0x8/64",
+		.inst_size = 3,
 	},
 };
 
