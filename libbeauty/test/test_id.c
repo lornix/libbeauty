@@ -315,6 +315,14 @@ struct test_data_s test_data[] = {
 		.inst[3] = "// 0x0003:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
 		.inst_size = 4,
 	},
+	{
+		.valid = 1,
+		// movl    $0x123,%eax
+		.bytes = {0xb8, 0x23, 0x01, 0x00, 0x00},
+		.bytes_size = 5,
+		.inst[0] = "// 0x0000:MOV  i0x123/32, r0x8/32",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
@@ -508,9 +516,9 @@ int main(int argc, char *argv[])
 			buffer_size, offset,
 			ll_inst);
 //		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
-		printf("LLVM DIS2 test_result = 0x%x:", tmp);
+		printf("LLVM DIS2 test_result = 0x%x\n", tmp);
 		if (tmp == 1) {
-			printf("TEST 0x%x FAILED AT: ", l);
+			printf("FAILED TEST 0x%x : ", l);
 			for (n = 0; n < buffer_size; n++) {
 				printf("%02x ", buffer[n]);
 			}

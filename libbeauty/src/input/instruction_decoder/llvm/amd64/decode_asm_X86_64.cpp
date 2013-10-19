@@ -392,12 +392,12 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				Operand->isImm() ) {
 				uint32_t value;
 				value = Operand->getImm();
-				ll_inst->srcA.kind = KIND_IMM;
-				ll_inst->srcA.operand[0].value = value;
-				ll_inst->srcA.operand[0].size = dis_info->size[1] * 8;
-				ll_inst->srcA.operand[0].offset = dis_info->offset[1];
-				outs() << format("SRC0.0 index multiplier Imm = 0x%x\n", value);
-				outs() << format("SRC0.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[1], dis_info->size[1], Bytes[dis_info->offset[2]]);
+				ll_inst->srcB.kind = KIND_IMM;
+				ll_inst->srcB.operand[0].value = value;
+				ll_inst->srcB.operand[0].size = dis_info->size[1] * 8;
+				ll_inst->srcB.operand[0].offset = dis_info->offset[1];
+				outs() << format("SRC1.0 index multiplier Imm = 0x%x\n", value);
+				outs() << format("SRC1.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[1], dis_info->size[1], Bytes[dis_info->offset[2]]);
 			}
 			result = 0;
 			break;
