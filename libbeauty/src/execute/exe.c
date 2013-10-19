@@ -970,8 +970,10 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		value = search_store(process_state->memory_reg,
 				instruction->dstA.index,
 				instruction->dstA.value_size);
-		value->length = instruction->dstA.value_size;
-		//inst->value3.length = inst->value2.length;
+		if (value) {
+			/* Only update it if is is found */
+			value->length = instruction->dstA.value_size;
+		}
 		debug_print(DEBUG_EXE, 1, "SEX dest length = %d %d\n", inst->value1.length, inst->value3.length);
 		inst->value3.init_value_type = inst->value1.init_value_type;
 		if (64 == inst->value3.length) {
