@@ -333,6 +333,14 @@ struct test_data_s test_data[] = {
 		.inst[2] = "// 0x0002:SEX  r0x98/32, r0x8/64",
 		.inst_size = 3,
 	},
+	{
+		.valid = 1,
+		// jmpq   *%rax
+		.bytes = {0xff, 0xe0},
+		.bytes_size = 2,
+		.inst[0] = "// 0x0000:JMPT  r0x8/64, r0x48/64",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
