@@ -2827,6 +2827,8 @@ int fill_phi_src_value_id(struct self_s *self, struct control_flow_node_s *nodes
 	int inst;
 	int node_source;
 	int value_id;
+	int reg;
+	int tmp;
 	printf("fill_phi_src_value_id: entered\n");
 
 	for (node = 1; node < nodes_size; node++) {
@@ -2840,16 +2842,25 @@ int fill_phi_src_value_id(struct self_s *self, struct control_flow_node_s *nodes
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
 					node_source = nodes[node].phi[n].phi_node[m].node;
+					reg = nodes[node].phi[n].reg;
 					/* FIXME: What to do if node_source == 0 ? */
 					if (node_source > 0) {
-						inst = nodes[node_source].used_register[nodes[node].phi[n].reg].dst;
+						inst = nodes[node_source].used_register[reg].dst;
 						if (inst == 0) {
-							printf("FAILED: fill_phi_src_value_id inst should not be 0\n");
-							exit(1);
+							/* Use the node_source phi instead. */
+							for (l = 0; l < nodes[node_source].phi_size; l++) {
+								tmp = nodes[node_source].phi[l].reg;
+								if (reg == tmp) {
+									value_id = nodes[node_source].phi[l].value_id;
+									break;
+								}
+							}
+							printf("fill_phi_src_value_id inst = 0x%x, value_id = 0x%x\n", inst, value_id);
+						} else {
+							inst_log1 =  &inst_log_entry[inst];
+							value_id = inst_log1->value3.value_id;
+							printf("fill_phi_src_value_id inst = 0x%x, value_id = 0x%x\n", inst, value_id);
 						}
-						inst_log1 =  &inst_log_entry[inst];
-						value_id = inst_log1->value3.value_id;
-						printf("fill_phi_src_value_id inst = 0x%x, value_id = 0x%x\n", inst, value_id);
 						if (value_id == 0) {
 							printf("FAILED: fill_phi_src_value_id value_id should not be 0\n");
 							exit(1);
@@ -2875,6 +2886,7 @@ int fill_phi_dst_size_from_src_size(struct self_s *self, int entry_point)
 	int l;
 	int value_id;
 	int first_size = 0;
+	int size_bits;
 	struct label_s *label;
 	printf("fill_phi_dst_size: entered\n");
 
@@ -2887,12 +2899,17 @@ int fill_phi_dst_size_from_src_size(struct self_s *self, int entry_point)
 		if (nodes[node].phi_size > 0) {
 			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
 			for (n = 0; n < nodes[node].phi_size; n++) {
+				first_size = 0;
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
 					value_id = nodes[node].phi[n].phi_node[m].value_id;
 					printf("fill_phi_dst_size node = 0x%x, phi_reg = 0x%x, value_id = 0x%x, size = 0x%lx\n", node, nodes[node].phi[n].reg, value_id, labels[value_id].size_bits);
-					if (m == 0) {
-						first_size = labels[value_id].size_bits;
-					} else if (first_size != labels[value_id].size_bits) {
+					size_bits = labels[value_id].size_bits;
+					if (size_bits == 0) {
+						continue;
+					}
+					if ((first_size == 0) && (size_bits != 0)) {
+						first_size = size_bits;
+					} else if (first_size != size_bits) {
 						printf("fill_phi_dst_size src sized do not match first_size 0x%x\n", first_size);
 						exit(1);
 					}
