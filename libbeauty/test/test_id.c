@@ -352,6 +352,16 @@ struct test_data_s test_data[] = {
 		.inst[3] = "// 0x0003:MOV  r0x98/64, r0x8/64",
 		.inst_size = 4,
 	},
+	{
+		.valid = 1,
+		// imul   $0x7,-0x8(%rsp),%rdi
+		.bytes = {0x48, 0x69, 0x7c, 0x24, 0xf8, 0x07, 0x00, 0x00, 0x00},
+		.bytes_size = 9,
+		.inst[0] = "// 0x0000:SUB  r0x28/64, i0x8/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/64, r0x98/64",
+		.inst[2] = "// 0x0002:IMULf i0x7/64, r0x98/64, r0x40/64",
+		.inst_size = 3,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

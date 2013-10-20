@@ -731,109 +731,214 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			result = 0;
 			break;
 		case 7:
-			Operand = &Inst->getOperand(0);
-			if (Operand->isValid() &&
-				Operand->isReg()) {
-				uint32_t value;
-				int reg_index = 0;
-				int tmp;
-				value = Operand->getReg();
-				tmp = get_reg_size_helper(value, &reg_index);
-				ll_inst->dstA.kind = KIND_REG;
-				ll_inst->dstA.operand[0].value = helper_reg_table[reg_index].reg_number;
-				ll_inst->dstA.operand[0].size = helper_reg_table[reg_index].size;
-				ll_inst->dstA.operand[0].offset = 0;
-				outs() << format("DST0.0 Reg: value = 0x%x, ", value);
-				outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
-				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
-				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+			switch (ll_inst->opcode) {
+			case IMUL:
+				Operand = &Inst->getOperand(0);
+				if (Operand->isValid() &&
+					Operand->isReg()) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->dstA.kind = KIND_REG;
+					ll_inst->dstA.operand[0].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->dstA.operand[0].size = helper_reg_table[reg_index].size;
+					ll_inst->dstA.operand[0].offset = 0;
+					outs() << format("DST0.0 Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				ll_inst->srcB.kind = KIND_IND_SCALE;
+				Operand = &Inst->getOperand(1);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[0].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[0].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[0].offset = 0;
+					outs() << format("SRC1.0 pointer Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				Operand = &Inst->getOperand(2);
+				if (Operand->isValid() &&
+					Operand->isImm() ) {
+					uint32_t value;
+					value = Operand->getImm();
+					ll_inst->srcB.operand[1].value = value;
+					ll_inst->srcB.operand[1].size = dis_info->size[2] * 8;
+					ll_inst->srcB.operand[1].offset = dis_info->offset[2];
+					outs() << format("SRC1.1 index multiplier Imm = 0x%x\n", value);
+					outs() << format("SRC1.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[2], dis_info->size[2], Bytes[dis_info->offset[2]]);
+				}
+				Operand = &Inst->getOperand(3);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[2].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[2].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[2].offset = 0;
+					outs() << format("SRC1.2 index Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				Operand = &Inst->getOperand(4);
+				if (Operand->isValid() &&
+					Operand->isImm() ) {
+					int64_t value;
+					value = Operand->getImm();
+					ll_inst->srcB.operand[3].value = value;
+					ll_inst->srcB.operand[3].size = dis_info->size[4] * 8;
+					ll_inst->srcB.operand[3].offset = dis_info->offset[4];
+					outs() << format("SRC1.3 offset Imm  = 0x%x\n", value);
+					outs() << format("SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
+				}
+				Operand = &Inst->getOperand(5);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[4].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[4].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[4].offset = 0;
+					outs() << format("SRC1.4 Segment Reg  = 0x%x\n", value);
+				}
+				Operand = &Inst->getOperand(6);
+				if (Operand->isValid() &&
+					Operand->isImm() ) {
+					uint32_t value;
+					value = Operand->getImm();
+					ll_inst->srcA.kind = KIND_IMM;
+					ll_inst->srcA.operand[0].value = value;
+					ll_inst->srcA.operand[0].size = dis_info->size[6] * 8;
+					ll_inst->srcA.operand[0].offset = dis_info->offset[6];
+					outs() << format("SRC0.0 index multiplier Imm = 0x%x\n", value);
+					outs() << format("SRC0.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[6], dis_info->size[6], Bytes[dis_info->offset[6]]);
+				}
+				Operand = &Inst->getOperand(3);
+				result = 0;
+				break;
+			default:
+				Operand = &Inst->getOperand(0);
+				if (Operand->isValid() &&
+					Operand->isReg()) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->dstA.kind = KIND_REG;
+					ll_inst->dstA.operand[0].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->dstA.operand[0].size = helper_reg_table[reg_index].size;
+					ll_inst->dstA.operand[0].offset = 0;
+					outs() << format("DST0.0 Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				Operand = &Inst->getOperand(1);
+				if (Operand->isValid() &&
+					Operand->isReg()) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcA.kind = KIND_REG;
+					ll_inst->srcA.operand[0].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcA.operand[0].size = helper_reg_table[reg_index].size;
+					ll_inst->srcA.operand[0].offset = 0;
+					outs() << format("SRC0.0 Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				ll_inst->srcB.kind = KIND_IND_SCALE;
+				Operand = &Inst->getOperand(2);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[0].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[0].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[0].offset = 0;
+					outs() << format("SRC1.0 pointer Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				Operand = &Inst->getOperand(3);
+				if (Operand->isValid() &&
+					Operand->isImm() ) {
+					uint32_t value;
+					value = Operand->getImm();
+					ll_inst->srcB.operand[1].value = value;
+					ll_inst->srcB.operand[1].size = dis_info->size[3] * 8;
+					ll_inst->srcB.operand[1].offset = dis_info->offset[3];
+					outs() << format("SRC1.1 index multiplier Imm = 0x%x\n", value);
+					outs() << format("SRC1.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[2], dis_info->size[2], Bytes[dis_info->offset[2]]);
+				}
+				Operand = &Inst->getOperand(4);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[2].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[2].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[2].offset = 0;
+					outs() << format("SRC1.2 index Reg: value = 0x%x, ", value);
+					outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
+					outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
+					outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
+				}
+				Operand = &Inst->getOperand(5);
+				if (Operand->isValid() &&
+					Operand->isImm() ) {
+					int64_t value;
+					value = Operand->getImm();
+					ll_inst->srcB.operand[3].value = value;
+					ll_inst->srcB.operand[3].size = dis_info->size[5] * 8;
+					ll_inst->srcB.operand[3].offset = dis_info->offset[5];
+					outs() << format("SRC1.3 offset Imm  = 0x%x\n", value);
+					outs() << format("SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
+				}
+				Operand = &Inst->getOperand(6);
+				if (Operand->isValid() &&
+					Operand->isReg() ) {
+					uint32_t value;
+					int reg_index = 0;
+					int tmp;
+					value = Operand->getReg();
+					tmp = get_reg_size_helper(value, &reg_index);
+					ll_inst->srcB.operand[4].value = helper_reg_table[reg_index].reg_number;
+					ll_inst->srcB.operand[4].size = helper_reg_table[reg_index].size;
+					ll_inst->srcB.operand[4].offset = 0;
+					outs() << format("SRC1.4 Segment Reg  = 0x%x\n", value);
+				}
+				result = 0;
+				break;
 			}
-			Operand = &Inst->getOperand(1);
-			if (Operand->isValid() &&
-				Operand->isReg()) {
-				uint32_t value;
-				int reg_index = 0;
-				int tmp;
-				value = Operand->getReg();
-				tmp = get_reg_size_helper(value, &reg_index);
-				ll_inst->srcA.kind = KIND_REG;
-				ll_inst->srcA.operand[0].value = helper_reg_table[reg_index].reg_number;
-				ll_inst->srcA.operand[0].size = helper_reg_table[reg_index].size;
-				ll_inst->srcA.operand[0].offset = 0;
-				outs() << format("SRC0.0 Reg: value = 0x%x, ", value);
-				outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
-				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
-				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
-			}
-			ll_inst->srcB.kind = KIND_IND_SCALE;
-			Operand = &Inst->getOperand(2);
-			if (Operand->isValid() &&
-				Operand->isReg() ) {
-				uint32_t value;
-				int reg_index = 0;
-				int tmp;
-				value = Operand->getReg();
-				tmp = get_reg_size_helper(value, &reg_index);
-				ll_inst->srcB.operand[0].value = helper_reg_table[reg_index].reg_number;
-				ll_inst->srcB.operand[0].size = helper_reg_table[reg_index].size;
-				ll_inst->srcB.operand[0].offset = 0;
-				outs() << format("SRC1.0 pointer Reg: value = 0x%x, ", value);
-				outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
-				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
-				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
-			}
-			Operand = &Inst->getOperand(3);
-			if (Operand->isValid() &&
-				Operand->isImm() ) {
-				uint32_t value;
-				value = Operand->getImm();
-				ll_inst->srcB.operand[1].value = value;
-				ll_inst->srcB.operand[1].size = dis_info->size[3] * 8;
-				ll_inst->srcB.operand[1].offset = dis_info->offset[3];
-				outs() << format("SRC1.1 index multiplier Imm = 0x%x\n", value);
-				outs() << format("SRC1.1 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[2], dis_info->size[2], Bytes[dis_info->offset[2]]);
-			}
-			Operand = &Inst->getOperand(4);
-			if (Operand->isValid() &&
-				Operand->isReg() ) {
-				uint32_t value;
-				int reg_index = 0;
-				int tmp;
-				value = Operand->getReg();
-				tmp = get_reg_size_helper(value, &reg_index);
-				ll_inst->srcB.operand[2].value = helper_reg_table[reg_index].reg_number;
-				ll_inst->srcB.operand[2].size = helper_reg_table[reg_index].size;
-				ll_inst->srcB.operand[2].offset = 0;
-				outs() << format("SRC1.2 index Reg: value = 0x%x, ", value);
-				outs() << format("name = %s, ", helper_reg_table[reg_index].reg_name);
-				outs() << format("size = 0x%x, ", helper_reg_table[reg_index].size);
-				outs() << format("reg_number = 0x%x\n", helper_reg_table[reg_index].reg_number);
-			}
-			Operand = &Inst->getOperand(5);
-			if (Operand->isValid() &&
-				Operand->isImm() ) {
-				int64_t value;
-				value = Operand->getImm();
-				ll_inst->srcB.operand[3].value = value;
-				ll_inst->srcB.operand[3].size = dis_info->size[5] * 8;
-				ll_inst->srcB.operand[3].offset = dis_info->offset[5];
-				outs() << format("SRC1.3 offset Imm  = 0x%x\n", value);
-				outs() << format("SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n", dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
-			}
-			Operand = &Inst->getOperand(6);
-			if (Operand->isValid() &&
-				Operand->isReg() ) {
-				uint32_t value;
-				int reg_index = 0;
-				int tmp;
-				value = Operand->getReg();
-				tmp = get_reg_size_helper(value, &reg_index);
-				ll_inst->srcB.operand[4].value = helper_reg_table[reg_index].reg_number;
-				ll_inst->srcB.operand[4].size = helper_reg_table[reg_index].size;
-				ll_inst->srcB.operand[4].offset = 0;
-				outs() << format("SRC1.4 Segment Reg  = 0x%x\n", value);
-			}
-			result = 0;
 			break;
 		default:
 			outs() << "Unrecognised num_operands\n";
