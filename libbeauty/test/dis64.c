@@ -192,7 +192,7 @@ int disassemble(struct self_s *self, struct dis_instructions_s *dis_instructions
 		printf("LLVMPrintInstructionDecodeAsmX86_64() failed. offset = 0x%"PRIx64"\n", offset);
 		exit(1);
 	}
-	tmp = convert_ll_inst_to_rtl(ll_inst, dis_instructions);
+	tmp = convert_ll_inst_to_rtl(self, ll_inst, dis_instructions);
 	if (tmp) {
 		printf("convert_ll_inst_to_rtl() failed. offset = 0x%"PRIx64"\n", offset);
 		exit(1);

@@ -260,7 +260,7 @@ struct test_data_s test_data[] = {
 		// mov    (%rsi),%eax
 		.bytes = {0x8b, 0x06},
 		.bytes_size = 2,
-		.inst[0] = "// 0x0000:MOV  r0x38/64, r0x90/64",
+		.inst[0] = "// 0x0000:ADD  r0x38/64, i0x0/64, r0x90/64",
 		.inst[1] = "// 0x0001:LOAD  m[r0x90]/32, r0x98/32",
 		.inst[2] = "// 0x0002:MOV  r0x98/32, r0x8/32",
 		.inst_size = 3,
@@ -340,6 +340,17 @@ struct test_data_s test_data[] = {
 		.bytes_size = 2,
 		.inst[0] = "// 0x0000:JMPT  r0x8/64, r0x48/64",
 		.inst_size = 1,
+	},
+	{
+		.valid = 1,
+		// mov    0x0(,%rax,8),%rax
+		.bytes = {0x48, 0x8b, 0x04, 0xc5, 0x00, 0x07, 0x00, 0x00},
+		.bytes_size = 8,
+		.inst[0] = "// 0x0000:MUL  r0x8/64, i0x8/64, r0x90/64",
+		.inst[1] = "// 0x0001:ADD  r0x90/64, i0x700/64, r0x90/64",
+		.inst[2] = "// 0x0002:LOAD  m[r0x90]/64, r0x98/64",
+		.inst[3] = "// 0x0003:MOV  r0x98/64, r0x8/64",
+		.inst_size = 4,
 	},
 };
 
@@ -489,7 +500,7 @@ int main(int argc, char *argv[])
 	//LLVMDecodeAsmPrintOpcodes(DC); 
 //	LLVMDecodeAsmOpcodesSource(DC); 
 
-	self = malloc(sizeof *self);
+	self = calloc(1, sizeof(struct self_s));
 	test_result = calloc(test_data_no, sizeof(int));
 
 	for (l = 0; l < test_data_no; l++) {
@@ -545,7 +556,7 @@ int main(int argc, char *argv[])
 		if (!tmp) {
 			printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
 			tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
-			tmp = convert_ll_inst_to_rtl(ll_inst, &dis_instructions);
+			tmp = convert_ll_inst_to_rtl(self, ll_inst, &dis_instructions);
 			if (tmp) {
 				printf("Unhandled instruction, not yet implemented convert\n");
 			}
