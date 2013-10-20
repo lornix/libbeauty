@@ -67,6 +67,12 @@ int search_for_jump_table_base(struct self_s *self, uint64_t inst_log, uint64_t 
 		*inst_base = inst_this;
 		return 0;
 	}
+	inst_this--;
+	instruction = &inst_log_entry[inst_this].instruction;
+	if (ADD == instruction->opcode) {
+		*inst_base = inst_this;
+		return 0;
+	}
 	return 1;
 }
 
@@ -303,12 +309,11 @@ int process_block(struct self_s *self, struct process_state_s *process_state, ui
 				}
 				inst_exe_base = &inst_log_entry[inst_base];
 				instruction = &(inst_exe_base->instruction);
-				debug_print(DEBUG_EXE, 1, "Relocated = 0x%x\n", instruction->srcA.relocated);
-				debug_print(DEBUG_EXE, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
-				debug_print(DEBUG_EXE, 1, "Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
-				debug_print(DEBUG_EXE, 1, "FIXME: JMPT reached..exiting %d 0x%"PRIx64"\n", tmp, inst_base);
-				if (2 == instruction->srcA.relocated_area) {
-					uint64_t index = instruction->srcA.relocated_index;
+				debug_print(DEBUG_EXE, 1, "Relocated = 0x%x\n", instruction->srcB.relocated);
+				debug_print(DEBUG_EXE, 1, "Relocated_area = 0x%x\n", instruction->srcB.relocated_area);
+				debug_print(DEBUG_EXE, 1, "Relocated_index = 0x%x\n", instruction->srcB.relocated_index);
+				if (2 == instruction->srcB.relocated_area) {
+					uint64_t index = instruction->srcB.relocated_index;
 					tmp = 0;
 					
 					do {
