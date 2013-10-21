@@ -213,8 +213,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		dstA = BinaryOperator::Create(Instruction::Mul, srcA, srcB, buffer, bb[node]);
 		value[inst_log1->value3.value_id] = dstA;
 		break;
-	case 0xe:  // MUL
-		printf("LLVM 0x%x: OPCODE = 0x%x:MUL\n", inst, inst_log1->instruction.opcode);
+	case 0xe:  // IMUL
+		printf("LLVM 0x%x: OPCODE = 0x%x:IMUL\n", inst, inst_log1->instruction.opcode);
 //		if (inst_log1->instruction.dstA.index == 0x28) {
 //			/* Skip the 0x28 reg as it is the SP reg */
 //			break;

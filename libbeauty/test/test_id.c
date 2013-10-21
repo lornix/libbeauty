@@ -370,6 +370,14 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:IMULf i0x7/64, r0x40/64, r0x8/64",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// dec    %edi
+		.bytes = {0xff, 0xcf},
+		.bytes_size = 2,
+		.inst[0] = "// 0x0000:SUBf r0x40/32, i0x1/32, r0x40/32",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

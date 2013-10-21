@@ -277,7 +277,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 				previous_operand = &operand_tmp;
 			} else if ((scale_operand->operand[2].value != 0) && (scale_operand->operand[1].value > 1)) {
 				instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-				instruction->opcode = MUL;
+				instruction->opcode = IMUL;
 				instruction->flags = 0;
 				convert_operand(self, ll_inst->address, scale_operand, 2, &(instruction->srcA));
 				convert_operand(self, ll_inst->address, scale_operand, 1, &(instruction->srcB));
@@ -379,7 +379,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 			ind_stack = 1;
 		}
 
-		/* MUL the index reg[2] with the multiplier imm[1] */
+		/* IMUL the index reg[2] with the multiplier imm[1] */
 		if (scale_operand->operand[2].value == 0) {
 			previous_operand = &operand_empty;
 		} else if ((scale_operand->operand[2].value != 0) && (scale_operand->operand[1].value == 1)) {
@@ -391,7 +391,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 			previous_operand = &operand_tmp;
 		} else if ((scale_operand->operand[2].value != 0) && (scale_operand->operand[1].value > 1)) {
 			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-			instruction->opcode = MUL;
+			instruction->opcode = IMUL;
 			instruction->flags = 0;
 			convert_operand(self, ll_inst->address, scale_operand, 2, &(instruction->srcA));
 			convert_operand(self, ll_inst->address, scale_operand, 1, &(instruction->srcB));
@@ -570,6 +570,28 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		copy_operand(&ll_inst->srcB, &ll_inst->srcA);
 		ll_inst->srcB.kind = KIND_EMPTY;
 		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case DEC:
+		copy_operand(&ll_inst->dstA, &ll_inst->srcA);
+		ll_inst->srcB.kind = KIND_IMM;
+		ll_inst->srcB.size = ll_inst->dstA.size;
+		ll_inst->srcB.operand[0].value = 1;
+		ll_inst->srcB.operand[0].size = 0;
+		ll_inst->srcB.operand[0].offset = 0;
+		ll_inst->opcode = SUB;
+		tmp  = convert_base(self, ll_inst, 1, dis_instructions);
+		result = tmp;
+		break;
+	case INC:
+		copy_operand(&ll_inst->dstA, &ll_inst->srcA);
+		ll_inst->srcB.kind = KIND_IMM;
+		ll_inst->srcB.size = ll_inst->dstA.size;
+		ll_inst->srcB.operand[0].value = 1;
+		ll_inst->srcB.operand[0].size = 0;
+		ll_inst->srcB.operand[0].offset = 0;
+		ll_inst->opcode = ADD;
+		tmp  = convert_base(self, ll_inst, 1, dis_instructions);
 		result = tmp;
 		break;
 	case LEA: /* Used at the MC Inst low level */
