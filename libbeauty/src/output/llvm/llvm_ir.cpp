@@ -480,6 +480,7 @@ int LLVM_ir_export::output(struct self_s *self)
 	struct label_s *labels;
 	int labels_size;
 	struct label_redirect_s *label_redirect;
+	struct label_s *label;
 	char buffer[1024];
 	int index;
 	
@@ -495,9 +496,26 @@ int LLVM_ir_export::output(struct self_s *self)
 			labels = external_entry_points[n].labels;
 			labels_size = external_entry_points[n].variable_id;
 			label_redirect = external_entry_points[n].label_redirect;
-			Module *M = new Module("test_llvm_export", Context);
- 			M->setDataLayout("e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128");
-			M->setTargetTriple("x86_64-pc-linux-gnu");
+			Module *mod = new Module("test_llvm_export", Context);
+ 			mod->setDataLayout("e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128");
+			mod->setTargetTriple("x86_64-pc-linux-gnu");
+
+			/* Add globals */
+			for (m = 0; m < labels_size; m++) {
+				label = &labels[label_redirect[m].redirect];
+				if ((3 == label->scope) && (2 == label->type)) {
+					printf("Label:0x%x: &data found. size=0x%lx\n", m, label->size_bits);
+					GlobalVariable* gvar_int32_mem1 = new GlobalVariable(/*Module=*/*mod,
+						/*Type=*/IntegerType::get(mod->getContext(), label->size_bits),
+						/*isConstant=*/false,
+						/*Linkage=*/GlobalValue::InternalLinkage,
+						/*Initializer=*/0, // has initializer, specified below
+						/*Name=*/"data0");
+					gvar_int32_mem1->setAlignment(label->size_bits >> 3);
+					value[m] = gvar_int32_mem1;
+				}
+			}
+
 
 			function_name = external_entry_points[n].name;
 			snprintf(output_filename, 500, "./llvm/%s.bc", function_name);
@@ -505,8 +523,8 @@ int LLVM_ir_export::output(struct self_s *self)
 			for (m = 0; m < external_entry_points[n].params_size; m++) {
 				index = external_entry_points[n].params[m];
 				int size = labels[index].size_bits;
-				printf("Label 0x%x: size_bits = 0x%x\n", index, size);
-				FuncTy_0_args.push_back(IntegerType::get(M->getContext(), size));
+				printf("Param=0x%x: Label 0x%x, size_bits = 0x%x\n", m, index, size);
+				FuncTy_0_args.push_back(IntegerType::get(mod->getContext(), size));
 			}
 
 			FunctionType *FT =
@@ -514,7 +532,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					FuncTy_0_args,
 					false); /*not vararg*/
 
-			Function *F = Function::Create(FT, Function::ExternalLinkage, function_name, M);
+			Function *F = Function::Create(FT, Function::ExternalLinkage, function_name, mod);
 
 			Function::arg_iterator args = F->arg_begin();
 			printf("Function: %s()  param_size = 0x%x\n", function_name, external_entry_points[n].params_size);
@@ -550,7 +568,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					if (!size_bits) size_bits = 32;
 					printf("Creating alloca for lable 0x%x, size_bits = 0x%x\n", m, size_bits);
 					tmp = label_to_string(&labels[m], buffer, 1023);
-					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(M->getContext(), size_bits), buffer, bb[1]);
+					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(mod->getContext(), size_bits), buffer, bb[1]);
 					ptr_local->setAlignment(size_bits >> 3);
 					value[m] = ptr_local;
 				}
@@ -570,7 +588,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					printf("LLVM:phi 0x%x\n", m);
 					tmp = label_to_string(&labels[nodes[node].phi[m].value_id], buffer, 1023);
 					printf("LLVM phi base size = 0x%x\n", size_bits);
-					PHINode* phi_node = PHINode::Create(IntegerType::get(M->getContext(), size_bits),
+					PHINode* phi_node = PHINode::Create(IntegerType::get(mod->getContext(), size_bits),
 						nodes[node].phi[m].phi_node_size,
 						buffer, bb[node]);
 					/* The rest of the PHI instruction is added later */
@@ -613,8 +631,8 @@ int LLVM_ir_export::output(struct self_s *self)
 			if (!ErrorInfo.empty())
 				return -1;
 
-			WriteBitcodeToFile(M, OS);
-			delete M;
+			WriteBitcodeToFile(mod, OS);
+			delete mod;
 		}
 	}
 
