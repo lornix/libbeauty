@@ -696,7 +696,8 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			switch (instruction->srcA.indirect) {
 			case IND_MEM:
 				tmp = fprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
+				//debug_print(DEBUG_OUTPUT, 1, "IND_MEM: inst:0x%x, value_id = 0x%lx\n", inst_number, value_id);
 				break;
 			case IND_STACK:
 				//tmp = fprintf(fd, "stack_");

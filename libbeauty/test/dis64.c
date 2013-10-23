@@ -3103,6 +3103,17 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 							inst_log1->value1.indirect_value_id = memory->value_id;
 						}
 					}
+					break;
+				case IND_MEM:
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value1.value_id);
+					break;
+				default:
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: UNHANDLED srcA.indirect = 0x%x\n", inst, instruction->srcA.indirect);
+					exit(1);
+					break;
 				}
 				break;
 			}
