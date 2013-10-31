@@ -43,8 +43,8 @@ class LLVM_ir_export
 {
 	public:
 		int find_function_member_node(struct self_s *self, struct external_entry_point_s *external_entry_point, int node_to_find, int *member_node);
-		int add_instruction(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry, int inst);
-		int add_node_instructions(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry);
+		int add_instruction(struct self_s *self, Module *mod, Value **value, BasicBlock **bb, int node, int external_entry, int inst);
+		int add_node_instructions(struct self_s *self, Module *mod, Value **value, BasicBlock **bb, int node, int external_entry);
 		int fill_value(struct self_s *self, Value **value, int value_id, int external_entry);
 		int output(struct self_s *self);
 
@@ -69,7 +69,7 @@ int LLVM_ir_export::find_function_member_node(struct self_s *self, struct extern
 	return found;
 }
 
-int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlock **bb, int node, int external_entry, int inst)
+int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **value, BasicBlock **bb, int node, int external_entry, int inst)
 {
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct inst_log_entry_s *inst_log1 = &inst_log_entry[inst];
@@ -79,6 +79,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 	Value *srcB;
 	Value *dstA;
 	int value_id;
+	int value_id_dst;
+	struct label_s *label;
 	int tmp;
 	char buffer[1024];
 	int node_true;
@@ -271,6 +273,28 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 		ReturnInst::Create(Context, srcA, bb[node]);
 		result = 1;
 		break;
+	case 0x1f:  // SEX
+		printf("LLVM 0x%x: OPCODE = 0x%x:SEX\n", inst, inst_log1->instruction.opcode);
+		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value3.value_id,
+			external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x\n", value_id);
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		value_id_dst = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+		label = &external_entry_point->labels[value_id_dst];
+		tmp = label_to_string(label, buffer, 1023);
+		dstA = new SExtInst(srcA, IntegerType::get(mod->getContext(), label->size_bits), buffer, bb[node]);
+		value[value_id_dst] = dstA;
+		break;
 	case 0x23:  // ICMP
 		printf("LLVM 0x%x: OPCODE = 0x%x:ICMP\n", inst, inst_log1->instruction.opcode);
 //		if (inst_log1->instruction.dstA.index == 0x28) {
@@ -396,7 +420,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Value **value, BasicBlo
 	return result;
 } 
 
-int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, BasicBlock **bb, int node, int external_entry) 
+int LLVM_ir_export::add_node_instructions(struct self_s *self, Module *mod, Value** value, BasicBlock **bb, int node, int external_entry) 
 {
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
@@ -419,7 +443,7 @@ int LLVM_ir_export::add_node_instructions(struct self_s *self, Value** value, Ba
 		inst_log1 =  &inst_log_entry[inst];
 		printf("LLVM node end: inst_end = 0x%x, next_size = 0x%x, node_end = 0x%x\n",
 			nodes[node].inst_end, inst_log1->next_size, inst_log1->node_end);
-		tmp = add_instruction(self, value, bb, node, external_entry, inst);
+		tmp = add_instruction(self, mod, value, bb, node, external_entry, inst);
 		if (inst_log1->next_size > 0) {
 			inst_next = inst_log1->next[0];
 		}
@@ -594,7 +618,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					/* The rest of the PHI instruction is added later */
 					value[nodes[node].phi[m].value_id] = phi_node;
 				}
-				LLVM_ir_export::add_node_instructions(self, value, bb, node, n);
+				LLVM_ir_export::add_node_instructions(self, mod, value, bb, node, n);
 			}
 
 			for (node = 1; node < nodes_size; node++) {
