@@ -1,5 +1,5 @@
 #ifndef __BFL_INTERNAL__
-#define __BFL_INTERNAL___
+#define __BFL_INTERNAL__
 
 #include <bfd.h>
 #include <inttypes.h>
