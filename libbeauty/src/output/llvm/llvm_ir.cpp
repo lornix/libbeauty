@@ -360,25 +360,56 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 //			/* Skip the 0x28 reg as it is the SP reg */
 //			break;
 //		}
-		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
-			inst_log1->value1.indirect_value_id,
-			external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect,
-			inst_log1->value3.value_id,
-			external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
-		value_id = external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect;
-		if (value_id) {
-			srcA = value[value_id];
-			tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-			dstA = new LoadInst(srcA, buffer, false, bb[node]);
-		} else {
-			printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
-		}
+		switch (inst_log1->instruction.srcA.indirect) {
+		case 1:  // Memory
+			printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+				inst_log1->value1.value_id,
+				external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+				inst_log1->value3.value_id,
+				external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
+			value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+			if (value_id) {
+				srcA = value[value_id];
+				tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+				dstA = new LoadInst(srcA, buffer, false, bb[node]);
+			} else {
+				printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
+				printf("inst indirect = 0x%x\n", inst_log1->instruction.srcA.indirect);
+			}
 
-		value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
-		if (value_id) {
-			value[value_id] = dstA;
-		} else {
-			printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
+			value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+			if (value_id) {
+				value[value_id] = dstA;
+			} else {
+				printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
+			}
+			break;
+		case 2:  // Stack
+			printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+				inst_log1->value1.indirect_value_id,
+				external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect,
+				inst_log1->value3.value_id,
+				external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
+			value_id = external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect;
+			if (value_id) {
+				srcA = value[value_id];
+				tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+				dstA = new LoadInst(srcA, buffer, false, bb[node]);
+			} else {
+				printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
+				printf("inst indirect = 0x%x\n", inst_log1->instruction.srcA.indirect);
+			}
+
+			value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+			if (value_id) {
+				value[value_id] = dstA;
+			} else {
+				printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
+			}
+			break;
+		default:
+			printf("FIXME: LOAD Indirect = 0x%x not yet handled\n", inst_log1->instruction.srcA.indirect);
+			break;
 		}
 		break;
 	case 0x26:  // STORE
