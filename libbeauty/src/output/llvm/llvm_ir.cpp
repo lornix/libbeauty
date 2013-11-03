@@ -441,6 +441,40 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 		}
 		dstA = new StoreInst(srcA, srcB, false, bb[node]);
 		break;
+	case 0x2F:  // GEP1
+		printf("LLVM 0x%x: OPCODE = 0x%x:GEP1\n", inst, inst_log1->instruction.opcode);
+//		if (inst_log1->instruction.dstA.index == 0x28) {
+//			/* Skip the 0x28 reg as it is the SP reg */
+//			break;
+//		}
+		printf("value_id1 = 0x%lx->0x%lx, value_id2 = 0x%lx->0x%lx\n",
+			inst_log1->value1.value_id,
+			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value2.value_id,
+			external_entry_point->label_redirect[inst_log1->value2.value_id].redirect);
+		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL. srcA value_id = 0x%x\n", value_id);
+				exit(1);
+			}
+		}
+		srcA = value[value_id];
+		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
+		if (!value[value_id]) {
+			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
+			if (tmp) {
+				printf("failed LLVM Value is NULL. srcB value_id = 0x%x\n", value_id);
+				exit(1);
+			}
+		}
+		srcB = value[value_id];
+		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
+		dstA = GetElementPtrInst::Create(srcA, srcB, buffer, bb[node]);
+		value[inst_log1->value3.value_id] = dstA;
+		break;
 	default:
 		printf("LLVM 0x%x: OPCODE = 0x%x. Not yet handled.\n", inst, inst_log1->instruction.opcode);
 		exit(1);
@@ -579,7 +613,11 @@ int LLVM_ir_export::output(struct self_s *self)
 				index = external_entry_points[n].params[m];
 				int size = labels[index].size_bits;
 				printf("Param=0x%x: Label 0x%x, size_bits = 0x%x\n", m, index, size);
-				FuncTy_0_args.push_back(IntegerType::get(mod->getContext(), size));
+				if (labels[index].lab_pointer > 0) {
+					FuncTy_0_args.push_back(PointerType::get(IntegerType::get(mod->getContext(), size), 0));
+				} else {	
+					FuncTy_0_args.push_back(IntegerType::get(mod->getContext(), size));
+				}
 			}
 
 			FunctionType *FT =

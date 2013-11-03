@@ -84,6 +84,7 @@ const char * opcode_table[] = {
 	"PUSH",  // 0x2C
 	"LEAVE",  // 0x2D
 	"NOP",  // 0x2E
+	"GEP1",  // 0x2F
 };
 
 char *store_table[] = { "i", "r", "m", "s" };
@@ -158,6 +159,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		break;
 	case STORE:
 	case ADD:
+	case GEP1:
 	case SUB:
 	case SBB:
 	case MUL:

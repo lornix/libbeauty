@@ -1914,6 +1914,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 
 				break;
 			case ADD:
+			case GEP1:
 			case MUL:
 			case IMUL:
 			case SUB:
