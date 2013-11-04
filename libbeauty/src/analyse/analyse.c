@@ -1699,7 +1699,6 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 				debug_print(DEBUG_ANALYSE, 1, "JCD: UNKNOWN PARAMS\n");
 			}
 			break;
-		case 0: /* Unknown */
 		case 2:
 			/* locals */
 			if (IND_STACK == indirect) {
@@ -1900,13 +1899,13 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 					//break;
 				}
 				if (1 == instruction->dstA.indirect) {
-					value_id = inst_log1->value3.indirect_value_id;
+					value_id = inst_log1->value3.value_id;
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				if (1 == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.indirect_value_id;
+					value_id = inst_log1->value1.value_id;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
