@@ -618,11 +618,17 @@ int LLVM_ir_export::output(struct self_s *self)
 			std::vector<Type*>FuncTy_0_args;
 			for (m = 0; m < external_entry_points[n].params_size; m++) {
 				index = external_entry_points[n].params[m];
-				int size = labels[index].size_bits;
-				printf("Param=0x%x: Label 0x%x, size_bits = 0x%x\n", m, index, size);
 				if (labels[index].lab_pointer > 0) {
+					int size = labels[index].pointer_type_size_bits;
+					printf("Param=0x%x: Pointer Label 0x%x, size_bits = 0x%x\n", m, index, size);
+					if (size < 8) {
+						printf("FIXME: size too small\n");
+						size = 8;
+					}
 					FuncTy_0_args.push_back(PointerType::get(IntegerType::get(mod->getContext(), size), 0));
 				} else {	
+					int size = labels[index].size_bits;
+					printf("Param=0x%x: Label 0x%x, size_bits = 0x%x\n", m, index, size);
 					FuncTy_0_args.push_back(IntegerType::get(mod->getContext(), size));
 				}
 			}

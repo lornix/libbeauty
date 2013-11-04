@@ -3578,6 +3578,66 @@ int change_add_to_gep1(struct self_s *self, struct external_entry_point_s *exter
 	return 0;
 }
 
+int discover_pointer_types(struct self_s *self, struct external_entry_point_s *external_entry_point, int node)
+{
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	int m;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	int variable_id = external_entry_point->variable_id;
+	uint64_t stack_address;
+	struct memory_s *memory;
+	int value_id1;
+	int value_id2;
+
+	int inst;
+	struct label_s label;
+	int found = 0;
+	debug_print(DEBUG_MAIN, 1, "discover_pointer_types() node 0x%x\n", node);
+
+	inst = nodes[node].inst_start;
+	do {
+		inst_log1 =  &inst_log_entry[inst];
+		instruction =  &inst_log1->instruction;
+		switch (instruction->opcode) {
+		case LOAD:
+			switch (inst_log1->instruction.srcA.indirect) {
+			case 1:  // Memory
+				value_id1 = label_redirect[inst_log1->value1.value_id].redirect;
+				labels[value_id1].pointer_type_size_bits = instruction->srcA.value_size;
+				debug_print(DEBUG_MAIN, 1, "discover_pointer_types() label 0x%x pointer type size = 0x%x\n",
+					value_id1, instruction->srcA.value_size);
+				break;
+			case 2:  // Stack
+				value_id1 = label_redirect[inst_log1->value1.indirect_value_id].redirect;
+				labels[value_id1].pointer_type_size_bits = instruction->srcA.value_size;
+				debug_print(DEBUG_MAIN, 1, "discover_pointer_types() label 0x%x pointer type size = 0x%x\n",
+					value_id1, instruction->srcA.value_size);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+		if (inst == nodes[node].inst_end) {
+			found = 1;
+		}
+		if (inst_log1->next_size > 0) {
+			inst = inst_log1->next[0];
+		} else {
+			/* Exit here */
+			found = 1;
+		}
+	} while (!found);
+
+	return 0;
+}
+
 int insert_nop_before(struct self_s *self, int inst, int *new_inst);
 int insert_nop_after(struct self_s *self, int inst, int *new_inst);
 
@@ -5694,6 +5754,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	/* Change ADD to GEP1 where the ADD involves pointers */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
@@ -5709,11 +5770,22 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-
-
-
-
-
+	/* Discover pointer types */
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
+					continue;
+				}
+				tmp = discover_pointer_types(self, &external_entry_points[l], n);
+				if (tmp) {
+					printf("discover_pointer_types() failed\n");
+					exit(1);
+				}
+			}
+		}
+	}
 
 	print_dis_instructions(self);
 #if 0
