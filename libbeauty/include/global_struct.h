@@ -180,6 +180,8 @@ struct label_s {
 	uint64_t value;
 	/* size in bits */
 	uint64_t size_bits;
+	/* pointer type size in bits */
+	uint64_t pointer_type_size_bits;
 	/* is it a pointer */
 	uint64_t lab_pointer;
 	/* is it a signed */
