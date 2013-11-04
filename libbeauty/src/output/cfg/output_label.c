@@ -802,6 +802,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			break;
 
 		case ADD:
+		case GEP1:
 			output_3_labels(self, fd, inst_log1, inst_number, label_redirect, labels, "+", cr, buffer);
 			break;
 		case MUL:
