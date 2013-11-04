@@ -292,6 +292,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 		value_id_dst = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
 		label = &external_entry_point->labels[value_id_dst];
 		tmp = label_to_string(label, buffer, 1023);
+		printf("label->size_bits = 0x%lx\n", label->size_bits);
 		dstA = new SExtInst(srcA, IntegerType::get(mod->getContext(), label->size_bits), buffer, bb[node]);
 		value[value_id_dst] = dstA;
 		break;
@@ -368,18 +369,21 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 				inst_log1->value3.value_id,
 				external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
 			value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
+			value_id_dst = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+			label = &external_entry_point->labels[value_id_dst];
 			if (value_id) {
 				srcA = value[value_id];
-				tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-				dstA = new LoadInst(srcA, buffer, false, bb[node]);
+				tmp = label_to_string(label, buffer, 1023);
+				LoadInst* dstA_load = new LoadInst(srcA, buffer, false, bb[node]);
+				dstA_load->setAlignment(label->size_bits >> 3);
+				dstA = dstA_load;
 			} else {
 				printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
 				printf("inst indirect = 0x%x\n", inst_log1->instruction.srcA.indirect);
 			}
 
-			value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
-			if (value_id) {
-				value[value_id] = dstA;
+			if (value_id_dst) {
+				value[value_id_dst] = dstA;
 			} else {
 				printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
 			}
@@ -391,18 +395,21 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 				inst_log1->value3.value_id,
 				external_entry_point->label_redirect[inst_log1->value3.value_id].redirect);
 			value_id = external_entry_point->label_redirect[inst_log1->value1.indirect_value_id].redirect;
+			value_id_dst = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
+			label = &external_entry_point->labels[value_id_dst];
 			if (value_id) {
 				srcA = value[value_id];
-				tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
-				dstA = new LoadInst(srcA, buffer, false, bb[node]);
+				tmp = label_to_string(label, buffer, 1023);
+				LoadInst* dstA_load = new LoadInst(srcA, buffer, false, bb[node]);
+				dstA_load->setAlignment(label->size_bits >> 3);
+				dstA = dstA_load;
 			} else {
 				printf("LLVM 0x%x: FIXME: Invalid srcA value_id\n", inst);
 				printf("inst indirect = 0x%x\n", inst_log1->instruction.srcA.indirect);
 			}
 
-			value_id = external_entry_point->label_redirect[inst_log1->value3.value_id].redirect;
-			if (value_id) {
-				value[value_id] = dstA;
+			if (value_id_dst) {
+				value[value_id_dst] = dstA;
 			} else {
 				printf("LLVM 0x%x: FIXME: Invalid value_id\n", inst);
 			}
