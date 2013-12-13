@@ -1,5 +1,5 @@
-AC_INIT
-AM_INIT_AUTOMAKE("libbeauty",0.2.0)
+AC_INIT("libbeauty",0.2.0)
+AM_INIT_AUTOMAKE
 AC_PREREQ(2.53)
 
 dnl The libtool version numbers (LT_*); Don't even think about faking this!
