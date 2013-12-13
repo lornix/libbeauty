@@ -235,6 +235,7 @@ static int get_value_RTL_instruction(
 			/* not set yet. */
 			destination->ref_log = 0;
 			/* unknown */
+			/* FIXME: Do we need a special value for this. E.g. for CONSTANT */
 			destination->value_scope = 0;
 			/* 1 - Entry Used */
 			destination->value_id = 0;
@@ -880,6 +881,12 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		if ((inst->value3.value_scope == 1) &&
 			(STORE_REG == instruction->dstA.store) &&
 			(1 == inst->value1.value_scope) &&
+			(0 == instruction->dstA.indirect)) {
+			inst->value3.value_scope = 2;
+		}
+		/* MOV imm to local */
+		if ((inst->value3.value_scope == 0) &&
+			(STORE_DIRECT == instruction->srcA.store) &&
 			(0 == instruction->dstA.indirect)) {
 			inst->value3.value_scope = 2;
 		}
