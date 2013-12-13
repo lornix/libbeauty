@@ -452,9 +452,11 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 //			/* Skip the 0x28 reg as it is the SP reg */
 //			break;
 //		}
-		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx\n",
+		printf("value_id1 = 0x%lx->0x%lx, value_id3 = 0x%lx->0x%lx indirect_value_id3 = 0x%lx->0x%lx\n",
 			inst_log1->value1.value_id,
 			external_entry_point->label_redirect[inst_log1->value1.value_id].redirect,
+			inst_log1->value3.value_id,
+			external_entry_point->label_redirect[inst_log1->value3.value_id].redirect,
 			inst_log1->value3.indirect_value_id,
 			external_entry_point->label_redirect[inst_log1->value3.indirect_value_id].redirect);
 		value_id = external_entry_point->label_redirect[inst_log1->value1.value_id].redirect;
@@ -473,6 +475,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			printf("LLVM 0x%x: FIXME: Invalid srcB value_id\n", inst);
 			break;
 		}
+		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		dstA = new StoreInst(srcA, srcB, false, bb[node]);
 		break;
 	case 0x2F:  // GEP1
