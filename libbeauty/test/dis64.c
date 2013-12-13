@@ -3561,6 +3561,15 @@ int change_add_to_gep1(struct self_s *self, struct external_entry_point_s *exter
 				instruction->opcode = GEP1;
 			}
 			break;
+		case SUB:
+			value_id1 = label_redirect[inst_log1->value1.value_id].redirect;
+			value_id2 = label_redirect[inst_log1->value2.value_id].redirect;
+			if ((labels[value_id1].lab_pointer > 0) &&
+				(labels[value_id2].lab_pointer == 0)) {
+				instruction->opcode = GEP1;
+				labels[value_id2].value = -labels[value_id2].value;
+			}
+			break;
 		default:
 			break;
 		}

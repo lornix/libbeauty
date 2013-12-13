@@ -802,8 +802,49 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			break;
 
 		case ADD:
-		case GEP1:
 			output_3_labels(self, fd, inst_log1, inst_number, label_redirect, labels, "+", cr, buffer);
+			break;
+		case GEP1:
+			if (instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				exit(1);
+			}
+			if (instruction->srcB.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				exit(1);
+			}
+			if (instruction->dstA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				exit(1);
+			}
+			if (print_inst(self, instruction, inst_number, labels))
+				return 1;
+			debug_print(DEBUG_OUTPUT, 1, "\t");
+			tmp = fprintf(fd, "\t");
+			value_id = inst_log1->value3.value_id;
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = label_to_string(label, buffer, 1023);
+			tmp = fprintf(fd, "%s", buffer);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = fprintf(fd, " = ");
+			value_id = inst_log1->value1.value_id;
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			tmp = label_to_string(label, buffer, 1023);
+			tmp = fprintf(fd, "%s", buffer);
+			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
+			value_id = inst_log1->value2.value_id;
+			tmp = label_redirect[value_id].redirect;
+			label = &labels[tmp];
+			if (label->value > INT64_MAX) {
+				tmp = fprintf(fd, " - 0x%lx", - label->value);
+			} else {
+				tmp = fprintf(fd, " + 0x%lx", label->value);
+			}
+			//tmp = label_to_string(label, buffer, 1023);
+			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = fprintf(fd, ";%s",cr);
 			break;
 		case MUL:
 		case IMUL:

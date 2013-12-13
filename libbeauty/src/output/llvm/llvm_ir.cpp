@@ -78,6 +78,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 	Value *srcA;
 	Value *srcB;
 	Value *dstA;
+	uint64_t srcA_size;
+	uint64_t srcB_size;
 	int value_id;
 	int value_id_dst;
 	struct label_s *label;
@@ -167,6 +169,18 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcA = value[value_id];
+		srcA_size = external_entry_point->labels[value_id].size_bits;
+		printf("srcA: scope=0x%lx, type=0x%lx value=0x%lx size_bits=0x%lx pointer_type_size_bits=0x%lx lab_pointer=0x%lx lab_signed=0x%lx lab_unsigned=0x%lx name=%s\n",
+			external_entry_point->labels[value_id].scope,
+			external_entry_point->labels[value_id].type,
+			external_entry_point->labels[value_id].value,
+			external_entry_point->labels[value_id].size_bits,
+			external_entry_point->labels[value_id].pointer_type_size_bits,
+			external_entry_point->labels[value_id].lab_pointer,
+			external_entry_point->labels[value_id].lab_signed,
+			external_entry_point->labels[value_id].lab_unsigned,
+			external_entry_point->labels[value_id].name);
+
 		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
 		if (!value[value_id]) {
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
@@ -176,7 +190,20 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcB = value[value_id];
+		srcB_size = external_entry_point->labels[value_id].size_bits;
+		printf("srcB: scope=0x%lx, type=0x%lx value=0x%lx size_bits=0x%lx pointer_type_size_bits=0x%lx lab_pointer=0x%lx lab_signed=0x%lx lab_unsigned=0x%lx name=%s\n",
+			external_entry_point->labels[value_id].scope,
+			external_entry_point->labels[value_id].type,
+			external_entry_point->labels[value_id].value,
+			external_entry_point->labels[value_id].size_bits,
+			external_entry_point->labels[value_id].pointer_type_size_bits,
+			external_entry_point->labels[value_id].lab_pointer,
+			external_entry_point->labels[value_id].lab_signed,
+			external_entry_point->labels[value_id].lab_unsigned,
+			external_entry_point->labels[value_id].name);
+
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		printf("srcA_size = 0x%lx, srcB_size = 0x%lx\n", srcA_size, srcB_size);
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
 		dstA = BinaryOperator::CreateSub(srcA, srcB, buffer, bb[node]);
 		value[inst_log1->value3.value_id] = dstA;
@@ -671,7 +698,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					(labels[m].type == 2)) {
 					size_bits = labels[m].size_bits;
 					/* FIXME: Make size_bits set correctly in the label */
-					if (!size_bits) size_bits = 32;
+					//if (!size_bits) size_bits = 32;
 					printf("Creating alloca for lable 0x%x, size_bits = 0x%x\n", m, size_bits);
 					tmp = label_to_string(&labels[m], buffer, 1023);
 					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(mod->getContext(), size_bits), buffer, bb[1]);
