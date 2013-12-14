@@ -164,8 +164,9 @@ int label_to_string(struct label_s *label, char *string, int size) {
 		break;
 	default:
 		debug_print(DEBUG_OUTPUT, 1, "unknown label scope: %04"PRIx64";\n", label->scope);
-		tmp = snprintf(&string[offset], size - offset, "unknown%04"PRIx64,
-			label->scope);
+		tmp = snprintf(&string[offset], size - offset, "unknown%04"PRIx64"%04"PRIx64,
+			label->scope,
+			label->value);
 		offset += tmp;
 		if (offset >= size) {
 			return 1;

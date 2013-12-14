@@ -936,12 +936,12 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* MOV param to local */
 		/* When the destination is a param_reg,
 		 * Change it to a local_reg */
-		if ((inst->value3.value_scope == 1) &&
-			(STORE_REG == instruction->dstA.store) &&
-			(1 == inst->value1.value_scope) &&
-			(0 == instruction->dstA.indirect)) {
-			inst->value3.value_scope = 2;
-		}
+		//if ((inst->value3.value_scope == 1) &&
+		//	(STORE_REG == instruction->dstA.store) &&
+		//	(1 == inst->value1.value_scope) &&
+		//	(0 == instruction->dstA.indirect)) {
+		//	inst->value3.value_scope = 2;
+		//}
 		/* Counter */
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
@@ -987,16 +987,23 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.ref_log =
 			inst->value1.ref_log;
 		/* Note: value_scope stays from the dst, not the src. */
-		inst->value3.value_scope = 3;
+		if (instruction->dstA.indirect == IND_STACK) {
+			inst->value3.value_scope = 2;
+		} else if (instruction->dstA.indirect == IND_MEM) {
+			inst->value3.value_scope = 3;
+		}
+
+		
+		//inst->value3.value_scope = 3;
 		/* MOV param to local */
 		/* When the destination is a param_reg,
 		 * Change it to a local_reg */
-		if ((inst->value3.value_scope == 1) &&
-			(STORE_REG == instruction->dstA.store) &&
-			(1 == inst->value1.value_scope) &&
-			(0 == instruction->dstA.indirect)) {
-			inst->value3.value_scope = 2;
-		}
+		//if ((inst->value3.value_scope == 1) &&
+		//	(STORE_REG == instruction->dstA.store) &&
+		//	(1 == inst->value1.value_scope) &&
+		//	(0 == instruction->dstA.indirect)) {
+		//	inst->value3.value_scope = 2;
+		//}
 		/* Counter */
 		//if (inst->value3.value_scope == 2) {
 			/* Only value_id preserves the value2 values */
