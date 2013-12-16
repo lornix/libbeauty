@@ -472,6 +472,7 @@ int main(int argc, char *argv[])
 	string1.len = 0;
 	string1.max = 1023;
 	string1.string[0] = 0;
+	int result_count;
 
 	if (argc != 1) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
@@ -608,11 +609,16 @@ int main(int argc, char *argv[])
 		printf("END test data 0x%x\n", l);
 	
 	}
-	
+
+	result_count = 0;
 	for (l = 0; l < test_data_no; l++) {
 		if (test_result[l]) {
 			printf("FAILED TEST 0x%x: result = 0x%x\n", l, test_result[l]);
+			result_count++;
 		}
+	}
+	if (!result_count) {
+		printf("ALL TESTS PASSED!\n");
 	}
 
 	return 0;
