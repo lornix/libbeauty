@@ -89,50 +89,50 @@ void debug_print(int module, int level, const char *format, ...)
 	switch (module) {
 	case DEBUG_MAIN:
 		if (level <= debug_dis64) {
-			fprintf(stderr, "DEBUG_MAIN,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_MAIN,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_BFD:
 		if (level <= debug_input_bfd) {
-			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_INPUT_BFD,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_DIS:
 		if (level <= debug_input_dis) {
-			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_INPUT_DIS,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_EXE:
 		if (level <= debug_exe) {
-			fprintf(stderr, "DEBUG_EXE,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_EXE,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE:
 		if (level <= debug_analyse) {
-			fprintf(stderr, "DEBUG_ANALYSE,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PATHS:
 		if (level <= debug_analyse_paths) {
-			fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PATHS,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PHI:
 		if (level <= debug_analyse_phi) {
-			fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PHI,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_OUTPUT:
 		if (level <= debug_output) {
-			fprintf(stderr, "DEBUG_OUTPUT,0x%x:", level);
-			vfprintf(stderr, format, ap);
+			dprintf(STDERR_FILENO, "DEBUG_OUTPUT,0x%x:", level);
+			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	default:
@@ -1472,7 +1472,7 @@ int output_cfg_dot(struct self_s *self,
 	struct control_flow_node_s *nodes = external_entry_points[entry_point].nodes;
 	int nodes_size = external_entry_points[entry_point].nodes_size;
 	char *filename;
-	FILE *fd;
+	int fd;
 	int node;
 	int tmp;
 	int n;
@@ -1491,14 +1491,14 @@ int output_cfg_dot(struct self_s *self,
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/test-0x%04x-%s.dot", entry_point, external_entry_points[entry_point].name);
 
-	fd = fopen(filename, "w");
-	if (!fd) {
-		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	if (fd < 0) {
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
 	}
-	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%d\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
-	tmp = fprintf(fd, "digraph code {\n"
+	tmp = dprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
@@ -1529,57 +1529,57 @@ int output_cfg_dot(struct self_s *self,
 		} else {
 			name = "";
 		}
-		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+		tmp = dprintf(fd, " \"Node:0x%08x\" ["
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s",
                                         node,
 					node, "lightgray", node, name);
 		if (external_entry_points[entry_point].params_size > 0) {
 			char buffer[1024];
-			tmp = fprintf(fd, "(");
+			tmp = dprintf(fd, "(");
 			for (n = 0; n < external_entry_points[entry_point].params_size; n++) {
 				int label_index;
 				label_index = external_entry_points[entry_point].params[n];
 				tmp = label_to_string(&external_entry_points[entry_point].labels[label_index], buffer, 1023);
-				fprintf(fd, "%s", buffer);
+				dprintf(fd, "%s", buffer);
 				if (n + 1 < external_entry_points[entry_point].params_size) {
-					tmp = fprintf(fd, ", ");
+					tmp = dprintf(fd, ", ");
 				}
 			}
-			tmp = fprintf(fd, ")");
+			tmp = dprintf(fd, ")");
 		}
-		tmp = fprintf(fd, "\\l");
-		tmp = fprintf(fd, "type = 0x%x\\l",
+		tmp = dprintf(fd, "\\l");
+		tmp = dprintf(fd, "type = 0x%x\\l",
 				nodes[node].type);
 		if (nodes[node].if_tail) {
-			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+			tmp = dprintf(fd, "if_tail = 0x%x\\l",
 				nodes[node].if_tail);
 		}
 		if (nodes[node].phi_size) {
 			for (n = 0; n < nodes[node].phi_size; n++) {
-				tmp = fprintf(fd, "phi[%d] = REG0x%x:0x%x ",
+				tmp = dprintf(fd, "phi[%d] = REG0x%x:0x%x ",
 					n, nodes[node].phi[n].reg, nodes[node].phi[n].value_id);
 				for (m = 0; m < nodes[node].phi[n].phi_node_size; m++) {
 					//tmp = get_value_id_from_node_reg(self, nodes[node].entry_point, nodes[node].phi[n].phi_node[m].node, nodes[node].phi[n].reg, &value_id);
-					tmp = fprintf(fd, "FPN:0x%x:SN:0x%x:L:0x%x, ",
+					tmp = dprintf(fd, "FPN:0x%x:SN:0x%x:L:0x%x, ",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
 						nodes[node].phi[n].phi_node[m].node,
 						nodes[node].phi[n].phi_node[m].value_id);
 				}
 #if 0
 				for (m = 0; m < nodes[node].path_size; m++) {
-					tmp = fprintf(fd, "P0x%x:FPN:0x%x:SN:0x%x, ",
+					tmp = dprintf(fd, "P0x%x:FPN:0x%x:SN:0x%x, ",
 						nodes[node].phi[n].path_node[m].path,
 						nodes[node].phi[n].path_node[m].first_prev_node,
 						nodes[node].phi[n].path_node[m].node);
 				}
 				for (m = 0; m < nodes[node].looped_path_size; m++) {
-					tmp = fprintf(fd, "LP0x%x:FPN:0x%x:SN:0x%x, ",
+					tmp = dprintf(fd, "LP0x%x:FPN:0x%x:SN:0x%x, ",
 						nodes[node].phi[n].looped_path_node[m].path,
 						nodes[node].phi[n].looped_path_node[m].first_prev_node,
 						nodes[node].phi[n].looped_path_node[m].node);
 				}
 #endif
-				tmp = fprintf(fd, "\\l");
+				tmp = dprintf(fd, "\\l");
 			}
 		}
 		n = nodes[node].inst_start;
@@ -1588,21 +1588,21 @@ int output_cfg_dot(struct self_s *self,
 			inst_log1 =  &inst_log_entry[n];
 			instruction =  &inst_log1->instruction;
 			//tmp = write_inst(self, fd, instruction, n, NULL);
-			//tmp = fprintf(fd, "\\l");
+			//tmp = dprintf(fd, "\\l");
 			printf("output_cfg:Inst 0x%x: label1 = 0x%"PRIx64", label2 = 0x%"PRIx64", label3 = 0x%"PRIx64"\n",
 				n,
 				inst_log1->value1.value_id,
 				inst_log1->value2.value_id,
 				inst_log1->value3.value_id);
 			tmp = output_inst_in_c(self, process_state, fd, n, label_redirect, labels, "\\l");
-			//tmp = fprintf(fd, "\\l\n");
+			//tmp = dprintf(fd, "\\l\n");
 			if (inst_log1->node_end || !(inst_log1->next_size)) {
 				block_end = 1;
 			} else {
 				n = inst_log1->next[0];
 			}
 		} while (!block_end);
-		tmp = fprintf(fd, "\"];\n");
+		tmp = dprintf(fd, "\"];\n");
 		for (n = 0; n < nodes[node].next_size; n++) {
 			char *label;
 			if (nodes[node].next_size < 2) {
@@ -1611,7 +1611,7 @@ int output_cfg_dot(struct self_s *self,
 				} else {
 					color = "blue";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color);
 			} else if (nodes[node].next_size == 2) {
 				if (1 == nodes[node].link_next[n].is_loop_edge) {
@@ -1626,17 +1626,17 @@ int output_cfg_dot(struct self_s *self,
 				} else {
 					label = "true";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color, label);
 			} else {
 				/* next_size > 2 */
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
 					node, nodes[node].link_next[n].node, color, n);
 			}
 		}
 	}
-	tmp = fprintf(fd, "}\n");
-	fclose(fd);
+	tmp = dprintf(fd, "}\n");
+	close(fd);
 	return 0;
 }
 
@@ -1644,7 +1644,7 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 {
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 	char *filename;
-	FILE *fd;
+	int fd;
 	int node;
 	int tmp;
 	int n;
@@ -1656,14 +1656,14 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/basic.dot");
 
-	fd = fopen(filename, "w");
+	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
 	if (!fd) {
-		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
 	}
-	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%d\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
-	tmp = fprintf(fd, "digraph code {\n"
+	tmp = dprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
@@ -1679,17 +1679,17 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 		} else {
 			name = "";
 		}
-		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+		tmp = dprintf(fd, " \"Node:0x%08x\" ["
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
 					node, "lightgray", node, name);
-		tmp = fprintf(fd, "type = 0x%x\\l",
+		tmp = dprintf(fd, "type = 0x%x\\l",
 				nodes[node].type);
 		if (nodes[node].if_tail) {
-			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+			tmp = dprintf(fd, "if_tail = 0x%x\\l",
 				nodes[node].if_tail);
 		}
-		tmp = fprintf(fd, "\"];\n");
+		tmp = dprintf(fd, "\"];\n");
 
 		for (n = 0; n < nodes[node].next_size; n++) {
 			char *label;
@@ -1699,7 +1699,7 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 				} else {
 					color = "blue";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color);
 			} else if (nodes[node].next_size == 2) {
 				if (1 == nodes[node].link_next[n].is_loop_edge) {
@@ -1714,24 +1714,24 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 				} else {
 					label = "true";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color, label);
 			} else {
 				/* next_size > 2 */
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
 					node, nodes[node].link_next[n].node, color, n);
 			}
 		}
 	}
-	tmp = fprintf(fd, "}\n");
-	fclose(fd);
+	tmp = dprintf(fd, "}\n");
+	close(fd);
 	return 0;
 }
 
 int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *external_entry_point)
 {
 	char *filename;
-	FILE *fd;
+	int fd;
 	int node;
 	int nodes_size = external_entry_point->nodes_size;
 	struct control_flow_node_s *nodes = external_entry_point->nodes;
@@ -1745,14 +1745,14 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/basic-%s.dot", external_entry_point->name);
 
-	fd = fopen(filename, "w");
+	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
 	if (!fd) {
-		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
 	}
-	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%d\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
-	tmp = fprintf(fd, "digraph code {\n"
+	tmp = dprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
@@ -1768,17 +1768,17 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 		} else {
 			name = "";
 		}
-		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+		tmp = dprintf(fd, " \"Node:0x%08x\" ["
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         node,
 					node, "lightgray", node, name);
-		tmp = fprintf(fd, "type = 0x%x\\l",
+		tmp = dprintf(fd, "type = 0x%x\\l",
 				external_entry_point->nodes[node].type);
 		if (external_entry_point->nodes[node].if_tail) {
-			tmp = fprintf(fd, "if_tail = 0x%x\\l",
+			tmp = dprintf(fd, "if_tail = 0x%x\\l",
 				external_entry_point->nodes[node].if_tail);
 		}
-		tmp = fprintf(fd, "\"];\n");
+		tmp = dprintf(fd, "\"];\n");
 
 		for (n = 0; n < external_entry_point->nodes[node].next_size; n++) {
 			char *label;
@@ -1788,7 +1788,7 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 				} else {
 					color = "blue";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color);
 			} else if (nodes[node].next_size == 2) {
 				if (1 == nodes[node].link_next[n].is_loop_edge) {
@@ -1803,17 +1803,17 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 				} else {
 					label = "true";
 				}
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"%s\"];\n",
 					node, nodes[node].link_next[n].node, color, label);
 			} else {
 				/* next_size > 2 */
-				tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
+				tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\" label=\"0x%x\"];\n",
 					node, nodes[node].link_next[n].node, color, n);
 			}
 		}
 	}
-	tmp = fprintf(fd, "}\n");
-	fclose(fd);
+	tmp = dprintf(fd, "}\n");
+	close(fd);
 	return 0;
 }
 
@@ -1834,7 +1834,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	int loop_then_else_index = ast->loop_then_else_size;
 	int loop_container_index = ast->loop_container_size;
 	char *filename;
-	FILE *fd;
+	int fd;
 	int start_node;
 	int tmp;
 	int index;
@@ -1846,14 +1846,14 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	const char *name;
 	filename = "test-ast.dot";
 
-	fd = fopen(filename, "w");
-	if (!fd) {
-		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	if (fd < 0) {
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
 	}
-	debug_print(DEBUG_MAIN, 1, ".dot fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, ".dot fd=%d\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out dot to file\n");
-	tmp = fprintf(fd, "digraph code {\n"
+	tmp = dprintf(fd, "digraph code {\n"
 		"\tgraph [bgcolor=white];\n"
 		"\tnode [color=lightgray, style=filled shape=box"
 		" fontname=\"%s\" fontsize=\"8\"];\n", font);
@@ -1867,53 +1867,53 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		} else {
 			name = "";
 		}
-		tmp = fprintf(fd, " \"Container:0x%08x\" ["
+		tmp = dprintf(fd, " \"Container:0x%08x\" ["
                                         "URL=\"Container:0x%08x\" color=\"%s\", label=\"Container:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		name = "";
 		for (m = 0; m < ast_container[n].length; m++) {
 			index = ast_container[n].object[m].index;
 			switch (ast_container[n].object[m].type) {
 			case AST_TYPE_NODE:
-				tmp = fprintf(fd, " \"Node:0x%08x\" ["
+				tmp = dprintf(fd, " \"Node:0x%08x\" ["
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         index,
 					index, "lightgray", index, name);
-				tmp = fprintf(fd, "\"]\n");
+				tmp = dprintf(fd, "\"]\n");
 				color = "red";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_CONTAINER:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_LOOP_CONTAINER:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"Loop_Container:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"Loop_Container:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_IF_THEN_ELSE:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_IF_THEN_GOTO:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"if_then_goto:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"if_then_goto:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_LOOP:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_LOOP_THEN_ELSE:
 				color = "blue";
-				tmp = fprintf(fd, "\"Container:0x%08x\" -> \"loop_then_else:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Container:0x%08x\" -> \"loop_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			default:
@@ -1931,50 +1931,50 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		} else {
 			name = "";
 		}
-		tmp = fprintf(fd, " \"Loop_Container:0x%08x\" ["
+		tmp = dprintf(fd, " \"Loop_Container:0x%08x\" ["
                                         "URL=\"Loop_Container:0x%08x\" color=\"%s\", label=\"Loop_Container:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		name = "";
 		for (m = 0; m < ast_loop_container[n].length; m++) {
 			index = ast_loop_container[n].object[m].index;
 			switch (ast_loop_container[n].object[m].type) {
 			case AST_TYPE_NODE:
-				tmp = fprintf(fd, " \"Node:0x%08x\" ["
+				tmp = dprintf(fd, " \"Node:0x%08x\" ["
                                         "URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
                                         index,
 					index, "lightgray", index, name);
-				tmp = fprintf(fd, "\"]\n");
+				tmp = dprintf(fd, "\"]\n");
 				color = "red";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_CONTAINER:
 				break;
 			case AST_TYPE_LOOP_CONTAINER:
 				color = "blue";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"Loop_container:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"Loop_container:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_IF_THEN_ELSE:
 				color = "blue";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_IF_THEN_GOTO:
 				color = "blue";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"if_then_goto:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"if_then_goto:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_LOOP:
 				color = "blue";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			case AST_TYPE_LOOP_THEN_ELSE:
 				color = "blue";
-				tmp = fprintf(fd, "\"Loop_Container:0x%08x\" -> \"loop_then_else:0x%08x\" [color=\"%s\"];\n",
+				tmp = dprintf(fd, "\"Loop_Container:0x%08x\" -> \"loop_then_else:0x%08x\" [color=\"%s\"];\n",
 					n, index, color);
 				break;
 			default:
@@ -1987,21 +1987,21 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			break;
 		}
 		name = "";
-		tmp = fprintf(fd, " \"if_then_else:0x%08x\" ["
+		tmp = dprintf(fd, " \"if_then_else:0x%08x\" ["
                                         "URL=\"if_then_else:0x%08x\" color=\"%s\", label=\"if_then_else:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		index = ast_if_then_else[n].expression_node.index;
 		switch (ast_if_then_else[n].expression_node.type) {
 		case AST_TYPE_NODE:
 			color = "gold";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "gold";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2011,12 +2011,12 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_if_then_else[n].if_then.type) {
 		case AST_TYPE_NODE:
 			color = "green";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "green";
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2027,13 +2027,13 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		case AST_TYPE_NODE:
 			color = "red";
 			debug_print(DEBUG_MAIN, 1, "if_then_else:0x%x TYPE_NODE \n", n);
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
 			debug_print(DEBUG_MAIN, 1, "if_then_else:0x%x TYPE_CONTAINER \n", n);
-			tmp = fprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2046,21 +2046,21 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			break;
 		}
 		name = "";
-		tmp = fprintf(fd, " \"if_then_goto:0x%08x\" ["
+		tmp = dprintf(fd, " \"if_then_goto:0x%08x\" ["
                                         "URL=\"if_then_goto:0x%08x\" color=\"%s\", label=\"if_then_goto:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		index = ast_if_then_goto[n].expression_node.index;
 		switch (ast_if_then_goto[n].expression_node.type) {
 		case AST_TYPE_NODE:
 			color = "gold";
-			tmp = fprintf(fd, "\"if_then_goto:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_goto:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "gold";
-			tmp = fprintf(fd, "\"if_then_goto:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_goto:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2070,12 +2070,12 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_if_then_goto[n].if_then_goto.type) {
 		case AST_TYPE_NODE:
 			color = "green";
-			tmp = fprintf(fd, "\"if_then_goto:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_goto:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "green";
-			tmp = fprintf(fd, "\"if_then_goto:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"if_then_goto:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2087,40 +2087,40 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			break;
 		}
 		name = "";
-		tmp = fprintf(fd, " \"loop:0x%08x\" ["
+		tmp = dprintf(fd, " \"loop:0x%08x\" ["
                                         "URL=\"loop:0x%08x\" color=\"%s\", label=\"loop:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		index = ast_loop[n].first_node.index;
-		tmp = fprintf(fd, " \"Node:0x%08x\" ["
+		tmp = dprintf(fd, " \"Node:0x%08x\" ["
 			"URL=\"Node:0x%08x\" color=\"%s\", label=\"Node:0x%08x:%s\\l",
 			index,
 			index, "lightgray", index, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		color = "gold";
-		tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+		tmp = dprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 			n, index, color);
 		index = ast_loop[n].body.index;
 		switch (ast_loop[n].body.type) {
 		case AST_TYPE_NODE:
 			color = "red";
-			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
-			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_IF_THEN_ELSE:
 			color = "blue";
-			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop:0x%08x\" -> \"if_then_else:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_LOOP:
 			color = "blue";
-			tmp = fprintf(fd, "\"loop:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop:0x%08x\" -> \"loop:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2132,21 +2132,21 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 			break;
 		}
 		name = "";
-		tmp = fprintf(fd, " \"loop_then_else:0x%08x\" ["
+		tmp = dprintf(fd, " \"loop_then_else:0x%08x\" ["
                                         "URL=\"loop_then_else:0x%08x\" color=\"%s\", label=\"loop_then_else:0x%08x:%s\\l",
                                         n,
 					n, "lightgray", n, name);
-		tmp = fprintf(fd, "\"]\n");
+		tmp = dprintf(fd, "\"]\n");
 		index = ast_loop_then_else[n].expression_node.index;
 		switch (ast_loop_then_else[n].expression_node.type) {
 		case AST_TYPE_NODE:
 			color = "gold";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "gold";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2156,12 +2156,12 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_loop_then_else[n].loop_then.type) {
 		case AST_TYPE_NODE:
 			color = "green";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "green";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2171,12 +2171,12 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 		switch (ast_loop_then_else[n].loop_else.type) {
 		case AST_TYPE_NODE:
 			color = "red";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		case AST_TYPE_CONTAINER:
 			color = "red";
-			tmp = fprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
+			tmp = dprintf(fd, "\"loop_then_else:0x%08x\" -> \"Container:0x%08x\" [color=\"%s\"];\n",
 				n, index, color);
 			break;
 		default:
@@ -2186,12 +2186,12 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 #if 0
 	for (n = 0; n < nodes[node].next_size; n++) {
 		color = "blue";
-		tmp = fprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
+		tmp = dprintf(fd, "\"Node:0x%08x\" -> \"Node:0x%08x\" [color=\"%s\"];\n",
 			node, nodes[node].link_next[n].node, color);
 	}
 #endif
-	tmp = fprintf(fd, "}\n");
-	fclose(fd);
+	tmp = dprintf(fd, "}\n");
+	close(fd);
 	return 0;
 }
 
@@ -4820,7 +4820,7 @@ int main(int argc, char *argv[])
 	void *handle_void = NULL;
 	uint32_t arch;
 	uint64_t mach;
-	FILE *fd;
+	int fd;
 	int tmp;
 	int err;
 	const char *file = "test.obj";
@@ -6458,8 +6458,8 @@ int main(int argc, char *argv[])
 					return 1;
 				}
 				tmp = output_label(label, stdout);
-				tmp = fprintf(stdout, ");\n");
-				tmp = fprintf(stdout, "PARAM size = 0x%"PRIx64"\n", size);
+				tmp = dprintf(stdout, ");\n");
+				tmp = dprintf(stdout, "PARAM size = 0x%"PRIx64"\n", size);
 				if (size > 1) {
 					debug_print(DEBUG_MAIN, 1, "number of param locals (0x%"PRIx64") found too big at instruction 0x%x\n", size, n);
 //					return 1;
@@ -6616,14 +6616,14 @@ int main(int argc, char *argv[])
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
 	filename = "test.c";
-	fd = fopen(filename, "w");
-	if (!fd) {
-		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%p\n", filename, fd);
+	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	if (fd < 0) {
+		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
 	}
-	debug_print(DEBUG_MAIN, 1, ".c fd=%p\n", fd);
+	debug_print(DEBUG_MAIN, 1, ".c fd=%d\n", fd);
 	debug_print(DEBUG_MAIN, 1, "writing out to file\n");
-	tmp = fprintf(fd, "#include <stdint.h>\n\n");
+	tmp = dprintf(fd, "#include <stdint.h>\n\n");
 	debug_print(DEBUG_MAIN, 1, "PRINTING MEMORY_DATA\n");
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		struct process_state_s *process_state;
@@ -6639,14 +6639,14 @@ int main(int argc, char *argv[])
 						debug_print(DEBUG_MAIN, 1, "int *data%04"PRIx64" = &data%04"PRIx64"\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
-						tmp = fprintf(fd, "int *data%04"PRIx64" = &data%04"PRIx64";\n",
+						tmp = dprintf(fd, "int *data%04"PRIx64" = &data%04"PRIx64";\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
 					} else {
 						debug_print(DEBUG_MAIN, 1, "int data%04"PRIx64" = 0x%04"PRIx64"\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
-						tmp = fprintf(fd, "int data%04"PRIx64" = 0x%"PRIx64";\n",
+						tmp = dprintf(fd, "int data%04"PRIx64" = 0x%"PRIx64";\n",
 							memory_data[n].start_address,
 							memory_data[n].init_value);
 					}
@@ -6654,7 +6654,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	tmp = fprintf(fd, "\n");
+	tmp = dprintf(fd, "\n");
 	debug_print(DEBUG_MAIN, 1, "\n");
 #if 0
 	for (n = 0; n < 100; n++) {
@@ -6700,7 +6700,7 @@ int main(int argc, char *argv[])
 			
 			process_state = &external_entry_points[l].process_state;
 
-			tmp = fprintf(fd, "\n");
+			tmp = dprintf(fd, "\n");
 			output_function_name(fd, &external_entry_points[l]);
 			tmp_state = 0;
 			for (m = 0; m < REG_PARAMS_ORDER_MAX; m++) {
@@ -6713,15 +6713,15 @@ int main(int argc, char *argv[])
 						(label->type == 1) &&
 						(label->value == reg_params_order[m])) {
 						if (tmp_state > 0) {
-							fprintf(fd, ", ");
+							dprintf(fd, ", ");
 						}
-						fprintf(fd, "int%"PRId64"_t ",
+						dprintf(fd, "int%"PRId64"_t ",
 							label->size_bits);
 						if (label->lab_pointer) {
-							fprintf(fd, "*");
+							dprintf(fd, "*");
 						}
 						tmp = label_to_string(label, buffer, 1023);
-						fprintf(fd, "%s", buffer);
+						dprintf(fd, "%s", buffer);
 						tmp_state++;
 					}
 				}
@@ -6735,32 +6735,32 @@ int main(int argc, char *argv[])
 					continue;
 				}
 				if (tmp_state > 0) {
-					fprintf(fd, ", ");
+					dprintf(fd, ", ");
 				}
-				fprintf(fd, "int%"PRId64"_t ",
+				dprintf(fd, "int%"PRId64"_t ",
 					label->size_bits);
 				if (label->lab_pointer) {
-					fprintf(fd, "*");
+					dprintf(fd, "*");
 				}
 				tmp = label_to_string(label, buffer, 1023);
-				fprintf(fd, "%s", buffer);
+				dprintf(fd, "%s", buffer);
 				tmp_state++;
 			}
-			tmp = fprintf(fd, ")\n{\n");
+			tmp = dprintf(fd, ")\n{\n");
 			for (n = 0; n < external_entry_points[l].locals_size; n++) {
 				struct label_s *label;
 				char buffer[1024];
 				label = &(external_entry_points[l].labels[external_entry_points[l].locals[n]]);
-				fprintf(fd, "\tint%"PRId64"_t ",
+				dprintf(fd, "\tint%"PRId64"_t ",
 					label->size_bits);
 				if (label->lab_pointer) {
-					fprintf(fd, "*");
+					dprintf(fd, "*");
 				}
 				tmp = label_to_string(label, buffer, 1023);
-				fprintf(fd, "%s", buffer);
-				fprintf(fd, ";\n");
+				dprintf(fd, "%s", buffer);
+				dprintf(fd, ";\n");
 			}
-			fprintf(fd, "\n");
+			dprintf(fd, "\n");
 					
 			tmp = output_function_body(self, process_state,
 				fd,
@@ -6777,7 +6777,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	fclose(fd);
+	close(fd);
 
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid &&

@@ -176,7 +176,7 @@ int label_to_string(struct label_s *label, char *string, int size) {
 	return 0;
 }
 
-int output_label_redirect(int offset, struct label_s *labels, struct label_redirect_s *label_redirect, FILE *fd) {
+int output_label_redirect(int offset, struct label_s *labels, struct label_redirect_s *label_redirect, int fd) {
 	int tmp;
 	struct label_s *label;
 	char buffer[1024];
@@ -187,11 +187,11 @@ int output_label_redirect(int offset, struct label_s *labels, struct label_redir
 	if (tmp) {
 		return tmp;
 	}
-	tmp = fprintf(fd, "%s", buffer);
+	tmp = dprintf(fd, "%s", buffer);
 	return 0;
 }
 
-int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, FILE *fd) {
+int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, int fd) {
 	int tmp;
 	/* FIXME: May handle by using first switch as switch (indirect) */
 	switch (store) {
@@ -205,13 +205,13 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 		/* relocation table entry == pointer */
 		/* this info should be gathered at disassembly point */
 		if (indirect == IND_MEM) {
-			tmp = fprintf(fd, "data%04"PRIx64,
+			tmp = dprintf(fd, "data%04"PRIx64,
 				index);
 		} else if (relocated) {
-			tmp = fprintf(fd, "&data%04"PRIx64,
+			tmp = dprintf(fd, "&data%04"PRIx64,
 				index);
 		} else {
-			tmp = fprintf(fd, "0x%"PRIx64,
+			tmp = dprintf(fd, "0x%"PRIx64,
 				index);
 		}
 		break;
@@ -222,12 +222,12 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 			if (IND_STACK == indirect) {
 				debug_print(DEBUG_OUTPUT, 1, "param_stack%04"PRIx64",%04"PRIx64",%04d\n",
 					index, indirect_offset_value, indirect);
-				tmp = fprintf(fd, "param_stack%04"PRIx64",%04"PRIx64",%04d",
+				tmp = dprintf(fd, "param_stack%04"PRIx64",%04"PRIx64",%04d",
 					index, indirect_offset_value, indirect);
 			} else if (0 == indirect) {
 				debug_print(DEBUG_OUTPUT, 1, "param_reg%04"PRIx64,
 					index);
-				tmp = fprintf(fd, "param_reg%04"PRIx64,
+				tmp = dprintf(fd, "param_reg%04"PRIx64,
 					index);
 			}
 			break;
@@ -236,12 +236,12 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 			if (IND_STACK == indirect) {
 				debug_print(DEBUG_OUTPUT, 1, "local_stack%04"PRIx64"\n",
 					value_id);
-				tmp = fprintf(fd, "local_stack%04"PRIx64,
+				tmp = dprintf(fd, "local_stack%04"PRIx64,
 					value_id);
 			} else if (0 == indirect) {
 				debug_print(DEBUG_OUTPUT, 1, "local_reg%04"PRIx64"\n",
 					value_id);
-				tmp = fprintf(fd, "local_reg%04"PRIx64,
+				tmp = dprintf(fd, "local_reg%04"PRIx64,
 					value_id);
 			}
 			break;
@@ -252,12 +252,12 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 			/* value_id to identify it. */
 			/* It will always be a local and not a param */
 			debug_print(DEBUG_OUTPUT, 1, "xxxlocal_mem%04"PRIx64";\n", (indirect_value_id));
-			tmp = fprintf(fd, "xxxlocal_mem%04"PRIx64,
+			tmp = dprintf(fd, "xxxlocal_mem%04"PRIx64,
 				indirect_value_id);
 			break;
 		default:
 			debug_print(DEBUG_OUTPUT, 1, "unknown value scope: %04"PRIx64";\n", (value_scope));
-			tmp = fprintf(fd, "unknown%04"PRIx64,
+			tmp = dprintf(fd, "unknown%04"PRIx64,
 				value_scope);
 			break;
 		}
@@ -270,7 +270,7 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 }
 
 int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
-	struct label_redirect_s *label_redirect, struct label_s *labels, FILE *fd)
+	struct label_redirect_s *label_redirect, struct label_s *labels, int fd)
 {
 	int opcode;
 	int err = 0;
@@ -322,12 +322,12 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			break;
 		}
 		if (err) break;
-		tmp = fprintf(fd, "(");
+		tmp = dprintf(fd, "(");
 
 		switch (inst_log1_flagged->instruction.srcB.indirect) {
 		case IND_MEM:
 		case IND_IO:
-			tmp = fprintf(fd, "*");
+			tmp = dprintf(fd, "*");
 			/* fall through */
 		case IND_STACK:
 			value_id = inst_log1_flagged->value2.indirect_value_id;
@@ -337,21 +337,21 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			break;
 		}
 		if (STORE_DIRECT == inst_log1_flagged->instruction.srcB.store) {
-			tmp = fprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
+			tmp = dprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
 		} else {
 			char buffer[1024];
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, "%s", buffer);
 		}
-		tmp = fprintf(fd, "%s", condition_string);
+		tmp = dprintf(fd, "%s", condition_string);
 
 		switch (inst_log1_flagged->instruction.srcA.indirect) {
 		case IND_MEM:
 		case IND_IO:
-			tmp = fprintf(fd, "*");
+			tmp = dprintf(fd, "*");
 			/* fall through */
 		case IND_STACK:
 			value_id = inst_log1_flagged->value1.indirect_value_id;
@@ -362,16 +362,16 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 		}
 
 		if (STORE_DIRECT == inst_log1_flagged->instruction.srcB.store) {
-			tmp = fprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
+			tmp = dprintf(fd, "0x%"PRIx64, inst_log1_flagged->instruction.srcB.index);
 		} else {
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, "%s", buffer);
 		}
 
-		tmp = fprintf(fd, ") ");
+		tmp = dprintf(fd, ") ");
 		break;
 	case SUB:
 	case ADD:
@@ -391,19 +391,19 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 		if ((!err) && (IND_DIRECT == inst_log1_flagged->instruction.srcA.indirect) &&
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
-			tmp = fprintf(fd, "((");
+			tmp = dprintf(fd, "((");
 			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1_flagged->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1_flagged->value2.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, "%s) ", condition_string);
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, "%s) ", condition_string);
 		}
 		break;
 
@@ -427,31 +427,31 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 		if ((!err) && (IND_DIRECT == inst_log1_flagged->instruction.srcA.indirect) &&
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
-			tmp = fprintf(fd, "((");
+			tmp = dprintf(fd, "((");
 			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1_flagged->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1_flagged->value2.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, " AND ");
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, " AND ");
 			if (1 == inst_log1_flagged->instruction.srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1_flagged->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1_flagged->value1.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, ")%s) ", condition_string);
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, ")%s) ", condition_string);
 		}
 		break;
 
@@ -472,31 +472,31 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 		if ((!err) && (IND_DIRECT == inst_log1_flagged->instruction.srcA.indirect) &&
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
-			tmp = fprintf(fd, "((");
+			tmp = dprintf(fd, "((");
 			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1_flagged->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1_flagged->value2.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, " AND ");
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, " AND ");
 			if (1 == inst_log1_flagged->instruction.srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1_flagged->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1_flagged->value1.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, ")%s) ", condition_string);
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, ")%s) ", condition_string);
 		}
 		break;
 
@@ -508,18 +508,18 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	return err;
 }
 
-uint32_t output_function_name(FILE *fd,
+uint32_t output_function_name(int fd,
 		struct external_entry_point_s *external_entry_point)
 {
 	int tmp;
 
 	debug_print(DEBUG_OUTPUT, 1, "int %s()\n{\n", external_entry_point->name);
 	debug_print(DEBUG_OUTPUT, 1, "value = %"PRIx64"\n", external_entry_point->value);
-	tmp = fprintf(fd, "int %s(", external_entry_point->name);
+	tmp = dprintf(fd, "int %s(", external_entry_point->name);
 	return 0;
 }
 
-int output_3_labels(struct self_s *self, FILE *fd, struct inst_log_entry_s *inst_log1, int inst_number,
+int output_3_labels(struct self_s *self, int fd, struct inst_log_entry_s *inst_log1, int inst_number,
         struct label_redirect_s *label_redirect, struct label_s *labels, const char *symbol, const char *cr, char *buffer) {
 	struct instruction_s *instruction = &(inst_log1->instruction);
 	int tmp;
@@ -540,33 +540,33 @@ int output_3_labels(struct self_s *self, FILE *fd, struct inst_log_entry_s *inst
 	if (print_inst(self, instruction, inst_number, labels))
 		return 1;
 	debug_print(DEBUG_OUTPUT, 1, "\t");
-	tmp = fprintf(fd, "\t");
+	tmp = dprintf(fd, "\t");
 	value_id = inst_log1->value3.value_id;
 	tmp = label_redirect[value_id].redirect;
 	label = &labels[tmp];
 	tmp = label_to_string(label, buffer, 1023);
-	tmp = fprintf(fd, "%s", buffer);
-	//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-	tmp = fprintf(fd, " = ");
+	tmp = dprintf(fd, "%s", buffer);
+	//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+	tmp = dprintf(fd, " = ");
 	value_id = inst_log1->value1.value_id;
 	tmp = label_redirect[value_id].redirect;
 	label = &labels[tmp];
 	tmp = label_to_string(label, buffer, 1023);
-	tmp = fprintf(fd, "%s", buffer);
-	tmp = fprintf(fd, " %s ", symbol);
+	tmp = dprintf(fd, "%s", buffer);
+	tmp = dprintf(fd, " %s ", symbol);
 	debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 	value_id = inst_log1->value2.value_id;
 	tmp = label_redirect[value_id].redirect;
 	label = &labels[tmp];
 	tmp = label_to_string(label, buffer, 1023);
-	tmp = fprintf(fd, "%s", buffer);
-	//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-	tmp = fprintf(fd, ";%s",cr);
+	tmp = dprintf(fd, "%s", buffer);
+	//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+	tmp = dprintf(fd, ";%s",cr);
 	return 0;
 }
 
 int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
-			 FILE *fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr)
+			 int fd, int inst_number, struct label_redirect_s *label_redirect, struct label_s *labels, const char *cr)
 {
 	int tmp, l, n2;
 	int tmp_state;
@@ -600,38 +600,38 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 	//instruction_prev =  &inst_log1_prev->instruction;
 
 	write_inst(self, &string1, instruction, inst_number, labels);
-	tmp = fprintf(fd, "%s", string1.string);
-	tmp = fprintf(fd, "%s", cr);
+	tmp = dprintf(fd, "%s", string1.string);
+	tmp = dprintf(fd, "%s", cr);
 #if 0
-	tmp = fprintf(fd, "// ");
+	tmp = dprintf(fd, "// ");
 	if (inst_log1->prev_size > 0) {
-		tmp = fprintf(fd, "prev_size=0x%x: ",
+		tmp = dprintf(fd, "prev_size=0x%x: ",
 			inst_log1->prev_size);
 		for (l = 0; l < inst_log1->prev_size; l++) {
-			tmp = fprintf(fd, "prev=0x%x, ",
+			tmp = dprintf(fd, "prev=0x%x, ",
 			inst_log1->prev[l]);
 		}
 	}
 	if (inst_log1->next_size > 0) {
-		tmp = fprintf(fd, "next_size=0x%x: ",
+		tmp = dprintf(fd, "next_size=0x%x: ",
 			inst_log1->next_size);
 		for (l = 0; l < inst_log1->next_size; l++) {
-			tmp = fprintf(fd, "next=0x%x, ",
+			tmp = dprintf(fd, "next=0x%x, ",
 			inst_log1->next[l]);
 		}
 	}
-	tmp = fprintf(fd, "%s", cr);
+	tmp = dprintf(fd, "%s", cr);
 #endif
 	/* Output labels when this is a join point */
 	/* or when the previous instruction was some sort of jump */
 	if ((inst_log1->prev_size) > 1) {
 		debug_print(DEBUG_OUTPUT, 1, "label%04"PRIx32":\n", inst_number);
-		tmp = fprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
+		tmp = dprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
 	} else if (1 == inst_log1->prev_size){
 		if ((inst_log1->prev[0] != (inst_number - 1)) &&
 			(inst_log1->prev[0] != 0)) {
 			debug_print(DEBUG_OUTPUT, 1, "label%04"PRIx32":\n", inst_number);
-			tmp = fprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
+			tmp = dprintf(fd, "label%04"PRIx32":%s", inst_number, cr);
 		}
 	}
 	debug_print(DEBUG_OUTPUT, 1, "\n");
@@ -649,7 +649,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		(4 == inst_log1->value3.value_type) ||
 		(6 == inst_log1->value3.value_type) ||
 		(5 == inst_log1->value3.value_type)) {
-		//tmp = fprintf(fd, "//");
+		//tmp = dprintf(fd, "//");
 		switch (instruction->opcode) {
 		case LOAD:
 		case STORE:
@@ -664,11 +664,11 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			/* FIXME: Check limits */
 			switch (instruction->dstA.indirect) {
 			case IND_MEM:
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.value_id;
 				break;
 			case IND_STACK:
@@ -679,7 +679,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				value_id = inst_log1->value3.indirect_value_id;
 				break;
 			case IND_IO:
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.value_id;
 				break;
 			case IND_DIRECT:
@@ -688,20 +688,20 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			switch (instruction->srcA.indirect) {
 			case IND_MEM:
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.value_id;
 				//debug_print(DEBUG_OUTPUT, 1, "IND_MEM: inst:0x%x, value_id = 0x%lx\n", inst_number, value_id);
 				break;
 			case IND_STACK:
-				//tmp = fprintf(fd, "stack_");
+				//tmp = dprintf(fd, "stack_");
 				value_id = inst_log1->value1.indirect_value_id;
 				break;
 			case IND_IO:
@@ -713,11 +713,11 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 
 			break;
 		case MOV:
@@ -741,24 +741,24 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			value_id = inst_log1->value3.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			value_id = inst_log1->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 
 			break;
 		case NEG:
@@ -781,24 +781,24 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			value_id = inst_log1->value3.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = 0 -");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = 0 -");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			value_id = inst_log1->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 
 			break;
 
@@ -821,31 +821,31 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			value_id = inst_log1->value3.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			value_id = inst_log1->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, "%s", buffer);
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			value_id = inst_log1->value2.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			if (label->value > INT64_MAX) {
-				tmp = fprintf(fd, " - 0x%lx", - label->value);
+				tmp = dprintf(fd, " - 0x%lx", - label->value);
 			} else {
-				tmp = fprintf(fd, " + 0x%lx", label->value);
+				tmp = dprintf(fd, " + 0x%lx", label->value);
 			}
 			//tmp = label_to_string(label, buffer, 1023);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 		case MUL:
 		case IMUL:
@@ -864,24 +864,24 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			value_id = inst_log1->value3.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			value_id = inst_log1->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, " * ");
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, " * ");
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
 			if (1 == instruction->srcB.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1->value2.value_id;
@@ -889,9 +889,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s", cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s", cr);
 			break;
 
 		case SUB:
@@ -911,9 +911,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			if (1 == instruction->dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
 			} else {
 				value_id = inst_log1->value3.value_id;
@@ -921,12 +921,12 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = !");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = !");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1->value1.value_id;
@@ -934,9 +934,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 		case SHL: //TODO: UNSIGNED
 			output_3_labels(self, fd, inst_log1, inst_number, label_redirect, labels, "<<", cr, buffer);
@@ -954,16 +954,16 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			debug_print(DEBUG_OUTPUT, 1, "JMP reached XXXX\n");
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 
 //			if (instruction->srcA.relocated) {
 //				debug_print(DEBUG_OUTPUT, 1, "JMP goto rel%08"PRIx64";\n", instruction->srcA.index);
-//				tmp = fprintf(fd, "JMP goto rel%08"PRIx64";\n",
+//				tmp = dprintf(fd, "JMP goto rel%08"PRIx64";\n",
 //					instruction->srcA.index);
 //			} else {
 				debug_print(DEBUG_OUTPUT, 1, "JMP2 goto label%04"PRIx32";%s",
 					inst_log1->next[0], cr);
-				tmp = fprintf(fd, "JMP2 goto label%04"PRIx32";%s",
+				tmp = dprintf(fd, "JMP2 goto label%04"PRIx32";%s",
 					inst_log1->next[0], cr);
 //			}
 			break;
@@ -980,40 +980,40 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			/* FIXME: Check limits */
 			if (1 == instruction->dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 		case CALL:
 			/* FIXME: This does nothing at the moment. */
 			if (print_inst(self, instruction, inst_number, labels)) {
-				tmp = fprintf(fd, "exiting1\n");
+				tmp = dprintf(fd, "exiting1\n");
 				return 1;
 			}
 			/* Search for EAX */
@@ -1024,13 +1024,13 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 					external_entry_points[instruction->srcA.index].params_size);
 			}
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			tmp = label_redirect[inst_log1->value3.value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, "%s", buffer);
 			debug_print(DEBUG_OUTPUT, 1, " = ");
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, " = ");
 			if (IND_DIRECT == instruction->srcA.indirect) {
 				/* A direct call */
 				/* FIXME: Get the output right */
@@ -1042,10 +1042,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 						exit(1);
 					}
 						
-					//tmp = fprintf(fd, "%s(%d:", 
+					//tmp = dprintf(fd, "%s(%d:", 
 					//	external_entry_points[instruction->srcA.index].name,
 					//	external_entry_points[instruction->srcA.index].params_size);
-					tmp = fprintf(fd, "%s(", 
+					tmp = dprintf(fd, "%s(", 
 						external_entry_points[instruction->srcA.index].name);
 					tmp_state = 0;
 					for (n2 = 0; n2 < call->params_size; n2++) {
@@ -1056,12 +1056,12 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 						//if ((label->scope == 2) &&
 						//	(label->type == 1)) {
 						if (tmp_state > 0) {
-							fprintf(fd, ", ");
+							dprintf(fd, ", ");
 						}
-						//fprintf(fd, "int%"PRId64"_t ",
+						//dprintf(fd, "int%"PRId64"_t ",
 						//	label->size_bits);
 						tmp = label_to_string(label, buffer, 1023);
-						tmp = fprintf(fd, "%s", buffer);
+						tmp = dprintf(fd, "%s", buffer);
 						tmp_state++;
 					//	}
 					}
@@ -1074,17 +1074,17 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 							continue;
 						}
 						if (tmp_state > 0) {
-							fprintf(fd, ", ");
+							dprintf(fd, ", ");
 						}
-						fprintf(fd, "int%"PRId64"_t ",
+						dprintf(fd, "int%"PRId64"_t ",
 						label->size_bits);
 						tmp = output_label(label, fd);
 						tmp_state++;
 					}
 #endif
-					tmp = fprintf(fd, ");%s", cr);
+					tmp = dprintf(fd, ");%s", cr);
 				} else {
-					tmp = fprintf(fd, "CALL1()%s", cr);
+					tmp = dprintf(fd, "CALL1()%s", cr);
 				}
 #if 0
 				/* FIXME: JCD test disabled */
@@ -1092,26 +1092,26 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				if (call) {
 					for (l = 0; l < call->params_size; l++) {
 						if (l > 0) {
-							fprintf(fd, ", ");
+							dprintf(fd, ", ");
 						}
 						label = &labels[call->params[l]];
 						tmp = output_label(label, fd);
 					}
 				}
 #endif
-				//tmp = fprintf(fd, ");\n");
+				//tmp = dprintf(fd, ");\n");
 				//debug_print(DEBUG_OUTPUT, 1, "%s();\n",
 				//	external_entry_points[instruction->srcA.index].name);
 			} else {
 				/* A indirect call via a function pointer or call table. */
-				tmp = fprintf(fd, "(*");
+				tmp = dprintf(fd, "(*");
 				tmp = label_redirect[inst_log1->value1.indirect_value_id].redirect;
 				label = &labels[tmp];
 				tmp = label_to_string(label, buffer, 1023);
-				tmp = fprintf(fd, "%s", buffer);
-				tmp = fprintf(fd, ") ()%s", cr);
+				tmp = dprintf(fd, "%s", buffer);
+				tmp = dprintf(fd, ") ()%s", cr);
 			}
-//			tmp = fprintf(fd, "/* call(); */\n");
+//			tmp = dprintf(fd, "/* call(); */\n");
 //			debug_print(DEBUG_OUTPUT, 1, "/* call(); */\n");
 			break;
 
@@ -1121,9 +1121,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "//\tcmp ");
-			tmp = fprintf(fd, "//\tcmp ");
+			tmp = dprintf(fd, "//\tcmp ");
 			if (1 == instruction->srcB.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1->value2.value_id;
@@ -1131,12 +1131,12 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " - ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " - ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1->value1.value_id;
@@ -1144,36 +1144,36 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 
 		case ICMP:
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			if (1 == instruction->dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.indirect_value_id;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
-			//tmp = fprintf(fd, "0x%x:", tmp);
+			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " = ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			debug_print(DEBUG_OUTPUT, 1, "icmp\n");
 			err = if_expression( instruction->predicate, inst_log1, label_redirect, labels, fd);
 			debug_print(DEBUG_OUTPUT, 1, "prev flags=%d\n",inst_log1->instruction.flags);
 			debug_print(DEBUG_OUTPUT, 1, "prev opcode=0x%x\n",inst_log1->instruction.opcode);
 			debug_print(DEBUG_OUTPUT, 1, "0x%"PRIx64":%s\n", instruction->srcA.index, condition_table[instruction->predicate]);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 
 		case TEST:
@@ -1182,9 +1182,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "//\ttest ");
-			tmp = fprintf(fd, "//\ttest ");
+			tmp = dprintf(fd, "//\ttest ");
 			if (1 == instruction->dstA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value2.indirect_value_id;
 			} else {
 				value_id = inst_log1->value2.value_id;
@@ -1192,12 +1192,12 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
-			tmp = fprintf(fd, " , ");
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " , ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
 			if (1 == instruction->srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1->value1.value_id;
@@ -1205,9 +1205,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s",cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
 			break;
 
 		case IF:
@@ -1217,9 +1217,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			debug_print(DEBUG_OUTPUT, 1, "if1 ");
-			tmp = fprintf(fd, "if1 ");
+			tmp = dprintf(fd, "if1 ");
 			found = 0;
 			tmp = 30; /* Limit the scan backwards */
 			l = inst_log1->prev[0];
@@ -1255,13 +1255,13 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				debug_print(DEBUG_OUTPUT, 1, "IF CONDITION unknown\n");
 				return 1;
 			}
-			tmp = fprintf(fd, "IF goto ");
+			tmp = dprintf(fd, "IF goto ");
 //			for (l = 0; l < inst_log1->next_size; l++) {
-//				tmp = fprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
+//				tmp = dprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
 //			}
-			tmp = fprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
-			tmp = fprintf(fd, "%s", cr);
-			tmp = fprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
+			tmp = dprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
+			tmp = dprintf(fd, "%s", cr);
+			tmp = dprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
 
 			break;
 
@@ -1272,15 +1272,15 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			debug_print(DEBUG_OUTPUT, 1, "if (");
-			tmp = fprintf(fd, "if (");
+			tmp = dprintf(fd, "if (");
 //			debug_print(DEBUG_OUTPUT, 1, "\t prev flags=%d, ",inst_log1_flags->instruction.flags);
 //			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
 //			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
 //			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
 			if (1 == instruction->srcA.indirect) {
-				tmp = fprintf(fd, "*");
+				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value1.indirect_value_id;
 			} else {
 				value_id = inst_log1->value1.value_id;
@@ -1288,16 +1288,16 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			tmp = fprintf(fd, ")");
+			tmp = dprintf(fd, "%s", buffer);
+			tmp = dprintf(fd, ")");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			tmp = fprintf(fd, " goto ");
+			tmp = dprintf(fd, " goto ");
 //			for (l = 0; l < inst_log1->next_size; l++) {
-//				tmp = fprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
+//				tmp = dprintf(fd, ", label%04"PRIx32"", inst_log1->next[l]);
 //			}
-			tmp = fprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
-			tmp = fprintf(fd, "%s", cr);
-			tmp = fprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
+			tmp = dprintf(fd, "label%04"PRIx32";", inst_log1->next[1]);
+			tmp = dprintf(fd, "%s", cr);
+			tmp = dprintf(fd, "\telse goto label%04"PRIx32";%s", inst_log1->next[0], cr);
 
 			break;
 
@@ -1309,19 +1309,19 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
-			tmp = fprintf(fd, "\t");
+			tmp = dprintf(fd, "\t");
 			debug_print(DEBUG_OUTPUT, 1, "return\n");
-			tmp = fprintf(fd, "return ");
+			tmp = dprintf(fd, "return ");
 			tmp = label_redirect[inst_log1->value1.value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
-			tmp = fprintf(fd, "%s", buffer);
-			//tmp = fprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			tmp = fprintf(fd, ";%s", cr);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s", cr);
 			break;
 		default:
 			debug_print(DEBUG_OUTPUT, 1, "Unhandled output instruction1 opcode=0x%x\n", instruction->opcode);
-			tmp = fprintf(fd, "//Unhandled output instruction\\l");
+			tmp = dprintf(fd, "//Unhandled output instruction\\l");
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
 			return 1;
@@ -1329,14 +1329,14 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		}
 		if (0 < inst_log1->next_size && inst_log1->next[0] != (inst_number + 1)) {
 			debug_print(DEBUG_OUTPUT, 1, "\tTMP3 goto label%04"PRIx32";\n", inst_log1->next[0]);
-			tmp = fprintf(fd, "\tTMP3 goto label%04"PRIx32";%s", inst_log1->next[0], cr);
+			tmp = dprintf(fd, "\tTMP3 goto label%04"PRIx32";%s", inst_log1->next[0], cr);
 		}
 	}
 	return 0;
 }
 
 int output_function_body(struct self_s *self, struct process_state_s *process_state,
-			 FILE *fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
+			 int fd, int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
 {
 	int tmp, n;
 
@@ -1352,10 +1352,10 @@ int output_function_body(struct self_s *self, struct process_state_s *process_st
 #if 0
 	if (0 < inst_log1->next_size && inst_log1->next[0]) {
 		debug_print(DEBUG_OUTPUT, 1, "\tTMP1 goto label%04"PRIx32";\n", inst_log1->next[0]);
-		tmp = fprintf(fd, "\tTMP1 goto label%04"PRIx32";\n", inst_log1->next[0]);
+		tmp = dprintf(fd, "\tTMP1 goto label%04"PRIx32";\n", inst_log1->next[0]);
 	}
 #endif
-	tmp = fprintf(fd, "}\n\n");
+	tmp = dprintf(fd, "}\n\n");
 	return 0;
 }
 
