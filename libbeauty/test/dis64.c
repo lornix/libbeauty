@@ -6787,7 +6787,7 @@ int main(int argc, char *argv[])
 			};
 		}
 	}
-	tmp = llvm_export(self);
+	//tmp = llvm_export(self);
 
 	bf_test_close_file(handle_void);
 	print_mem(memory_reg, 1);
