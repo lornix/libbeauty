@@ -15,4 +15,5 @@ libbeauty_ll_inst_to_rtl_la_SOURCES = \
 	dis.c
 
 libbeauty_ll_inst_to_rtl_la_LDFLAGS = \
-	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
+	-lbeauty_input_bfd -L$(top_srcdir)/src/input/binary_file_decoder/libbfd/.libs
