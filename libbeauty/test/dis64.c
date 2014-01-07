@@ -1491,7 +1491,7 @@ int output_cfg_dot(struct self_s *self,
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/test-0x%04x-%s.dot", entry_point, external_entry_points[entry_point].name);
 
-	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
@@ -1656,7 +1656,7 @@ int output_cfg_dot_basic(struct self_s *self, struct control_flow_node_s *nodes,
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/basic.dot");
 
-	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (!fd) {
 		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
@@ -1745,7 +1745,7 @@ int output_cfg_dot_basic2(struct self_s *self, struct external_entry_point_s *ex
 	filename = calloc(1024, sizeof(char));
 	tmp = snprintf(filename, 1024, "./cfg/basic-%s.dot", external_entry_point->name);
 
-	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (!fd) {
 		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
@@ -1846,7 +1846,7 @@ int output_ast_dot(struct self_s *self, struct ast_s *ast, struct control_flow_n
 	const char *name;
 	filename = "test-ast.dot";
 
-	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
@@ -6616,7 +6616,7 @@ int main(int argc, char *argv[])
 	 * This section deals with outputting the .c file.
 	 ***************************************************/
 	filename = "test.c";
-	fd = open(filename, O_CREAT|O_WRONLY|O_TRUNC);
+	fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		debug_print(DEBUG_MAIN, 1, "Failed to open file %s, error=%d\n", filename, fd);
 		return 1;
