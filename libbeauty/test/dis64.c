@@ -5748,6 +5748,16 @@ int main(int argc, char *argv[])
 			external_entry_points[l].label_redirect = calloc(10000, sizeof(struct label_redirect_s));
 			external_entry_points[l].labels = calloc(10000, sizeof(struct label_s));
 			external_entry_points[l].variable_id = 0x100;
+
+			/* Init special labels */
+			/* param_stack0000 == EIP on the stack */
+			external_entry_points[l].label_redirect[3].redirect = 3;
+			external_entry_points[l].labels[3].scope = 2;
+			external_entry_points[l].labels[3].type = 2;
+			external_entry_points[l].labels[3].value = 0;
+			external_entry_points[l].labels[3].size_bits = 64;
+			external_entry_points[l].labels[3].lab_pointer = 1;
+
 			debug_print(DEBUG_MAIN, 1, "NAME DST: 0x%x:%s\n",
 				l, external_entry_points[l].name);
 			for (n = 0; n < MEMORY_STACK_SIZE; n++) {
