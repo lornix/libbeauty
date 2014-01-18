@@ -2262,13 +2262,11 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				break;
 			/* DSTA, SRCA, SRCB == nothing */
 			case MOV:
-			case LOAD:
-			case STORE:
 				/* If SRC and DST in same instruction, let SRC dominate. */
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64"\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64", SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2278,15 +2276,8 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				}
 				if ((instruction->dstA.store == STORE_REG) &&
 					(instruction->dstA.indirect != IND_DIRECT)) {
-					/* This is a special case, where the dst register is indirect, so actually a src. */
-					nodes[node].used_register[instruction->dstA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1D:0x%"PRIx64"\n", instruction->dstA.index);
-					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
-						nodes[node].used_register[instruction->dstA.index].seen = 1;
-						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
-						nodes[node].used_register[instruction->dstA.index].src_first = inst;
-						debug_print(DEBUG_MAIN, 1, "Set1D\n");
-					}
+					debug_print(DEBUG_MAIN, 1, "ERROR: MOV dstA.indirect\n");
+					exit(1);
 				}
 
 				if ((instruction->dstA.store == STORE_REG) &&
@@ -2298,6 +2289,70 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
 						debug_print(DEBUG_MAIN, 1, "Set2\n");
 					}
+				}
+				break;
+			/* DSTA, SRCA, SRCB == DSTA */
+			case LOAD:
+				/* If SRC and DST in same instruction, let SRC dominate. */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect != IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64", SRC\n", instruction->srcA.index);
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
+					}
+				}
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect != IND_DIRECT)) {
+					debug_print(DEBUG_MAIN, 1, "ERROR: MOV dstA.indirect\n");
+					exit(1);
+				}
+
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->dstA.index].dst = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen2:0x%"PRIx64", DST\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 2;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						debug_print(DEBUG_MAIN, 1, "Set2\n");
+					}
+				}
+				break;
+			/* DSTA, SRCA, SRCB == DSTA */
+			case STORE:
+				/* If SRC and DST in same instruction, let SRC dominate. */
+				if ((instruction->srcA.store == STORE_REG) &&
+					(instruction->srcA.indirect == IND_DIRECT)) {
+					nodes[node].used_register[instruction->srcA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64", SRC\n", instruction->srcA.index);
+					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
+						nodes[node].used_register[instruction->srcA.index].seen = 1;
+						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
+						nodes[node].used_register[instruction->srcA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1\n");
+					}
+				}
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect != IND_DIRECT)) {
+					/* This is a special case, where the dst register is indirect, so actually a src. */
+					nodes[node].used_register[instruction->dstA.index].src = inst;
+					debug_print(DEBUG_MAIN, 1, "Seen1D:0x%"PRIx64", DST\n", instruction->dstA.index);
+					if (nodes[node].used_register[instruction->dstA.index].seen == 0) {
+						nodes[node].used_register[instruction->dstA.index].seen = 1;
+						nodes[node].used_register[instruction->dstA.index].size = instruction->dstA.value_size;
+						nodes[node].used_register[instruction->dstA.index].src_first = inst;
+						debug_print(DEBUG_MAIN, 1, "Set1D\n");
+					}
+				}
+
+				if ((instruction->dstA.store == STORE_REG) &&
+					(instruction->dstA.indirect == IND_DIRECT)) {
+					debug_print(DEBUG_MAIN, 1, "ERROR: MOV dstA.indirect\n");
+					exit(1);
 				}
 				break;
 			/* DSTA, SRCA, SRCB == DSTA */
@@ -2361,7 +2416,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					/* CMP and TEST do not have a dst */
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64"\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64", SRCA\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2372,7 +2427,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcB.store == STORE_REG) &&
 					(instruction->srcB.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcB.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%"PRIx64"\n", instruction->srcB.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1B:0x%"PRIx64", SRCB\n", instruction->srcB.index);
 					if (nodes[node].used_register[instruction->srcB.index].seen == 0) {
 						nodes[node].used_register[instruction->srcB.index].seen = 1;
 						nodes[node].used_register[instruction->srcB.index].size = instruction->srcB.value_size;
@@ -2406,7 +2461,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					/* CMP and TEST do not have a dst */
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64"\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1A:0x%"PRIx64", SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -2419,7 +2474,7 @@ int fill_node_used_register_table(struct self_s *self, struct control_flow_node_
 				if ((instruction->srcA.store == STORE_REG) &&
 					(instruction->srcA.indirect == IND_DIRECT)) {
 					nodes[node].used_register[instruction->srcA.index].src = inst;
-					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64"\n", instruction->srcA.index);
+					debug_print(DEBUG_MAIN, 1, "Seen1:0x%"PRIx64", SRC\n", instruction->srcA.index);
 					if (nodes[node].used_register[instruction->srcA.index].seen == 0) {
 						nodes[node].used_register[instruction->srcA.index].seen = 1;
 						nodes[node].used_register[instruction->srcA.index].size = instruction->srcA.value_size;
@@ -3046,7 +3101,161 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 		case NOP:
 			break;
 		case MOV:
+			switch (instruction->srcA.store) {
+			case STORE_DIRECT:
+				memset(&label, 0, sizeof(struct label_s));
+				if (instruction->srcA.indirect == IND_MEM) {
+					label.scope = 3;
+					label.type = 1;
+					label.lab_pointer = 1;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				} else if (instruction->srcA.relocated) {
+					label.scope = 3;
+					label.type = 2;
+					label.lab_pointer = 0;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				} else {
+					label.scope = 3;
+					label.type = 3;
+					label.lab_pointer = 0;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				}
+				
+				inst_log1->value1.value_id = variable_id;
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = label.scope;
+				labels[variable_id].type = label.type;
+				labels[variable_id].lab_pointer += label.lab_pointer;
+				labels[variable_id].value = label.value;
+				labels[variable_id].size_bits = label.size_bits;
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x:MOV srcA direct given value_id = 0x%"PRIx64"\n", inst,
+					inst_log1->value1.value_id); 
+				variable_id++;
+				break;
+			case STORE_REG:
+				/* FIXME: TODO*/
+				switch(instruction->srcA.indirect) {
+				case IND_DIRECT:
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:MOV srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value1.value_id);
+					break;
+				default:
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:MOV UNHANDLED srcA.indirect = 0x%x\n", inst, instruction->srcA.indirect);
+					exit(1);
+					break;
+				}
+				break;
+			}
+
+			/* Used to update the reg_tracker while stepping through the assign src */
+			switch (instruction->dstA.store) {
+			case STORE_DIRECT:
+				break;
+			case STORE_REG:
+				switch(instruction->dstA.indirect) {
+				case IND_DIRECT:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id);
+					break;
+				case IND_STACK:
+					break;
+				}
+				break;
+			}
+			break;
 		case LOAD:
+			switch (instruction->srcA.store) {
+			/* Memory pointed to by fixed number pointer */
+			case STORE_DIRECT:
+				memset(&label, 0, sizeof(struct label_s));
+				if (instruction->srcA.indirect == IND_MEM) {
+					label.scope = 3;
+					label.type = 1;
+					label.lab_pointer = 1;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				} else if (instruction->srcA.relocated) {
+					label.scope = 3;
+					label.type = 2;
+					label.lab_pointer = 0;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				} else {
+					label.scope = 3;
+					label.type = 3;
+					label.lab_pointer = 0;
+					label.value = instruction->srcA.index;
+					label.size_bits = instruction->srcA.value_size;
+				}
+				
+				inst_log1->value1.value_id = variable_id;
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = label.scope;
+				labels[variable_id].type = label.type;
+				labels[variable_id].lab_pointer += label.lab_pointer;
+				labels[variable_id].value = label.value;
+				labels[variable_id].size_bits = label.size_bits;
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD srcA direct given value_id = 0x%"PRIx64"\n", inst,
+					inst_log1->value1.value_id); 
+				variable_id++;
+				break;
+			case STORE_REG:
+				/* FIXME: TODO*/
+				switch(instruction->srcA.indirect) {
+				case IND_STACK:
+					stack_address = inst_log1->value1.indirect_init_value + inst_log1->value1.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD assign_id: stack_address = 0x%"PRIx64"\n", inst, stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcA.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value1.indirect_value_id = memory->value_id;
+						}
+					} else {
+						/* FIXME: Handle a new memory case */
+					}
+					break;
+				case IND_MEM:
+					inst_log1->value1.value_id = 
+						reg_tracker[instruction->srcA.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value1.value_id);
+					break;
+				default:
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD UNHANDLED srcA.indirect = 0x%x\n", inst, instruction->srcA.indirect);
+					exit(1);
+					break;
+				}
+				break;
+			}
+
+			/* Used to update the reg_tracker while stepping through the assign src */
+			switch (instruction->dstA.store) {
+			case STORE_DIRECT:
+				break;
+			case STORE_REG:
+				switch(instruction->dstA.indirect) {
+				case IND_DIRECT:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id);
+					break;
+				case IND_STACK:
+					break;
+				}
+				break;
+			}
+			break;
 		case STORE:
 			switch (instruction->srcA.store) {
 			case STORE_DIRECT:
@@ -3078,7 +3287,7 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				labels[variable_id].lab_pointer += label.lab_pointer;
 				labels[variable_id].value = label.value;
 				labels[variable_id].size_bits = label.size_bits;
-				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA direct given value_id = 0x%"PRIx64"\n", inst,
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x:STORE srcA direct given value_id = 0x%"PRIx64"\n", inst,
 					inst_log1->value1.value_id); 
 				variable_id++;
 				break;
@@ -3088,12 +3297,12 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				case IND_DIRECT:
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:STORE srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id);
 					break;
 				case IND_STACK:
 					stack_address = inst_log1->value1.indirect_init_value + inst_log1->value1.indirect_offset_value;
-					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					debug_print(DEBUG_MAIN, 1, "assign_id:STORE stack_address = 0x%"PRIx64"\n", stack_address);
 					memory = search_store(
 						external_entry_point->process_state.memory_stack,
 						stack_address,
@@ -3107,28 +3316,12 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				case IND_MEM:
 					inst_log1->value1.value_id = 
 						reg_tracker[instruction->srcA.index];
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:STORE srcA given value_id = 0x%"PRIx64"\n", inst,
 						inst_log1->value1.value_id);
 					break;
 				default:
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: UNHANDLED srcA.indirect = 0x%x\n", inst, instruction->srcA.indirect);
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:STORE UNHANDLED srcA.indirect = 0x%x\n", inst, instruction->srcA.indirect);
 					exit(1);
-					break;
-				}
-				break;
-			}
-			switch (instruction->dstA.store) {
-			case STORE_DIRECT:
-				break;
-			case STORE_REG:
-				switch(instruction->dstA.indirect) {
-				case IND_DIRECT:
-					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
-					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
-						instruction->dstA.index,
-						inst_log1->value3.value_id);
-					break;
-				case IND_STACK:
 					break;
 				}
 				break;
@@ -3436,7 +3629,7 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 		case RET:
 			inst_log1->value1.value_id = 
 				reg_tracker[instruction->srcA.index];
-			debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+			debug_print(DEBUG_MAIN, 1, "Inst 0x%x:RET srcA given value_id = 0x%"PRIx64"\n", inst,
 				inst_log1->value1.value_id); 
 			break;
 		case JMP:

@@ -851,7 +851,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Create result */
-		debug_print(DEBUG_EXE, 1, "MOV or LOAD\n");
+		debug_print(DEBUG_EXE, 1, "MOV\n");
 		debug_print(DEBUG_EXE, 1, "MOV dest length = %d %d\n", inst->value1.length, inst->value3.length);
 		inst->value3.start_address = instruction->dstA.index;
 		inst->value3.length = instruction->dstA.value_size;
@@ -861,12 +861,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.offset_value = inst->value1.offset_value;
 		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
-			inst->value3.indirect_init_value =
-				inst->value1.indirect_init_value;
-			inst->value3.indirect_offset_value =
-				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			debug_print(DEBUG_EXE, 1, "ERROR: MOV set to dstA.indirect\n");
+			exit(1);
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -910,8 +906,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		/* Get value of srcA */
 		ret = get_value_RTL_instruction(self, process_state, &(instruction->srcA), &(inst->value1), 0); 
 		/* Create result */
-		debug_print(DEBUG_EXE, 1, "MOV or LOAD\n");
-		debug_print(DEBUG_EXE, 1, "MOV dest length = %d %d\n", inst->value1.length, inst->value3.length);
+		debug_print(DEBUG_EXE, 1, "LOAD\n");
+		debug_print(DEBUG_EXE, 1, "LOAD dest length = %d %d\n", inst->value1.length, inst->value3.length);
 		inst->value3.start_address = instruction->dstA.index;
 		inst->value3.length = instruction->dstA.value_size;
 		//inst->value3.length = inst->value1.length;
@@ -920,12 +916,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 		inst->value3.offset_value = inst->value1.offset_value;
 		inst->value3.value_type = inst->value1.value_type;
 		if (inst->instruction.dstA.indirect) {
-			inst->value3.indirect_init_value =
-				inst->value1.indirect_init_value;
-			inst->value3.indirect_offset_value =
-				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			debug_print(DEBUG_EXE, 1, "ERROR: LOAD set to dstA.indirect\n");
+			exit(1);
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;

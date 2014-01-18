@@ -1892,25 +1892,32 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				break;
 			case LOAD:
-			case STORE:
-				debug_print(DEBUG_ANALYSE, 1, "LOAD or STORE\n");
+				debug_print(DEBUG_ANALYSE, 1, "LOAD\n");
 				if (inst_log1->value1.value_type == 5) {
+					/* FIXME: What to do in this case */
 					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
 					//break;
 				}
-				if (1 == instruction->dstA.indirect) {
-					value_id = inst_log1->value3.value_id;
-				} else {
-					value_id = inst_log1->value3.value_id;
-				}
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
-				if (1 == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.value_id;
-				} else {
-					value_id = inst_log1->value1.value_id;
-				}
+				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
-
+				value_id = inst_log1->value3.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value3\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				break;
+			case STORE:
+				debug_print(DEBUG_ANALYSE, 1, "STORE\n");
+				if (inst_log1->value1.value_type == 5) {
+					/* FIXME: What to do in this case */
+					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
+					//break;
+				}
+				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value1\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				value_id = inst_log1->value3.value_id;
+				debug_print(DEBUG_ANALYSE, 1, "value3\n");
+				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				break;
 			case ADD:
 			case GEP1:
