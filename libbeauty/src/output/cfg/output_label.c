@@ -663,7 +663,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			}
 			if (print_inst(self, instruction, inst_number, labels))
 				return 1;
-			debug_print(DEBUG_OUTPUT, 1, "\t");
+			//debug_print(DEBUG_OUTPUT, 1, "\n");
 			tmp = dprintf(fd, "\t");
 			/* FIXME: Check limits */
 			switch (instruction->dstA.indirect) {
@@ -687,6 +687,11 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				break;
 			}
 			tmp = label_redirect[value_id].redirect;
+			debug_print(DEBUG_OUTPUT, 1, "value3 label 0x%"PRIx64", redir 0x%x\n", value_id, tmp);
+			if (!tmp) {
+				debug_print(DEBUG_OUTPUT, 1, "value3 label zero\n");
+				exit(1);
+			}
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
@@ -712,7 +717,12 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				break;
 			}
 			tmp = label_redirect[value_id].redirect;
+			debug_print(DEBUG_OUTPUT, 1, "value1 label 0x%"PRIx64", redir 0x%x\n", value_id, tmp);
 			label = &labels[tmp];
+			if (!tmp) {
+				debug_print(DEBUG_OUTPUT, 1, "value1 label zero. Label has not been initialized\n");
+				exit(1);
+			}
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);

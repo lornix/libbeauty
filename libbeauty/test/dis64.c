@@ -3219,8 +3219,18 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 					if (memory) {
 						if (memory->value_id) {
 							inst_log1->value1.indirect_value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD srcA reg given value_id = 0x%"PRIx64"\n", inst,
+								inst_log1->value1.value_id); 
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD srcA reg given indirect_value_id = 0x%"PRIx64"\n", inst,
+								inst_log1->value1.indirect_value_id); 
+						} else {
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD stack found: no value_id. stack_address = 0x%"PRIx64"\n",
+								inst, stack_address);
+							exit(1);
 						}
 					} else {
+						debug_print(DEBUG_MAIN, 1, "Inst 0x%x:LOAD stack not found: stack_address = 0x%"PRIx64"\n", inst, stack_address);
+						exit(1);
 						/* FIXME: Handle a new memory case */
 					}
 					break;
