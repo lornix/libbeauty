@@ -378,6 +378,26 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:SUBf r0x40/32, i0x1/32, r0x40/32",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// mov    %eax,-0x4(%rbp)
+		.bytes = {0x89, 0x45, 0xfc},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x8/64, r0x90/64",
+		.inst[1] = "// 0x0001:MOV  r0x8/32, r0x98/32",
+		.inst[2] = "// 0x0002:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
+		.inst_size = 3,
+	},
+	{
+		.valid = 1,
+		// mov    -0x4(%rbp),%eax
+		.bytes = {0x8b, 0x45, 0xfc},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x4/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:MOV  r0x98/32, r0x8/32",
+		.inst_size = 3,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
