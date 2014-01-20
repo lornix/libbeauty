@@ -4867,7 +4867,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 					}
 				}
 			} else {
-				debug_print(DEBUG_MAIN, 1, "assign_id: memory not found for stack address\n");
+				debug_print(DEBUG_MAIN, 1, "FIXME: assign_id: memory not found for stack address\n");
+				exit(1);
 			}
 			break;
 
