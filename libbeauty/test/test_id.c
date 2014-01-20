@@ -409,6 +409,16 @@ struct test_data_s test_data[] = {
 		.inst[3] = "// 0x0003:STORE  r0x98/32, r0x90/64, s[r0x90]/32",
 		.inst_size = 4,
 	},
+	{
+		.valid = 1,
+		// movl   $0x1,(%rax)
+		.bytes = {0xc7, 0x00, 0x01, 0x00, 0x00, 0x00},
+		.bytes_size = 6,
+		.inst[0] = "// 0x0000:ADD  r0x8/64, i0x0/64, r0x90/64",
+		.inst[1] = "// 0x0001:MOV  i0x1/32, r0x98/32",
+		.inst[2] = "// 0x0002:STORE  r0x98/32, r0x90/64, m[r0x90]/32",
+		.inst_size = 3,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
