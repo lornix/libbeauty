@@ -3589,7 +3589,24 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 			}
 			break;
 		case CALL:
-			/* FIXME: TODO*/
+			/* FIXME: TODO. Handle the params passed */
+			/* Used to update the reg_tracker while stepping through the assign src */
+			switch (instruction->dstA.store) {
+			case STORE_DIRECT:
+				break;
+			case STORE_REG:
+				switch(instruction->dstA.indirect) {
+				case IND_DIRECT:
+					reg_tracker[instruction->dstA.index] = inst_log1->value3.value_id;
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: reg 0x%"PRIx64" given value_id = 0x%"PRIx64"\n", inst,
+						instruction->dstA.index,
+						inst_log1->value3.value_id); 
+					break;
+				case IND_STACK:
+					break;
+				}
+				break;
+			}
 			break;
 		case IF:
 			break;
