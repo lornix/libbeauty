@@ -4875,10 +4875,25 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 
 	case CALL:
 		debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
-		if (IND_DIRECT != instruction->dstA.indirect) {
-			inst_log1->value3.indirect_value_id = variable_id;
-		} else {
+		if (IND_DIRECT == instruction->dstA.indirect) {
 			inst_log1->value3.value_id = variable_id;
+		} else {
+			debug_print(DEBUG_MAIN, 1, "ERROR: CALL with indirect dstA\n");
+			exit(1);
+		}
+		memset(label, 0, sizeof(struct label_s));
+		ret = log_to_label(instruction->dstA.store,
+			instruction->dstA.indirect,
+			instruction->dstA.index,
+			instruction->dstA.value_size,
+			instruction->dstA.relocated,
+			inst_log1->value3.value_scope,
+			inst_log1->value3.value_id,
+			inst_log1->value3.indirect_offset_value,
+			inst_log1->value3.indirect_value_id,
+			label);
+		if (ret) {
+			debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
 		}
 		break;
 	case IF:

@@ -1819,41 +1819,24 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
  
 		/* FIXME: Currently this is a NOP. */
 		/* Get value of dstA */
-		inst->value3.start_address = inst->value1.start_address;
-		inst->value3.length = inst->value1.length;
-		inst->value3.init_value_type = inst->value1.init_value_type;
-		inst->value3.init_value = inst->value1.init_value;
-		inst->value3.offset_value = inst->value1.offset_value;
+		inst->value3.start_address = 0;
+		inst->value3.length = 0;
+		inst->value3.init_value_type = 0;
+		inst->value3.init_value = 0;
+		inst->value3.offset_value = 0;
 		//inst->value3.value_type = inst->value1.value_type;
 		inst->value3.value_type = 0;
-		inst->value3.indirect_init_value =
-			inst->value1.indirect_init_value;
-		inst->value3.indirect_offset_value =
-			inst->value1.indirect_offset_value;
-		if (inst->instruction.dstA.indirect) {
-			inst->value3.indirect_init_value =
-				inst->value1.indirect_init_value;
-			inst->value3.indirect_offset_value =
-				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
-		}
-		inst->value3.ref_memory =
-			inst->value1.ref_memory;
-		inst->value3.ref_log =
-			inst->value1.ref_log;
-		inst->value3.value_scope = inst->value1.value_scope;
+		inst->value3.indirect_init_value = 0;
+		inst->value3.indirect_offset_value = 0;
+		inst->value3.ref_memory = 0;
+		inst->value3.ref_log = 0;
+		inst->value3.value_scope = 2;
 		/* Counter */
 		inst->value3.value_id = 0;
 		inst->value1.value_id = 0;
 		/* 1 - Entry Used */
 		inst->value1.valid = 1;
 		inst->value3.valid = 1;
-			debug_print(DEBUG_EXE, 1, "value=0x%"PRIx64"+0x%"PRIx64"=0x%"PRIx64"\n",
-				inst->value3.init_value,
-				inst->value3.offset_value,
-				inst->value3.init_value +
-					inst->value3.offset_value);
 		put_value_RTL_instruction(self, process_state, inst);
 		/* Once value3 is written, over write value1 with ESP */
 		/* Get the current ESP value so one can convert function params to locals */
