@@ -144,7 +144,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
 					instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-					instruction->srcA.relocated_index = reloc_table_entry->value;
+					instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 					print_reloc_table_entry(reloc_table_entry);
 					debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 					debug_print(DEBUG_INPUT_DIS, 1, "Relocated_index = 0x%x\n", instruction->srcA.relocated_index);
@@ -228,7 +228,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-				instruction->srcA.relocated_index = reloc_table_entry->value;
+				instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				print_reloc_table_entry(reloc_table_entry);
 				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -666,7 +666,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-				instruction->srcA.relocated_index = reloc_table_entry->value;
+				instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				print_reloc_table_entry(reloc_table_entry);
 				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -749,7 +749,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-				instruction->srcA.relocated_index = reloc_table_entry->value;
+				instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				print_reloc_table_entry(reloc_table_entry);
 				debug_print(DEBUG_INPUT_DIS, 1, "Relocated_area = 0x%x\n", instruction->srcA.relocated_area);
 			}
@@ -934,11 +934,11 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
 			/* FIXME: what about relocations that use a different howto? */
-			debug_print(DEBUG_INPUT_DIS, 1, "reg_mem=5, mod=0, relocation table entry exists. value=0x%"PRIx64"\n", reloc_table_entry->value);
+			debug_print(DEBUG_INPUT_DIS, 1, "reg_mem=5, mod=0, relocation table entry exists. value=0x%"PRIx64"\n", reloc_table_entry->symbol_value);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
-			instruction->srcA.index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
+			instruction->srcA.index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->srcA.value_size = size;
@@ -1009,7 +1009,7 @@ int rmb(void *handle_void, struct dis_instructions_s *dis_instructions, uint8_t 
 			if (!tmp) {
 				instruction->srcA.relocated = 1;
 				instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-				instruction->srcA.relocated_index = reloc_table_entry->value;
+				instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 			}
 			dis_instructions->bytes_used+=4;
 		}
@@ -1145,7 +1145,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=4;
 	} else if (16 == size) {
@@ -1156,7 +1156,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=2;
 	} else if (8 == size) {
@@ -1167,7 +1167,7 @@ int dis_Ex_Ix(void *handle_void, int opcode, uint8_t rex, struct dis_instruction
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=1;
 	} else {
@@ -1229,7 +1229,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
 					instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-					instruction->srcA.relocated_index = reloc_table_entry->value;
+					instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				}
 				dis_instructions->bytes_used+=4;
 			} else if (16 == size) {
@@ -1240,7 +1240,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
 					instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-					instruction->srcA.relocated_index = reloc_table_entry->value;
+					instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				}
 				dis_instructions->bytes_used+=2;
 			} else if (8 == size) {
@@ -1251,7 +1251,7 @@ int dis_Ex(void *handle_void, int *table, uint8_t rex, struct dis_instructions_s
 				if (!tmp) {
 					instruction->srcA.relocated = 1;
 					instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-					instruction->srcA.relocated_index = reloc_table_entry->value;
+					instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 				}
 				dis_instructions->bytes_used+=1;
 			} else {
@@ -1385,7 +1385,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used += 1;
 		instruction->srcA.value_size = 8;
@@ -1417,7 +1417,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->srcA.value_size = 32;
@@ -1519,7 +1519,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=1;
 		instruction->srcA.value_size = 8;
@@ -1569,7 +1569,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->srcA.value_size = 32;
@@ -1636,7 +1636,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=1;
 		instruction->srcA.value_size = 8;
@@ -1667,7 +1667,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used += 4;
 		instruction->srcA.value_size = 32;
@@ -1882,7 +1882,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		/* FIXME: Length wrong */
 		dis_instructions->bytes_used += 4;
@@ -1995,7 +1995,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used += 1;
 		instruction->srcA.value_size = 8;
@@ -2035,7 +2035,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used += (width / 8);
 		instruction->srcA.value_size = width;
@@ -2284,7 +2284,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		} else {
 			instruction->srcA.relocated = 0;
 		}
@@ -2320,7 +2320,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->dstA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=4;
 		instruction->dstA.value_size = 32;
@@ -2503,7 +2503,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		}
 		dis_instructions->bytes_used+=1;
 		instruction->srcA.value_size = 8;
@@ -2557,7 +2557,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		if (!tmp) {
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 		} else {
 			instruction->srcA.relocated = 0;
 		}
@@ -3003,10 +3003,10 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 		instruction->srcA.index = rel64;
 		tmp = bf_relocated_code(handle_void, base_address, offset + dis_instructions->bytes_used, 4, &reloc_table_entry);
 		if (!tmp) {
-			debug_print(DEBUG_INPUT_DIS, 1, "CALL RELOCATED 0x%04"PRIx64"\n", reloc_table_entry->value);
+			debug_print(DEBUG_INPUT_DIS, 1, "CALL RELOCATED 0x%04"PRIx64"\n", reloc_table_entry->symbol_value);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 			/* FIXME: Check it works for all related cases. E.g. jmp and call */
 
 			instruction->srcA.index = reloc_table_entry->external_functions_index;
@@ -3043,7 +3043,7 @@ int disassemble_amd64(void *handle_void, struct dis_instructions_s *dis_instruct
 			debug_print(DEBUG_INPUT_DIS, 1, "RELOCATED 0x%04"PRIx64"\n", offset + dis_instructions->bytes_used);
 			instruction->srcA.relocated = 1;
 			instruction->srcA.relocated_area = reloc_table_entry->relocated_area;
-			instruction->srcA.relocated_index = reloc_table_entry->value;
+			instruction->srcA.relocated_index = reloc_table_entry->symbol_value;
 			/* FIXME: Check it works for all related cases. E.g. jmp and call */
 			instruction->srcA.index = offset + dis_instructions->bytes_used;
 		} else {

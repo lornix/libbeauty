@@ -63,11 +63,12 @@ uint32_t print_reloc_table_entry(struct reloc_table_s *reloc_table_entry) {
 	debug_print(DEBUG_INPUT_DIS, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
 	debug_print(DEBUG_INPUT_DIS, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
 	debug_print(DEBUG_INPUT_DIS, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
-	debug_print(DEBUG_INPUT_DIS, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	debug_print(DEBUG_INPUT_DIS, 1, "AddEnd:0x%"PRIx64"\n", reloc_table_entry->addend);
 	debug_print(DEBUG_INPUT_DIS, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
 	debug_print(DEBUG_INPUT_DIS, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
 	debug_print(DEBUG_INPUT_DIS, 1, "Section name:%s\n", reloc_table_entry->section_name);
 	debug_print(DEBUG_INPUT_DIS, 1, "Symbol name:%s\n", reloc_table_entry->symbol_name);
+	debug_print(DEBUG_INPUT_DIS, 1, "Symbol value:0x%"PRIx64"\n", reloc_table_entry->symbol_value);
 	return 0;
 }
 

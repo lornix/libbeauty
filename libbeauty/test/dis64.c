@@ -4740,7 +4740,8 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 
 	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
 	debug_print(DEBUG_MAIN, 1, "opcode = 0x%x\n", instruction->opcode);
-	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x:0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		function,
 		n,
 		instruction->dstA.store,
 		instruction->dstA.indirect,
@@ -5057,6 +5058,8 @@ int main(int argc, char *argv[])
 	int loops_size = 2000;
 	struct ast_s *ast;
 	int *section_number_mapping;
+	struct reloc_table_s *reloc_table;
+	int reloc_table_size;
 	LLVMDecodeAsmX86_64Ref decode_asm;
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
@@ -5164,17 +5167,9 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "\n");
 
 	bf_get_reloc_table_code_section(handle_void);
+	
 #if 0
-	debug_print(DEBUG_MAIN, 1, "reloc_table_code_sz=0x%"PRIx64"\n", handle->reloc_table_code_sz);
-	for (n = 0; n < handle->reloc_table_code_sz; n++) {
-		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", value = 0x%"PRIx64", section_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
-			handle->reloc_table_code[n].address,
-			handle->reloc_table_code[n].size,
-			handle->reloc_table_code[n].value,
-			handle->reloc_table_code[n].section_index,
-			handle->reloc_table_code[n].section_name,
-			handle->reloc_table_code[n].symbol_name);
-	}
+	tmp = bf_print_reloc_table_code_section(handle_void);
 #endif
 	bf_get_reloc_table_data_section(handle_void);
 #if 0
@@ -5227,15 +5222,18 @@ int main(int argc, char *argv[])
 	tmp = bf_link_reloc_table_code_to_external_entry_point(handle_void, external_entry_points);
 	if (tmp) return 1;
 
-#if 0
-	for (n = 0; n < handle->reloc_table_code_sz; n++) {
-		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", type = %d, function_index = 0x%"PRIx64", section_name=%s, symbol_name=%s\n",
-			handle->reloc_table_code[n].address,
-			handle->reloc_table_code[n].size,
-			handle->reloc_table_code[n].type,
-			handle->reloc_table_code[n].external_functions_index,
-			handle->reloc_table_code[n].section_name,
-			handle->reloc_table_code[n].symbol_name);
+#if 1
+	reloc_table_size = bf_get_reloc_table_code_size(handle_void);
+	reloc_table = bf_get_reloc_table_code(handle_void);
+	for (n = 0; n < reloc_table_size; n++) {
+		debug_print(DEBUG_MAIN, 1, "reloc_table_code:addr = 0x%"PRIx64", size = 0x%"PRIx64", type = 0x%x, function_index = 0x%"PRIx64", section_name=%s, symbol_name=%s, symbol_value = 0x%"PRIx64"\n",
+			reloc_table[n].address,
+			reloc_table[n].size,
+			reloc_table[n].type,
+			reloc_table[n].external_functions_index,
+			reloc_table[n].section_name,
+			reloc_table[n].symbol_name,
+			reloc_table[n].symbol_value);
 	}
 #endif			
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {

@@ -371,7 +371,8 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 			for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
 				if ((external_entry_points[n].valid != 0) &&
 					(external_entry_points[n].type == 1) &&
-					(external_entry_points[n].value == instruction->srcA.index)) {
+					(external_entry_points[n].value == instruction->srcA.relocated_index)) {
+					//debug_print(DEBUG_OUTPUT, 1, "found external relocated 0x%x\n", n);
 					instruction->srcA.index = n;
 					instruction->srcA.relocated = 1;
 					break;

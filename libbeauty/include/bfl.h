@@ -39,6 +39,14 @@ int bf_copy_rodata_section(void *handle_void, uint8_t *data, uint64_t data_size)
 int bf_get_reloc_table_code_section(void *handle_void);
 int bf_get_reloc_table_data_section(void *handle_void);
 int bf_get_reloc_table_rodata_section(void *handle_void);
+int bf_get_reloc_table_code_size(void *handle_void);
+struct reloc_table_s * bf_get_reloc_table_code(void *handle_void);
+int bf_get_reloc_table_data_size(void *handle_void);
+struct reloc_table_s * bf_get_reloc_table_data(void *handle_void);
+int bf_get_reloc_table_rodata_size(void *handle_void);
+struct reloc_table_s * bf_get_reloc_table_rodata(void *handle_void);
+
+int bf_print_reloc_table_code_section(void *handle_void);
 int external_entry_points_init_bfl(struct external_entry_point_s *external_entry_points, void *handle_void);
 uint32_t bf_relocated_code(void *handle_void, uint8_t *base_address, uint64_t offset, uint64_t size, struct reloc_table_s **reloc_table_entry);
 uint32_t bf_relocated_data(void *handle_void, uint64_t offset, uint64_t size);

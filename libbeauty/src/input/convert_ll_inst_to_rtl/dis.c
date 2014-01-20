@@ -85,7 +85,7 @@ uint32_t print_reloc_table_entry(struct reloc_table_s *reloc_table_entry) {
 	debug_print(DEBUG_INPUT_DIS, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
 	debug_print(DEBUG_INPUT_DIS, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
 	debug_print(DEBUG_INPUT_DIS, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
-	debug_print(DEBUG_INPUT_DIS, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->value);
+	debug_print(DEBUG_INPUT_DIS, 1, "Value:0x%"PRIx64"\n", reloc_table_entry->symbol_value);
 	debug_print(DEBUG_INPUT_DIS, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
 	debug_print(DEBUG_INPUT_DIS, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
 	debug_print(DEBUG_INPUT_DIS, 1, "Section name:%s\n", reloc_table_entry->section_name);
@@ -133,10 +133,10 @@ int convert_operand(struct self_s *self, uint64_t base_address, struct operand_l
 				ll_operand->operand[operand_number].size >> 3,
 				&reloc_table_entry);
 			if (!tmp) {
-				printf("convert_operand: relocate found\n");
-				inst_operand->relocated = 1;
+				printf("convert_operand: relocate found area=0x%lx, value = 0x%lx\n", reloc_table_entry->relocated_area, reloc_table_entry->symbol_value);
+				inst_operand->relocated = 2;
 				inst_operand->relocated_area = reloc_table_entry->relocated_area;
-				inst_operand->relocated_index = reloc_table_entry->value;
+				inst_operand->relocated_index = reloc_table_entry->symbol_value;
 			}
 		}
 		break;
@@ -651,6 +651,18 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		result = 0;
 		break;
 	case CALL: /* non-relative */ 
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = CALL;
+		instruction->flags = 0;
+		convert_operand(self, ll_inst->address, &(ll_inst->srcB), 0, &(instruction->srcA));
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_AX;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		dis_instructions->instruction_number++;
+		result = 0;
 		break;
 	case IF:
 		debug_print(DEBUG_INPUT_DIS, 1, "IF opcode  = 0x%x\n", ll_inst->opcode);

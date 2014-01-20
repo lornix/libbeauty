@@ -36,10 +36,11 @@ struct reloc_table_s {
 	int		type;
 	uint64_t	address;
 	uint64_t	size;
-	uint64_t	value;
+	uint64_t	addend;
 	uint64_t	external_functions_index;
 	uint64_t	section_index;
 	uint64_t	relocated_area;
+	uint64_t	symbol_value;
 	const char	*section_name;
 	const char	*symbol_name;
 };

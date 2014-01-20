@@ -254,7 +254,7 @@ int bf_find_relocation_rodata(void *handle_void, uint64_t index, int *relocation
 			print_reloc_table_entry(reloc_table_entry);
 			found = 0;
 			*relocation_area = reloc_table_entry->relocated_area;
-			*relocation_index = reloc_table_entry->value;
+			*relocation_index = reloc_table_entry->symbol_value;
 			break;
 		}
 	}
@@ -376,6 +376,18 @@ dump_reloc_set (bfd *abfd, asection *sec, arelent **relpp, long relcount)
     }
 }
 
+int bf_get_reloc_table_code_size(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_code_sz;
+}
+
+struct reloc_table_s * bf_get_reloc_table_code(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_code;
+}
+
 int bf_get_reloc_table_code_section(void *handle_void)
 {
 	/* FIXME: search for .text section instead of selecting 0 */
@@ -411,14 +423,16 @@ int bf_get_reloc_table_code_section(void *handle_void)
 		//debug_print(DEBUG_INPUT_BFD, 1, "rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_code[n].address = rel->address;
 		ret->reloc_table_code[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
-		ret->reloc_table_code[n].value = rel->addend;
+		ret->reloc_table_code[n].addend = rel->addend;
 		//debug_print(DEBUG_INPUT_BFD, 1, "rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
-		//if (rel->howto == NULL)
+		//if (rel->howto == NULL) {
 		//	printf (" howto *unknown*\n");
-		//else if (rel->howto->name)
+		//} else if (rel->howto->name) {
 		//	printf (" howto->name %-16s\n", rel->howto->name);
-		//else
 		//	printf (" howto->type %-16d\n", rel->howto->type);
+		//} else {
+		//	printf (" howto->type %-16d\n", rel->howto->type);
+		//}
 
 		//debug_print(DEBUG_INPUT_BFD, 1, "p1 %p\n",&rel->sym_ptr_ptr);
 		//debug_print(DEBUG_INPUT_BFD, 1, "p2 %p\n",rel->sym_ptr_ptr);
@@ -433,12 +447,25 @@ int bf_get_reloc_table_code_section(void *handle_void)
 		ret->reloc_table_code[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_code[n].section_name = sym_sec->name;
 		ret->reloc_table_code[n].symbol_name = sym_name;
+		ret->reloc_table_code[n].symbol_value = sym_val;
 		
-		//printf ("sym_name = %s, sym_val = 0x%"PRIx64"\n",sym_name, sym_val);
+		printf ("sym_name = %s, sym_val = 0x%"PRIx64"\n",sym_name, sym_val);
 
 	}
 	free(relpp);
 	return 1;
+}
+
+int bf_get_reloc_table_data_size(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_data_sz;
+}
+
+struct reloc_table_s * bf_get_reloc_table_data(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_data;
 }
 
 int bf_get_reloc_table_data_section(void *handle_void)
@@ -497,12 +524,25 @@ int bf_get_reloc_table_data_section(void *handle_void)
 		ret->reloc_table_data[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_data[n].section_name = sym_sec->name;
 		ret->reloc_table_data[n].symbol_name = sym_name;
+		ret->reloc_table_code[n].symbol_value = sym_val;
 		
 		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
 	}
 	free(relpp);
 	return 1;
+}
+
+int bf_get_reloc_table_rodata_size(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_rodata_sz;
+}
+
+struct reloc_table_s * bf_get_reloc_table_rodata(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	return ret->reloc_table_rodata;
 }
 
 int bf_get_reloc_table_rodata_section(void *handle_void)
@@ -539,7 +579,7 @@ int bf_get_reloc_table_rodata_section(void *handle_void)
 		//debug_print(DEBUG_INPUT_BFD, 1, "rel:addr = 0x%"PRIx64"\n", rel->address);
 		ret->reloc_table_rodata[n].address = rel->address;
 		ret->reloc_table_rodata[n].size = (uint64_t) bfd_get_reloc_size (rel->howto);
-		ret->reloc_table_rodata[n].value = rel->addend;
+		ret->reloc_table_rodata[n].addend = rel->addend;
 		//debug_print(DEBUG_INPUT_BFD, 1, "rel:size = 0x%"PRIx64"\n", (uint64_t) bfd_get_reloc_size (rel->howto));
 		//debug_print(DEBUG_INPUT_BFD, 1, "value 0x%"PRIx64"\n", rel->addend);
 //		if (rel->howto == NULL)
@@ -562,12 +602,43 @@ int bf_get_reloc_table_rodata_section(void *handle_void)
 		ret->reloc_table_rodata[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_rodata[n].section_name = sym_sec->name;
 		ret->reloc_table_rodata[n].symbol_name = sym_name;
+		ret->reloc_table_code[n].symbol_value = sym_val;
 		
 		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
 	}
 	free(relpp);
 	return 1;
+}
+
+int bf_print_reloc_table_entry(struct reloc_table_s *reloc_table_entry)
+{
+	debug_print(DEBUG_INPUT_BFD, 1, "Reloc Type:0x%x\n", reloc_table_entry->type);
+	debug_print(DEBUG_INPUT_BFD, 1, "Address:0x%"PRIx64"\n", reloc_table_entry->address);
+	debug_print(DEBUG_INPUT_BFD, 1, "Size:0x%"PRIx64"\n", reloc_table_entry->size);
+	debug_print(DEBUG_INPUT_BFD, 1, "AddEnd:0x%"PRIx64"\n", reloc_table_entry->addend);
+	debug_print(DEBUG_INPUT_BFD, 1, "External Function Index:0x%"PRIx64"\n", reloc_table_entry->external_functions_index);
+	debug_print(DEBUG_INPUT_BFD, 1, "Section index:0x%"PRIx64"\n", reloc_table_entry->section_index);
+	debug_print(DEBUG_INPUT_BFD, 1, "Section name:%s\n", reloc_table_entry->section_name);
+	debug_print(DEBUG_INPUT_BFD, 1, "Symbol name:%s\n", reloc_table_entry->symbol_name);
+	debug_print(DEBUG_INPUT_BFD, 1, "Symbol Value:0x%"PRIx64"\n", reloc_table_entry->symbol_value);
+	return 0;
+}
+
+int bf_print_reloc_table_code_section(void *handle_void)
+{
+	struct rev_eng *ret = (struct rev_eng*) handle_void;
+	int64_t reloc_table_size;
+	struct reloc_table_s *reloc_table_entry;
+	int n;
+	int tmp;
+	reloc_table_size = ret->reloc_table_code_sz;
+	debug_print(DEBUG_INPUT_BFD, 1, "reloc_table_code_sz=0x%"PRIx64"\n", reloc_table_size);
+	for (n = 0; n < reloc_table_size; n++) {
+		reloc_table_entry = &(ret->reloc_table_code[n]);
+		tmp = bf_print_reloc_table_entry(reloc_table_entry);
+	}
+        return 0;
 }
 
 int external_entry_points_init_bfl(struct external_entry_point_s *external_entry_points, void *handle_void)
