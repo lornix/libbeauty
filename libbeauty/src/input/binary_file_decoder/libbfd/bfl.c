@@ -524,7 +524,7 @@ int bf_get_reloc_table_data_section(void *handle_void)
 		ret->reloc_table_data[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_data[n].section_name = sym_sec->name;
 		ret->reloc_table_data[n].symbol_name = sym_name;
-		ret->reloc_table_code[n].symbol_value = sym_val;
+		ret->reloc_table_data[n].symbol_value = sym_val;
 		
 		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
@@ -560,11 +560,14 @@ int bf_get_reloc_table_rodata_section(void *handle_void)
 	uint64_t sym_val;
 
 	tmp = bf_find_section(ret, ".rodata", 7, &n);
-	//debug_print(DEBUG_INPUT_BFD, 1, "%s: section = 0x%x\n", __FUNCTION__, n);
+	debug_print(DEBUG_INPUT_BFD, 1, "%s: section = 0x%x\n", __FUNCTION__, n);
 	section = ret->section[n];
+	debug_print(DEBUG_INPUT_BFD, 1, "%s: section_ptr = %p\n", __FUNCTION__, section);
 
 	datasize = bfd_get_reloc_upper_bound(ret->bfd, section);
+	debug_print(DEBUG_INPUT_BFD, 1, "%s: datasize = 0x%lx\n", __FUNCTION__, datasize);
 	relpp = malloc (datasize);
+	debug_print(DEBUG_INPUT_BFD, 1, "%s: relpp = %p\n", __FUNCTION__, relpp);
 	/* This function silently fails if ret->symtab is not set
 	 * to an already loaded symbol table.
 	 */
@@ -602,7 +605,7 @@ int bf_get_reloc_table_rodata_section(void *handle_void)
 		ret->reloc_table_rodata[n].relocated_area = ret->section_number_mapping[sym_sec->index];
 		ret->reloc_table_rodata[n].section_name = sym_sec->name;
 		ret->reloc_table_rodata[n].symbol_name = sym_name;
-		ret->reloc_table_code[n].symbol_value = sym_val;
+		ret->reloc_table_rodata[n].symbol_value = sym_val;
 		
 		//printf (" %i, %s\n",sym_sec->index, sym_name);
 
