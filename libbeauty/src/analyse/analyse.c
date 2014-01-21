@@ -1822,6 +1822,7 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 		break;
 	default:
 		debug_print(DEBUG_ANALYSE, 1, "VALUE unhandled 0x%"PRIx64"\n", label->scope);
+		exit(1);
 		break;
 	}
 	debug_print(DEBUG_ANALYSE, 1, "params_size = 0x%x, locals_size = 0x%x\n",

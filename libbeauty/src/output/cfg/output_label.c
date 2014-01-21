@@ -652,7 +652,6 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		//tmp = dprintf(fd, "//");
 		switch (instruction->opcode) {
 		case LOAD:
-		case STORE:
 			if (inst_log1->value1.value_type == 6) {
 				debug_print(DEBUG_OUTPUT, 1, "ERROR1 %d\n", instruction->opcode);
 				//break;
@@ -670,6 +669,85 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			case IND_MEM:
 				tmp = dprintf(fd, "*");
 				value_id = inst_log1->value3.value_id;
+				break;
+			case IND_STACK:
+				/* FIXME: only use the indirect_value_id if it is an in-variant
+				 *	within the scope of the function.
+				 *	Assume in-variant for now.
+				 */
+				value_id = inst_log1->value3.indirect_value_id;
+				break;
+			case IND_IO:
+				tmp = dprintf(fd, "*");
+				value_id = inst_log1->value3.value_id;
+				break;
+			case IND_DIRECT:
+				value_id = inst_log1->value3.value_id;
+				break;
+			}
+			tmp = label_redirect[value_id].redirect;
+			debug_print(DEBUG_OUTPUT, 1, "value3 label 0x%"PRIx64", redir 0x%x\n", value_id, tmp);
+			if (!tmp) {
+				debug_print(DEBUG_OUTPUT, 1, "value3 label zero\n");
+				exit(1);
+			}
+			label = &labels[tmp];
+			//tmp = dprintf(fd, "0x%x:", tmp);
+			tmp = label_to_string(label, buffer, 1023);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
+			tmp = dprintf(fd, " = ");
+			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
+			switch (instruction->srcA.indirect) {
+			case IND_MEM:
+				tmp = dprintf(fd, "*");
+				value_id = inst_log1->value1.value_id;
+				//debug_print(DEBUG_OUTPUT, 1, "IND_MEM: inst:0x%x, value_id = 0x%lx\n", inst_number, value_id);
+				break;
+			case IND_STACK:
+				//tmp = dprintf(fd, "stack_");
+				value_id = inst_log1->value1.indirect_value_id;
+				break;
+			case IND_IO:
+				value_id = inst_log1->value1.indirect_value_id;
+				break;
+			case IND_DIRECT:
+				value_id = inst_log1->value1.value_id;
+				break;
+			}
+			tmp = label_redirect[value_id].redirect;
+			debug_print(DEBUG_OUTPUT, 1, "value1 label 0x%"PRIx64", redir 0x%x\n", value_id, tmp);
+			label = &labels[tmp];
+			if (!tmp) {
+				debug_print(DEBUG_OUTPUT, 1, "value1 label zero. Label has not been initialized\n");
+				exit(1);
+			}
+			//tmp = dprintf(fd, "0x%x:", tmp);
+			tmp = label_to_string(label, buffer, 1023);
+			tmp = dprintf(fd, "%s", buffer);
+			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
+			tmp = dprintf(fd, ";%s",cr);
+			break;
+
+		case STORE:
+			if (inst_log1->value1.value_type == 6) {
+				debug_print(DEBUG_OUTPUT, 1, "ERROR1 %d\n", instruction->opcode);
+				//break;
+			}
+			if (inst_log1->value1.value_type == 5) {
+				debug_print(DEBUG_OUTPUT, 1, "ERROR2\n");
+				//break;
+			}
+			if (print_inst(self, instruction, inst_number, labels))
+				return 1;
+			//debug_print(DEBUG_OUTPUT, 1, "\n");
+			tmp = dprintf(fd, "\t");
+			/* FIXME: Check limits */
+			switch (instruction->dstA.indirect) {
+			case IND_MEM:
+				tmp = dprintf(fd, "*");
+				/* value2 holds the value_id for the value3 pointer */
+				value_id = inst_log1->value2.value_id;
 				break;
 			case IND_STACK:
 				/* FIXME: only use the indirect_value_id if it is an in-variant

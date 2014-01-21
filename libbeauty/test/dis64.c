@@ -3336,6 +3336,66 @@ int assign_labels_to_src(struct self_s *self, struct external_entry_point_s *ext
 				}
 				break;
 			}
+			switch (instruction->srcB.store) {
+			case STORE_DIRECT:
+				memset(&label, 0, sizeof(struct label_s));
+				if (instruction->srcB.indirect == IND_MEM) {
+					label.scope = 3;
+					label.type = 1;
+					label.lab_pointer = 1;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				} else if (instruction->srcB.relocated) {
+					label.scope = 3;
+					label.type = 2;
+					label.lab_pointer = 0;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				} else {
+					label.scope = 3;
+					label.type = 3;
+					label.lab_pointer = 0;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				}
+				
+				inst_log1->value2.value_id = variable_id;
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = label.scope;
+				labels[variable_id].type = label.type;
+				labels[variable_id].lab_pointer += label.lab_pointer;
+				labels[variable_id].value = label.value;
+				labels[variable_id].size_bits = label.size_bits;
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given value_id = 0x%"PRIx64"\n", inst,
+					inst_log1->value2.value_id); 
+				variable_id++;
+				break;
+			case STORE_REG:
+				/* FIXME: TODO*/
+				switch(instruction->srcB.indirect) {
+				case IND_DIRECT:
+					inst_log1->value2.value_id = 
+						reg_tracker[instruction->srcB.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcA given value_id = 0x%"PRIx64"\n", inst,
+						inst_log1->value2.value_id);
+					break;
+				case IND_STACK:
+					stack_address = inst_log1->value2.indirect_init_value + inst_log1->value2.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcB.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value2.indirect_value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x: srcB direct given indirect_value_id = 0x%"PRIx64"\n", inst,
+								inst_log1->value2.indirect_value_id); 
+						}
+					}
+				}
+				break;
+			}
 			break;
 		case ADD:
 		case ADC:
@@ -4751,6 +4811,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 	struct instruction_s *instruction =  &inst_log1->instruction;
 	int variable_id = self->external_entry_points[function].variable_id;
 	uint64_t stack_address;
+	uint64_t data_address;
 	int index;
 	int tmp;
 	struct memory_s *memory;
@@ -4834,6 +4895,39 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 		case IND_MEM:
 			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_MEM\n");
 			inst_log1->value3.indirect_value_id = 0;
+			data_address = inst_log1->value3.indirect_init_value + inst_log1->value3.indirect_offset_value;
+			debug_print(DEBUG_MAIN, 1, "assign_id: data_address = 0x%"PRIx64"\n", data_address);
+			memory = search_store(
+				self->external_entry_points[function].process_state.memory_data,
+				data_address,
+				inst_log1->instruction.dstA.indirect_size);
+			if (memory) {
+				if (memory->value_id) {
+					inst_log1->value3.indirect_value_id = memory->value_id;
+					ret = 0;
+					break;
+				} else {
+					inst_log1->value3.indirect_value_id = variable_id;
+					memory->value_id = variable_id;
+					ret = log_to_label(instruction->dstA.store,
+						instruction->dstA.indirect,
+						instruction->dstA.index,
+						instruction->dstA.value_size,
+						instruction->dstA.relocated,
+						inst_log1->value3.value_scope,
+						inst_log1->value3.value_id,
+						inst_log1->value3.indirect_offset_value,
+						inst_log1->value3.indirect_value_id,
+						label);
+					if (ret) {
+						debug_print(DEBUG_MAIN, 1, "assign_id: IND_MEM log_to_label failed\n");
+						exit(1);
+					}
+				}
+			} else {
+				debug_print(DEBUG_MAIN, 1, "FIXME: assign_id: memory not found for stack address\n");
+				exit(1);
+			}
 			break;
 
 		case IND_STACK:
@@ -4864,6 +4958,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 						label);
 					if (ret) {
 						debug_print(DEBUG_MAIN, 1, "assign_id: IND_STACK log_to_label failed\n");
+						exit(1);
 					}
 				}
 			} else {
@@ -4880,6 +4975,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 		default:
 			debug_print(DEBUG_MAIN, 1, "Unknown instruction->dstA.indirect = 0x%x\n",
 				instruction->dstA.indirect);
+			exit(1);
 			break;
 		}
 		break;
@@ -6554,6 +6650,7 @@ int main(int argc, char *argv[])
 	 * 	Function params,
 	 *	local vars.
 	 ***************************************************/
+#if 0
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid &&
 			external_entry_points[l].type == 1) {
@@ -6575,7 +6672,7 @@ int main(int argc, char *argv[])
 			external_entry_points[l].locals_size);
 		}
 	}
-
+#endif
 	/***************************************************
 	 * This section sorts the external entry point params to the correct order
 	 ***************************************************/
