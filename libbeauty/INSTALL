@@ -1,0 +1,84 @@
+Compilation and Installation instructions
+-----------------------------------------
+Authors: Arun Prakash Jana (engineerarun@gmail.com)
+         James Courtier-Dutton
+Platform: Tested on Ubuntu 13.04
+Compiler: gcc or clang
+
+Prerequisites:
+-------------
+autoconf
+libtool
+llvm-dev
+libclang-dev
+llvm Git development branch source code - http://llvm.org/git/llvm.git
+
+Steps to install libbeauty:
+--------------------------
+
+1. Check-out llvm source from Git
+ $ git clone http://llvm.org/git/llvm.git
+
+2. cd to the llvm directory.
+
+3. Compile the llvm library as a shared library
+ $ ./configure --enable-shared
+ $ make
+
+4. Install methods:
+a) make install
+b) Copy the shared library Debug+Asserts/lib/libLLVM-3.5svn.so to
+ /usr/lib/libLLVM-3.5svn.so (32-bit system)
+ /usr/lib64/libLLVM-3.5svn.so (64-bit system)
+
+5. Download the libbeauty source:
+Methods:
+a) git clone https://github.com/jcdutton/libbeauty.git
+   $ cd libbeauty/libbeauty
+b) https://github.com/jcdutton/libbeauty/archive/master.zip
+   Extract the package and cd to the libbeauty source directory
+   $ unzip libbeauty-master.zip
+   $ cd libbeauty-master/libbeauty
+
+7. Set CC, CXX, CPP, CXXCPP environment variables if you with to use clang/llvm to compile libbeauty,
+otherwise gcc is the default.
+Then Run
+ $ autogen.sh
+
+8. To compile, run
+   $ make
+9. To install, run
+   $ make install
+
+After a clean compilation and install, the libraries should be located at
+ $ /usr/local/lib/beauty/
+
+10. Testing.
+   $ cd test
+
+First run "./test_case".
+This should output:
+NumOperands = 0x0, Offset = 0x3, Size = 0x1
+Test passed
+
+If it does not say test passed, libbeauty will not work.
+To fix the test, you need to apply the "fix-wrong-displacementSize.diff"
+to the llvm source (not the libbeauty source) and compile and install llvm again.
+The test "./test_case" should now pass.
+
+Next run "./test_id"
+It should report:
+ALL TESTS PASSED!
+
+You can now try out libbeauty.
+e.g.
+./dis64 test0.o
+
+dis64 is in the ./test directory.
+The test0.o is in the ./src/test directory, along with many other tests, along with associated C code.
+The will create .dot files in the ./test/cfg directory that look a bit like C code with comments.
+
+dis64 is a current work in progress demonstation of the libbeauty library. It takes a .o file, and uses libbeauty to process it.
+
+Soon, LLVM IR files will also be created, but that is work in progress right now, so the output to LLVM IR has been disabled for now.
+
