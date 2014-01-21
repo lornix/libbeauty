@@ -91,6 +91,7 @@ enum {
 #define LEAVE 0x2D /* Used at the MC Inst low level */
 #define NOP 0x2E /* The NOP instructions */
 #define GEP1 0x2F /* Used when raising an ADD of pointers to LLVM IR */
+#define CALLM 0x30 /* Call indirect */
 
 #define FLAG_NONE 0
 #define FLAG_OVERFLOW 1

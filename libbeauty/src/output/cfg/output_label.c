@@ -1133,8 +1133,18 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 					//tmp = dprintf(fd, "%s(%d:", 
 					//	external_entry_points[instruction->srcA.index].name,
 					//	external_entry_points[instruction->srcA.index].params_size);
-					tmp = dprintf(fd, "%s(", 
-						external_entry_points[instruction->srcA.index].name);
+					if (STORE_DIRECT == instruction->srcA.store) {
+						tmp = dprintf(fd, "%s(", 
+							external_entry_points[instruction->srcA.index].name);
+					} else if (STORE_REG == instruction->srcA.store) {
+						/* FIXME: find the label for this reg */
+						tmp = dprintf(fd, "register 0x%"PRIx64"(", 
+							instruction->srcA.index);
+					} else {
+						debug_print(DEBUG_OUTPUT, 1, "ERROR:Unknown CALL type\n");
+						exit(1);
+					}
+
 					tmp_state = 0;
 					for (n2 = 0; n2 < call->params_size; n2++) {
 						struct label_s *label;

@@ -78,6 +78,9 @@ const char * dis_opcode_table[] = {
 	"POP",  // 0x2b
 	"PUSH",  // 0x2c
 	"LEAVE", // 0x2d
+	"NOP", // 0x2e
+	"GEP1", // 0x2f
+	"CALLM", // 0x30
 	""
 };
 
@@ -249,6 +252,14 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 	srcB_operand = &(ll_inst->srcB);
 	dstA_operand = &(ll_inst->dstA);
 	previous_operand = &operand_empty;
+	printf("KIND operand: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
+		srcA_operand->kind,
+		srcB_operand->kind,
+		dstA_operand->kind);
+	printf("KIND ll_inst: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
+		ll_inst->srcA.kind,
+		ll_inst->srcB.kind,
+		ll_inst->dstA.kind);
 	/* FIXME: Need to handle special instructions as well */
 	if (!indirect) {
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
@@ -360,10 +371,6 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 		dis_instructions->instruction_number++;
 	} else {
 		/* Handle the indirect case */
-		printf("KIND: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
-			srcA_operand->kind,
-			srcB_operand->kind,
-			dstA_operand->kind);
 		if (dstA_operand->kind == KIND_IND_SCALE) {
 			scale_operand = dstA_operand;
 			/* Let srcA and srcB override this */
@@ -654,7 +661,7 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = CALL;
 		instruction->flags = 0;
-		convert_operand(self, ll_inst->address, &(ll_inst->srcB), 0, &(instruction->srcA));
+		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcA));
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 64;
@@ -663,6 +670,19 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->dstA.value_size = 64;
 		dis_instructions->instruction_number++;
 		result = 0;
+		break;
+	case CALLM: /* indirect */ 
+		ll_inst->opcode = CALL;
+		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		result = tmp;
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number -  1];
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_AX;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		//dis_instructions->instruction_number++;
 		break;
 	case IF:
 		debug_print(DEBUG_INPUT_DIS, 1, "IF opcode  = 0x%x\n", ll_inst->opcode);

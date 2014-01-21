@@ -381,9 +381,10 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		}
 		if ((instruction->srcA.indirect == IND_DIRECT) &&
 			(instruction->srcA.relocated == 1)) {
-			tmp = snprintf(buffer, 1023, " CALL2 0x%"PRIx64":%s(",
-				instruction->srcA.index,
-				external_entry_points[instruction->srcA.index].name);
+				tmp = snprintf(buffer, 1023, " CALL2 0x%"PRIx64":%s(",
+					instruction->srcA.index,
+					external_entry_points[instruction->srcA.index].name);
+			
 			tmp = string_cat(string, buffer, strlen(buffer));
 			tmp_state = 0;
 			l = instruction->srcA.index;
@@ -424,6 +425,12 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		} else if (instruction->srcA.indirect == IND_MEM) {
 			tmp = snprintf(buffer, 1023, "(*r0x%"PRIx64") ();", 
 				instruction->srcA.index);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else if (instruction->srcA.store == STORE_REG) {
+			tmp = snprintf(buffer, 1023, " (%s0x%"PRIx64"/%d) ();",
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				instruction->srcA.value_size);
 			tmp = string_cat(string, buffer, strlen(buffer));
 		} else {
 			tmp = snprintf(buffer, 1023, " CALL FAILED index=0x%"PRIx64"",

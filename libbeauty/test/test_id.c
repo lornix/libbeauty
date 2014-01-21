@@ -419,6 +419,16 @@ struct test_data_s test_data[] = {
 		.inst[2] = "// 0x0002:STORE  r0x98/32, r0x90/64, m[r0x90]/32",
 		.inst_size = 3,
 	},
+	{
+		.valid = 1,
+		// callq  *0x8(%rbx)
+		.bytes = {0xff, 0x53, 0x08},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:ADD  r0x20/64, i0x8/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  m[r0x90]/64, r0x98/64",
+		.inst[2] = "// 0x0002:CALL  (r0x98/64) ();",
+		.inst_size = 3,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
@@ -616,6 +626,7 @@ int main(int argc, char *argv[])
 		printf("LLVM DIS2 test_result = 0x%x\n", tmp);
 		if (tmp == 1) {
 			printf("FAILED TEST 0x%x : ", l);
+			test_result[l] = 1;
 			for (n = 0; n < buffer_size; n++) {
 				printf("%02x ", buffer[n]);
 			}
@@ -627,25 +638,26 @@ int main(int argc, char *argv[])
 			tmp = convert_ll_inst_to_rtl(self, ll_inst, &dis_instructions);
 			if (tmp) {
 				printf("Unhandled instruction, not yet implemented convert\n");
-			}
-			for (m = 0; m < dis_instructions.instruction_number; m++) {
-				string1.len = 0;
-				string1.string[0] = 0;
-				tmp = write_inst(self, &string1, &(dis_instructions.instruction[m]), m, NULL);
-				tmp = printf("result:    len=%zd:%s\n", string1.len, string1.string);
-				if (test_data[l].inst_size == dis_instructions.instruction_number) {
-					tmp = printf("test data: len=%zd:%s\n", strlen(test_data[l].inst[m]), test_data[l].inst[m]);
-					tmp = strncmp(string1.string, test_data[l].inst[m], string1.len);
-					if (tmp) {
-						printf("FAILED TEST 0x%x: tmp = 0x%x\n", l, tmp);
-						test_result[l] = 1;
+				test_result[l] = 1;
+			} else {
+				for (m = 0; m < dis_instructions.instruction_number; m++) {
+					string1.len = 0;
+					string1.string[0] = 0;
+					tmp = write_inst(self, &string1, &(dis_instructions.instruction[m]), m, NULL);
+					tmp = printf("result:    len=%zd:%s\n", string1.len, string1.string);
+					if (test_data[l].inst_size == dis_instructions.instruction_number) {
+						tmp = printf("test data: len=%zd:%s\n", strlen(test_data[l].inst[m]), test_data[l].inst[m]);
+						tmp = strncmp(string1.string, test_data[l].inst[m], string1.len);
+						if (tmp) {
+							printf("FAILED TEST 0x%x: tmp = 0x%x\n", l, tmp);
+							test_result[l] = 1;
+						}
+					} else {
+						printf("FAILED TEST 0x%x: wrong amount of instructions\n", l);
+						test_result[l] = 2;
 					}
-				} else {
-					printf("FAILED TEST 0x%x: wrong amount of instructions\n", l);
-					test_result[l] = 2;
 				}
-
-			}
+			}	
 		}
 		printf("END test data 0x%x\n", l);
 	
