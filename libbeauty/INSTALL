@@ -40,20 +40,20 @@ b) https://github.com/jcdutton/libbeauty/archive/master.zip
    $ unzip libbeauty-master.zip
    $ cd libbeauty-master/libbeauty
 
-7. Set CC, CXX, CPP, CXXCPP environment variables if you with to use clang/llvm to compile libbeauty,
+6. Set CC, CXX, CPP, CXXCPP environment variables if you with to use clang/llvm to compile libbeauty,
 otherwise gcc is the default.
 Then Run
  $ autogen.sh
 
-8. To compile, run
+7. To compile, run
    $ make
-9. To install, run
+8. To install, run
    $ make install
 
-After a clean compilation and install, the libraries should be located at
- $ /usr/local/lib/beauty/
+After a clean compilation and install, the libraries should be located at:
+   /usr/local/lib/beauty/
 
-10. Testing.
+9. Testing.
    $ cd test
 
 First run "./test_case".
