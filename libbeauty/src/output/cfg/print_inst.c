@@ -363,7 +363,9 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		break;
 	case IF:
 		tmp = snprintf(buffer, 1023, " cond=%"PRIu64"", instruction->srcA.index);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		tmp = snprintf(buffer, 1023, " JMP-REL=0x%"PRIx64"", instruction->dstA.index);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		ret = 0;
 		break;
 	case CALL:

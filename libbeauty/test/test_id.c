@@ -437,6 +437,15 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:CALL  (r0x8/64) ();",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// cmovne %edx,%eax
+		.bytes = {0x0f, 0x45, 0xc2},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:IF   cond=6 JMP-REL=0x0",
+		.inst[1] = "// 0x0001:MOV  r0x18/32, r0x8/32",
+		.inst_size = 2,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
@@ -661,7 +670,8 @@ int main(int argc, char *argv[])
 							test_result[l] = 1;
 						}
 					} else {
-						printf("FAILED TEST 0x%x: wrong amount of instructions\n", l);
+						printf("FAILED TEST 0x%x: wrong amount of instructions. Expect 0x%x, got 0x%x\n",
+							l, test_data[l].inst_size, dis_instructions.instruction_number);
 						test_result[l] = 2;
 					}
 				}

@@ -227,8 +227,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 	struct operand_low_level_s *scale_operand;
 	struct operand_low_level_s operand_tmp;
 
-	dis_instructions->instruction_number = 0;
-	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:start inst_number = 0x%x\n", dis_instructions->instruction_number);
+	debug_print(DEBUG_INPUT_DIS, 1, "disassemble_amd64:convert_base start inst_number = 0x%x\n", dis_instructions->instruction_number);
 	dis_instructions->instruction[dis_instructions->instruction_number].opcode = NOP; /* Un-supported OPCODE */
 	dis_instructions->instruction[dis_instructions->instruction_number].flags = 0; /* No flags effected */
 	if ((ll_inst->srcA.kind == KIND_IND_REG) || 	
@@ -575,6 +574,34 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		break;
 	case MOV:
 		copy_operand(&ll_inst->srcB, &ll_inst->srcA);
+		ll_inst->srcB.kind = KIND_EMPTY;
+		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+	case CMOV:
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = IF;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_DIRECT;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		/* Means get from rest of instruction */
+		//relative = getbyte(base_address, offset + dis_instructions->bytes_used);
+		/* extends byte to int64_t */
+		rel64 = 0; /* Skip to next instruction */
+		instruction->dstA.index = rel64;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 32;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ll_inst->predicate; /* CONDITION to skip mov instruction */
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		dis_instructions->instruction_number++;
+		
+		ll_inst->opcode = MOV;
+		//copy_operand(&ll_inst->srcB, &ll_inst->srcA);
 		ll_inst->srcB.kind = KIND_EMPTY;
 		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
 		result = tmp;
