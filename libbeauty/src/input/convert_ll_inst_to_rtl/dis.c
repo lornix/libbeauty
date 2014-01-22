@@ -81,6 +81,7 @@ const char * dis_opcode_table[] = {
 	"NOP", // 0x2e
 	"GEP1", // 0x2f
 	"CALLM", // 0x30
+	"SETCC", // 0x31
 	""
 };
 
@@ -606,6 +607,63 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
 		result = tmp;
 		break;
+	case SETCC:
+		copy_operand(&ll_inst->srcA, &ll_inst->dstA);
+		ll_inst->opcode = MOV;
+		ll_inst->srcA.kind = KIND_IMM;
+		ll_inst->srcA.size = 8;
+		ll_inst->srcA.operand[0].value = 1;
+		ll_inst->srcA.operand[0].size = 8;
+		ll_inst->srcA.operand[0].offset = 0;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = IF;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_DIRECT;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		/* Means get from rest of instruction */
+		//relative = getbyte(base_address, offset + dis_instructions->bytes_used);
+		/* extends byte to int64_t */
+		rel64 = 0; /* Skip to next instruction */
+		instruction->dstA.index = rel64;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 32;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ll_inst->predicate; /* CONDITION to skip mov instruction */
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		dis_instructions->instruction_number++;
+		
+		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = IF;
+		instruction->flags = 0;
+		instruction->dstA.store = STORE_DIRECT;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		/* Means get from rest of instruction */
+		//relative = getbyte(base_address, offset + dis_instructions->bytes_used);
+		/* extends byte to int64_t */
+		rel64 = 0; /* Skip to next instruction */
+		instruction->dstA.index = rel64;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 32;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ((ll_inst->predicate - 1) ^ 0x1) + 1; /* CONDITION to skip mov instruction */
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = 32;
+		dis_instructions->instruction_number++;
+		
+		ll_inst->srcA.operand[0].value = 0;
+		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		result = tmp;
+		break;
+
 	case DEC:
 		copy_operand(&ll_inst->dstA, &ll_inst->srcA);
 		ll_inst->srcB.kind = KIND_IMM;

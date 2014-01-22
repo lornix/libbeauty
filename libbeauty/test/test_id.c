@@ -446,6 +446,21 @@ struct test_data_s test_data[] = {
 		.inst[1] = "// 0x0001:MOV  r0x18/32, r0x8/32",
 		.inst_size = 2,
 	},
+	{
+		.valid = 1,
+		// setne  -0x5b(%rbp)
+		.bytes = {0x0f, 0x95, 0x45, 0xa5},
+		.bytes_size = 4,
+		.inst[0] = "// 0x0000:IF   cond=6 JMP-REL=0x0",
+		.inst[1] = "// 0x0001:SUB  r0x30/64, i0x5b/64, r0x90/64",
+		.inst[2] = "// 0x0002:MOV  i0x1/8, r0x98/8",
+		.inst[3] = "// 0x0003:STORE  r0x98/8, r0x90/64, s[r0x90]/8",
+		.inst[4] = "// 0x0004:IF   cond=5 JMP-REL=0x0",
+		.inst[5] = "// 0x0005:SUB  r0x30/64, i0x5b/64, r0x90/64",
+		.inst[6] = "// 0x0006:MOV  i0x0/8, r0x98/8",
+		.inst[7] = "// 0x0007:STORE  r0x98/8, r0x90/64, s[r0x90]/8",
+		.inst_size = 8,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
