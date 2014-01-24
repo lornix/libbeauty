@@ -702,7 +702,7 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->dstA.value_size = 64;
 		break;
 	case JMPM: /* Jump Indirect */
-		ll_inst->opcode = JMP;
+		ll_inst->opcode = JMPT;
 		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
 		result = tmp;
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number -  1];
