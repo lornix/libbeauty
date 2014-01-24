@@ -461,6 +461,17 @@ struct test_data_s test_data[] = {
 		.inst[7] = "// 0x0007:STORE  r0x98/8, r0x90/64, s[r0x90]/8",
 		.inst_size = 8,
 	},
+	{
+		.valid = 1,
+		// jmpq   *0x0(,%rax,8)
+		.bytes = {0xff, 0x24, 0xc5, 0x00, 0x00, 0x00, 0x00},
+		.bytes_size = 7,
+		.inst[0] = "// 0x0000:IMUL  r0x8/64, i0x8/0, r0x90/64",
+		.inst[1] = "// 0x0001:ADD  r0x90/64, i0x0/64, r0x90/64",
+		.inst[2] = "// 0x0002:LOAD  m[r0x90]/64, r0x98/64",
+		.inst[3] = "// 0x0003:JMP  r0x98/64, r0x48/64",
+		.inst_size = 4,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

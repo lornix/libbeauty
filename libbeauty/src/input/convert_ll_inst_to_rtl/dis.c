@@ -701,6 +701,18 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->dstA.relocated = 0;
 		instruction->dstA.value_size = 64;
 		break;
+	case JMPM: /* Jump Indirect */
+		ll_inst->opcode = JMP;
+		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
+		result = tmp;
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number -  1];
+		instruction->dstA.store = STORE_REG;
+		instruction->dstA.indirect = IND_DIRECT;
+		instruction->dstA.indirect_size = 64;
+		instruction->dstA.index = REG_IP;
+		instruction->dstA.relocated = 0;
+		instruction->dstA.value_size = 64;
+		break;
 	case CALLT: /* Call jump table */
 		break;
 	case JMP: /* Relative */
