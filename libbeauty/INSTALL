@@ -40,10 +40,18 @@ b) https://github.com/jcdutton/libbeauty/archive/master.zip
    $ unzip libbeauty-master.zip
    $ cd libbeauty-master/libbeauty
 
-6. Set CC, CXX, CPP, CXXCPP environment variables if you with to use clang/llvm to compile libbeauty,
-otherwise gcc is the default.
-Then Run
+6. Set CC, CXX, CPP, CXXCPP environment variables if you wish to use clang/llvm to compile libbeauty:
+export CC=/usr/bin/clang
+export CPP=/usr/bin/clang++
+export CXXCPP="/usr/bin/clang++ -E"
+export CPP="/usr/bin/clang -E"
+
+Otherwise gcc is the default.
+
+Then run once:
  $ autogen.sh
+After that, you only need to run:
+ $ ./configure
 
 7. To compile, run
    $ make
@@ -78,7 +86,7 @@ dis64 is in the ./test directory.
 The test0.o is in the ./src/test directory, along with many other tests, along with associated C code.
 The will create .dot files in the ./test/cfg directory that look a bit like C code with comments.
 
-dis64 is a current work in progress demonstation of the libbeauty library. It takes a .o file, and uses libbeauty to process it.
+dis64 is a currently a work in progress demonstration of the libbeauty library. It takes a .o file, and uses libbeauty to process it.
 
 Soon, LLVM IR files will also be created, but that is work in progress right now, so the output to LLVM IR has been disabled for now.
 
