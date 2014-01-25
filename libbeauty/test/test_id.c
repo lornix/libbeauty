@@ -469,7 +469,7 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:IMUL  r0x8/64, i0x8/0, r0x90/64",
 		.inst[1] = "// 0x0001:ADD  r0x90/64, i0x0/64, r0x90/64",
 		.inst[2] = "// 0x0002:LOAD  m[r0x90]/64, r0x98/64",
-		.inst[3] = "// 0x0003:JMP  r0x98/64, r0x48/64",
+		.inst[3] = "// 0x0003:JMPT  r0x98/64, r0x48/64",
 		.inst_size = 4,
 	},
 };
