@@ -488,6 +488,14 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:JMP  i0xfffffffffffffc98/64, r0x48/64",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// f3 48 a5                rep movsq %ds:(%rsi),%es:(%rdi) 
+		.bytes = {0xf3, 0x48, 0xa5},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:REP XXX",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
