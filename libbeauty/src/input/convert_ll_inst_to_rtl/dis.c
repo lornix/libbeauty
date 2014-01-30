@@ -842,6 +842,19 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		result = tmp;
 		break;
 	case SEX: /* Signed Extention */
+		if ((ll_inst->srcA.kind == KIND_EMPTY) &&
+			(ll_inst->srcB.kind == KIND_EMPTY) &&
+			(ll_inst->dstA.kind == KIND_EMPTY)) {
+			/* Special case for CDQE */
+			ll_inst->srcB.kind = KIND_REG;
+			//ll_operand->size; // Already set
+		        ll_inst->srcB.operand[0].value = REG_AX;
+		        ll_inst->srcB.operand[0].size = ll_inst->srcB.size;
+			ll_inst->dstA.kind = KIND_REG;
+			//ll_operand->size; // Already set
+		        ll_inst->dstA.operand[0].value = REG_AX;
+		        ll_inst->dstA.operand[0].size = ll_inst->dstA.size;
+		}
 		copy_operand(&ll_inst->srcB, &ll_inst->srcA);
 		ll_inst->srcB.kind = KIND_EMPTY;
 		tmp  = convert_base(self, ll_inst, 0, dis_instructions);
