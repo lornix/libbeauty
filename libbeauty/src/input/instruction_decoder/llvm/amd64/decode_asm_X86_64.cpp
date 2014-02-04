@@ -268,6 +268,12 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 		outs() << "Bytes reset to 0\n";
 		return 1;
 	}
+	if (Bytes[0] == 0xf3) {
+		/* FIXME: Implement */
+		outs() << "REPZ\n";
+		PC++;
+	}
+
 	S = DisAsm->getInstruction(*Inst, Size, MemoryObject2, PC,
 		/*REMOVE*/ nulls(), nulls());
 	outs() << format("getInstruction Size = 0x%x\n",Size);

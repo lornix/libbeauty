@@ -496,6 +496,14 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:REP XXX",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// 85 c0                	test   %eax,%eax
+		.bytes = {0x85, 0xc0},
+		.bytes_size = 2,
+		.inst[0] = "// 0x0000:TESTf r0x8/32, r0x8/32",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
