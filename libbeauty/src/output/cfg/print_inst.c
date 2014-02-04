@@ -172,10 +172,8 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	case SHR:
 	case SAL:
 	case SAR:
-	case CMP:
 	case NOT:
 	case NEG:
-	case TEST:
 	/* FIXME: Add DIV */
 	//case DIV:
 		if (instruction->srcA.indirect) {
@@ -218,6 +216,38 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 				store_table[instruction->dstA.store],
 				instruction->dstA.index,
 				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		}
+		ret = 0;
+		break;
+	case CMP:
+	case TEST:
+		if (instruction->srcA.indirect) {
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
+				indirect_table[instruction->srcA.indirect],
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		}
+		if (instruction->srcB.indirect) {
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
+				indirect_table[instruction->srcB.indirect],
+				store_table[instruction->srcB.store],
+				instruction->srcB.index,
+				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+				store_table[instruction->srcB.store],
+				instruction->srcB.index,
+				instruction->srcB.value_size);
 			tmp = string_cat(string, buffer, strlen(buffer));
 		}
 		ret = 0;

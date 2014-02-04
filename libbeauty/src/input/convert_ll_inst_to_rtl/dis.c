@@ -993,6 +993,12 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		result = tmp;
 		break;
 	case TEST:
+		if ((ll_inst->srcA.kind == KIND_EMPTY) &&
+			(ll_inst->srcB.kind != KIND_EMPTY) &&
+			(ll_inst->dstA.kind != KIND_EMPTY)) {
+			copy_operand(&ll_inst->dstA, &ll_inst->srcA);
+			ll_inst->dstA.kind = KIND_EMPTY;
+		}
 		tmp  = convert_base(self, ll_inst, 1, dis_instructions);
 		result = tmp;
 		break;
