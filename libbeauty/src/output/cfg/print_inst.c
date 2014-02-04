@@ -255,6 +255,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	case ICMP:
 		tmp = snprintf(buffer, 1023, " COND 0x%x,",
 			instruction->predicate);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		if (instruction->srcA.indirect) {
 			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
 				indirect_table[instruction->srcA.indirect],
