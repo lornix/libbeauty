@@ -4440,6 +4440,7 @@ int fix_flag_dependency_instructions(struct self_s *self)
 				//	debug_print(DEBUG_MAIN, 1, "flag NOT HANDLED inst 0x%x TEST OP:0x%x\n", n, inst_log1_flags->instruction.opcode);
 				//	exit (1);
 				//}
+				/* Change TEST,IF to AND,ICMP,BC */
 				tmp = insert_nop_after(self, self->flag_dependency[n], &new_inst);
 				reg_size = inst_log1_flags->instruction.srcA.value_size;
 				inst_log1_flags->instruction.opcode = rAND;
