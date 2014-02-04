@@ -159,6 +159,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		break;
 	case STORE:
 	case ADD:
+	case ADC:
 	case GEP1:
 	case SUB:
 	case SBB:
