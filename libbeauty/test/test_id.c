@@ -684,6 +684,14 @@ int main(int argc, char *argv[])
 			buffer_size, offset,
 			(char *)buffer1, 1023);
 		LLVMDisasmInstructionPrint(octets, buffer, buffer_size, buffer1);
+		if (octets != test_data[l].bytes_size) {
+			tmp = octets;
+			octets = LLVMDisasmInstruction(DC, buffer + tmp,
+				buffer_size - tmp, offset,
+				(char *)buffer1, 1023);
+			LLVMDisasmInstructionPrint(octets, buffer + tmp, buffer_size - tmp, buffer1);
+		}
+
 //		printf("LLVM DIS octets = 0x%x:", octets);
 //		for (n = 0; n < octets; n++) {
 //			printf("%02x ", buffer[n]);
