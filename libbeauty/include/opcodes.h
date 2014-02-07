@@ -94,6 +94,7 @@ enum {
 #define CALLM 0x30 /* Call indirect */
 #define SETCC 0x31 /* Set conditional */
 #define JMPM 0x32 /* Call indirect */
+#define MOVS 0x33 /* MOVS strings */
 
 #define FLAG_NONE 0
 #define FLAG_OVERFLOW 1

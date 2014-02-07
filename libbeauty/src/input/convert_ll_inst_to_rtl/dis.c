@@ -1203,6 +1203,136 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		dis_instructions->instruction_number++;
 		result = 0;
 		break;
+	case MOVS:
+		if (ll_inst->rep == 1) {
+			/* FIXME not finished */
+			/* CMP ECX, 0 */
+			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+			instruction->opcode = CMP;
+			instruction->flags = 1;
+			instruction->srcA.store = STORE_REG;
+			instruction->srcA.indirect = IND_DIRECT;
+			instruction->srcA.indirect_size = 64;
+			instruction->srcA.index = REG_CX;
+			instruction->srcA.relocated = 0;
+			instruction->srcA.value_size = ll_inst->srcA.size;
+			instruction->dstA.store = STORE_DIRECT;
+			instruction->dstA.indirect = IND_DIRECT;
+			instruction->dstA.indirect_size = 64;
+			instruction->dstA.index = 0;
+			instruction->dstA.relocated = 0;
+			instruction->dstA.value_size = 32;
+			instruction->srcB.store = STORE_DIRECT;
+			instruction->srcB.indirect = IND_DIRECT;
+			instruction->srcB.indirect_size = 64;
+			instruction->srcB.index = 0;
+			instruction->srcB.relocated = 0;
+			instruction->srcB.value_size = ll_inst->srcA.size;
+			dis_instructions->instruction_number++;
+
+			/* IF: JZ next instruction */
+			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+			instruction->opcode = IF;
+			instruction->flags = 0;
+			instruction->dstA.store = STORE_DIRECT;
+			instruction->dstA.indirect = IND_DIRECT;
+			instruction->dstA.indirect_size = 64;
+			/* Should be to next amd64 instruction. */
+			instruction->dstA.index = 0;  /* 0 is next instruction */
+			instruction->dstA.relocated = 0;
+			instruction->dstA.value_size = 32;
+			instruction->srcA.store = STORE_DIRECT;
+			instruction->srcA.indirect = IND_DIRECT;
+			instruction->srcA.indirect_size = 64;
+			instruction->srcA.index = 4; /* CONDITION JZ */
+			instruction->srcA.relocated = 0;
+			instruction->srcA.value_size = 32;
+			dis_instructions->instruction_number++;
+
+			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
+			/* CX-- */
+			instruction->opcode = SUB;
+			instruction->flags = 0;
+			instruction->srcA.store = STORE_DIRECT;
+			instruction->srcA.indirect = IND_DIRECT;
+			instruction->srcA.indirect_size = 64;
+			instruction->srcA.index = 1;
+			instruction->srcA.relocated = 0;
+			instruction->srcA.value_size = ll_inst->srcA.size;
+			instruction->dstA.store = STORE_REG;
+			instruction->dstA.indirect = IND_DIRECT;
+			instruction->dstA.indirect_size = 64;
+			instruction->dstA.index = REG_CX;
+			instruction->dstA.relocated = 0;
+			instruction->dstA.value_size = ll_inst->srcA.size;
+			instruction->srcB.store = STORE_REG;
+			instruction->srcB.indirect = IND_DIRECT;
+			instruction->srcB.indirect_size = 64;
+			instruction->srcB.index = REG_CX;
+			instruction->srcB.relocated = 0;
+			instruction->srcB.value_size = ll_inst->srcA.size;
+			dis_instructions->instruction_number++;
+		}
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = MOV;
+		instruction->flags = 0;
+		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcA));
+		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->dstA));
+		/* Force indirect */
+		instruction->srcA.indirect = IND_MEM;
+		instruction->srcA.indirect_size = ll_inst->srcA.size;
+		instruction->dstA.indirect = IND_MEM;
+		instruction->dstA.indirect_size = ll_inst->dstA.size;
+		dis_instructions->instruction_number++;
+		/* FIXME: Need to use direction flag */
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = ADD;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ll_inst->srcA.size >> 3;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = ll_inst->srcA.size;
+		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->dstA));
+		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcB));
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = ADD;
+		instruction->flags = 0;
+		instruction->srcA.store = STORE_DIRECT;
+		instruction->srcA.indirect = IND_DIRECT;
+		instruction->srcA.indirect_size = 64;
+		instruction->srcA.index = ll_inst->dstA.size >> 3;
+		instruction->srcA.relocated = 0;
+		instruction->srcA.value_size = ll_inst->dstA.size;
+		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->dstA));
+		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->srcB));
+		dis_instructions->instruction_number++;
+
+		if (ll_inst->rep == 1) {
+			instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+			instruction->opcode = JMP;
+			instruction->flags = 0;
+			instruction->srcA.store = STORE_DIRECT;
+			instruction->srcA.indirect = IND_DIRECT;
+			instruction->srcA.indirect_size = 64;
+			/* JMP back to beginning of this amd64 instruction and also the rep byte */
+			instruction->srcA.index = -(dis_instructions->bytes_used); 
+			instruction->srcA.relocated = 0;
+			instruction->srcA.value_size = 64;
+			instruction->dstA.store = STORE_REG;
+			instruction->dstA.indirect = IND_DIRECT;
+			instruction->dstA.indirect_size = 64;
+			instruction->dstA.index = REG_IP;
+			instruction->dstA.relocated = 0;
+			instruction->dstA.value_size = 64;
+			dis_instructions->instruction_number++;
+		}
+		result = 0;
+		break;
 	default:
 		debug_print(DEBUG_INPUT_DIS, 1, "convert: Unrecognised opcode %x\n", ll_inst->opcode);
 		result = 1;

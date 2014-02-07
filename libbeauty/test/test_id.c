@@ -493,8 +493,14 @@ struct test_data_s test_data[] = {
 		// f3 48 a5                rep movsq %ds:(%rsi),%es:(%rdi) 
 		.bytes = {0xf3, 0x48, 0xa5},
 		.bytes_size = 3,
-		.inst[0] = "// 0x0000:REP XXX",
-		.inst_size = 1,
+		.inst[0] = "// 0x0000:CMPf r0x10/64, i0x0/64",
+		.inst[1] = "// 0x0001:IF   cond=4 JMP-REL=0x0",
+		.inst[2] = "// 0x0002:SUB  i0x1/64, r0x10/64, r0x10/64",
+		.inst[3] = "// 0x0003:MOV  m[r0x38]/64, m[r0x40]/64",
+		.inst[4] = "// 0x0004:ADD  i0x8/64, r0x38/64, r0x38/64",
+		.inst[5] = "// 0x0005:ADD  i0x8/64, r0x40/64, r0x40/64",
+		.inst[6] = "// 0x0006:JMP  i0xfffffffffffffffe/64, r0x48/64",
+		.inst_size = 7,
 	},
 	{
 		.valid = 1,
