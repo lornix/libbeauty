@@ -25,6 +25,8 @@ struct instruction_low_level_s {
 	int opcode;
 	uint64_t address;
 	int octets;
+	/* 0:None, 1:REPZ, 2:REPNZ */
+	int rep;
 	int predicate;
 	struct operand_low_level_s srcA;
 	struct operand_low_level_s srcB;

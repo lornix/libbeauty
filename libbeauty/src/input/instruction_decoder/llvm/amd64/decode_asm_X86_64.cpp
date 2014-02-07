@@ -251,6 +251,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
                              struct instruction_low_level_s *ll_inst) {
 	int n;
 	int result = 1;
+	int rep = 0;
 	// Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
 	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, 0);
 
@@ -271,6 +272,13 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	if (Bytes[0] == 0xf3) {
 		/* FIXME: Implement */
 		outs() << "REPZ\n";
+		rep = 1;
+		PC++;
+	}
+	if (Bytes[0] == 0xf2) {
+		/* FIXME: Implement */
+		outs() << "REPNZ\n";
+		rep = 2;
 		PC++;
 	}
 
@@ -308,6 +316,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	ll_inst->opcode = new_helper[opcode].opcode;
 	ll_inst->address = PC;
 	ll_inst->octets = Size;
+	ll_inst->rep = rep;
 	ll_inst->predicate = new_helper[opcode].predicate;
 	ll_inst->srcA.size = new_helper[opcode].srcA_size;
 	ll_inst->srcB.size = new_helper[opcode].srcB_size;
