@@ -256,7 +256,12 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, 0);
 
 	outs() << "DECODE INST\n";
-	uint64_t Size;
+	if (PC > BytesSize) {
+		outs() << "Buffer overflow\n";
+		return 1;
+	}
+	outs() << format("PC = 0x%lx\n", PC);
+	uint64_t Size = 0;
 	struct dis_info_s *dis_info = (struct dis_info_s *) DisInfo;
 	MCInst *Inst = dis_info->Inst;
 	Inst->clear();
@@ -265,17 +270,17 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 		dis_info->size[n] = 0;
 	}
 	MCDisassembler::DecodeStatus S;
-	if (Bytes[0] == 0) {
-		outs() << "Bytes reset to 0\n";
-		return 1;
-	}
-	if (Bytes[0] == 0xf3) {
+//	if (Bytes[PC] == 0) {
+//		outs() << "Bytes reset to 0\n";
+//		return 1;
+//	}
+	if (Bytes[PC] == 0xf3) {
 		/* FIXME: Implement */
 		outs() << "REPZ\n";
 		rep = 1;
 		PC++;
 	}
-	if (Bytes[0] == 0xf2) {
+	if (Bytes[PC] == 0xf2) {
 		/* FIXME: Implement */
 		outs() << "REPNZ\n";
 		rep = 2;
@@ -284,6 +289,9 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 
 	S = DisAsm->getInstruction(*Inst, Size, MemoryObject2, PC,
 		/*REMOVE*/ nulls(), nulls());
+	if (rep > 0) {
+		Size++;
+	}
 	outs() << format("getInstruction Size = 0x%x\n",Size);
 	if (S != MCDisassembler::Success) {
 	// case MCDisassembler::Fail:

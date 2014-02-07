@@ -1274,13 +1274,22 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 			dis_instructions->instruction_number++;
 		}
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
-		instruction->opcode = MOV;
+		instruction->opcode = LOAD;
 		instruction->flags = 0;
 		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcA));
-		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->dstA));
+		convert_operand(self, ll_inst->address, &(operand_reg_tmp2), 0, &(instruction->dstA));
 		/* Force indirect */
 		instruction->srcA.indirect = IND_MEM;
 		instruction->srcA.indirect_size = ll_inst->srcA.size;
+		dis_instructions->instruction_number++;
+
+		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
+		instruction->opcode = STORE;
+		instruction->flags = 0;
+		convert_operand(self, ll_inst->address, &(operand_reg_tmp2), 0, &(instruction->srcA));
+		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->srcB));
+		convert_operand(self, ll_inst->address, &(ll_inst->dstA), 0, &(instruction->dstA));
+		/* Force indirect */
 		instruction->dstA.indirect = IND_MEM;
 		instruction->dstA.indirect_size = ll_inst->dstA.size;
 		dis_instructions->instruction_number++;
