@@ -4063,14 +4063,22 @@ int build_flag_dependency_table(struct self_s *self)
 			} else {
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
 				if (self->flag_result_users[l] > 0) {
-					if (inst_log_entry[l].instruction.opcode != CMP) {
-						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP. Opcode = 0x%x\n",
-							inst_log_entry[l].instruction.opcode);
+					if ((inst_log_entry[l].instruction.opcode != CMP) &&
+						(inst_log_entry[l].instruction.opcode != TEST)) {
+						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP/TEST. Opcode = 0x%x, Node = 0x%x\n",
+							inst_log_entry[l].instruction.opcode,
+							inst_log_entry[l].node_member);
 						exit(1);
 					}
+					if (inst_log_entry[l].instruction.opcode == TEST) {
+						debug_print(DEBUG_MAIN, 1, "FIXME: Too many TEST. Inst = 0x%x Opcode = 0x%x\n",
+							l,
+							inst_log_entry[l].instruction.opcode);
+					}
+					
 					/* Use "before" because after will cause a race condition */
 					tmp = insert_nop_before(self, l, &new_inst);
-					/* copy CMP into it */
+					/* copy CMP/TEST into it */
 					tmp = substitute_inst(self, l, new_inst);
 					self->flag_dependency[n] = new_inst;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
