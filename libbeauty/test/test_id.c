@@ -638,7 +638,15 @@ int main(int argc, char *argv[])
 
 	
 	DA = LLVMNewDecodeAsmX86_64();
+	if (!DA) {
+		printf("LLVMNewDecodeAsmX86_64() failed\n");
+		exit(1);
+	}
 	tmp = LLVMSetupDecodeAsmX86_64(DA);
+	if (tmp) {
+		printf("LLVMSetupDecodeAsmX86_64() failed\n");
+		exit(1);
+	}
 //	LLVMPrintTargets();
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
 		0, NULL,
