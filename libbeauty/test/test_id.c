@@ -482,7 +482,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
-		// e9 98 fc ff ff          jmpq 
+		// jmpq 
 		.bytes = {0xe9, 0x98, 0xfc, 0xff, 0xff},
 		.bytes_size = 5,
 		.inst[0] = "// 0x0000:JMP  i0xfffffffffffffc98/64, r0x48/64",
@@ -490,7 +490,7 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
-		// f3 48 a5                rep movsq %ds:(%rsi),%es:(%rdi) 
+		// rep movsq %ds:(%rsi),%es:(%rdi) 
 		.bytes = {0xf3, 0x48, 0xa5},
 		.bytes_size = 3,
 		.inst[0] = "// 0x0000:CMPf r0x10/64, i0x0/64",
@@ -505,9 +505,17 @@ struct test_data_s test_data[] = {
 	},
 	{
 		.valid = 1,
-		// 85 c0                	test   %eax,%eax
+		// test   %eax,%eax
 		.bytes = {0x85, 0xc0},
 		.bytes_size = 2,
+		.inst[0] = "// 0x0000:TESTf r0x8/32, r0x8/32",
+		.inst_size = 1,
+	},
+	{
+		.valid = 1,
+		// movss  -0x4(%rbp),%xmm0
+		.bytes = {0xf3, 0x0f, 0x10, 0x45, 0xfc},
+		.bytes_size = 5,
 		.inst[0] = "// 0x0000:TESTf r0x8/32, r0x8/32",
 		.inst_size = 1,
 	},

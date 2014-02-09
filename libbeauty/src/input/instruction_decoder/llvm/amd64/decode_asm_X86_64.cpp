@@ -252,6 +252,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	int n;
 	int result = 1;
 	int rep = 0;
+	int rep_inst = 0;
 	// Wrap the pointer to the Bytes, BytesSize and PC in a MemoryObject.
 	llvm::DecodeAsmMemoryObject MemoryObject2(Bytes, BytesSize, 0);
 
@@ -274,13 +275,19 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 //		outs() << "Bytes reset to 0\n";
 //		return 1;
 //	}
-	if (Bytes[PC] == 0xf3) {
+	/* rep_inst is set if the instruction is in the
+	 * group of ones that can have REP in front of them
+	 */
+	if (Bytes[PC + 1] == 0x48) {
+		rep_inst = 1;
+	}
+	if (Bytes[PC] == 0xf3 && rep_inst) {
 		/* FIXME: Implement */
 		outs() << "REPZ\n";
 		rep = 1;
 		PC++;
 	}
-	if (Bytes[PC] == 0xf2) {
+	if (Bytes[PC] == 0xf2 && rep_inst) {
 		/* FIXME: Implement */
 		outs() << "REPNZ\n";
 		rep = 2;
