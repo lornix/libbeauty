@@ -188,6 +188,8 @@ struct helper_reg_table_s helper_reg_table[] = {
 	{"%r13", 64, REG_13},
 	{"%r14", 64, REG_14},
 	{"%r15", 64, REG_15},
+	{"%r13d", 32, REG_13},
+	{"%xmm0", 128, REG_XMM0},
 };
 
 struct decode_inst_helper_s {
