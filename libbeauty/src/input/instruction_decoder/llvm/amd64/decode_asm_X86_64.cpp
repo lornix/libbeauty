@@ -173,11 +173,15 @@ int DecodeAsmX86_64::setup() {
 
 int DecodeAsmX86_64::get_reg_size_helper(int value, int *reg_index) {
 	std::string buf;
+	std::string buf2;
 	StringRef reg_name;
 	int helper_size = sizeof(helper_reg_table) / sizeof(struct helper_reg_table_s);
 	int n;
 	int tmp;
 	raw_string_ostream OS(buf);
+	raw_string_ostream OS2(buf2);
+	OS.SetUnbuffered();
+	OS2.SetUnbuffered();
 	//outs() << format("get_reg_size_helper value = 0x%x\n", value);
 	if (value == 0) {
 		return 1;
@@ -196,6 +200,18 @@ int DecodeAsmX86_64::get_reg_size_helper(int value, int *reg_index) {
 			return 0;
 		}
 	}
+	outs() << format("ERROR: get_reg_size_helper Unknown reg value = 0x%x\n", value);
+#if 0
+	for (n = 1; n < 233; n++) {
+		outs() << format("Reg:0x%x\n", n);
+		buf2.clear();  /* Clears the OS2 buffer */
+		IP->printRegName(OS2, n);
+		reg_name = OS2.str();
+		outs() << reg_name << "\n";
+	}
+#endif
+	exit(1);
+
 	return 1;
 }
 
