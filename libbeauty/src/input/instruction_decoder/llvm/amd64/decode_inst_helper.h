@@ -188,7 +188,14 @@ struct helper_reg_table_s helper_reg_table[] = {
 	{"%r13", 64, REG_13},
 	{"%r14", 64, REG_14},
 	{"%r15", 64, REG_15},
+	{"%r08d", 32, REG_08},
+	{"%r09d", 32, REG_09},
+	{"%r10d", 32, REG_10},
+	{"%r11d", 32, REG_11},
+	{"%r12d", 32, REG_12},
 	{"%r13d", 32, REG_13},
+	{"%r14d", 32, REG_14},
+	{"%r15d", 32, REG_15},
 	{"%xmm0", 128, REG_XMM0},
 };
 
