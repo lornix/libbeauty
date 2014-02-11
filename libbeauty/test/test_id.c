@@ -527,6 +527,14 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:SHLf r0x18/32, r0x10/8, r0x18/32",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// mov    %r13d,%ecx
+		.bytes = {0x44, 0x89, 0xe9},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:MOV  r0x78/32, r0x10/32",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
