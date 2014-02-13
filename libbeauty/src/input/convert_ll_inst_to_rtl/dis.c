@@ -1007,6 +1007,7 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		result = tmp;
 		break;
 	case CMP:
+		ll_inst->dstA.kind = KIND_EMPTY;
 		tmp  = convert_base(self, ll_inst, 1, dis_instructions);
 		result = tmp;
 		break;

@@ -535,6 +535,24 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:MOV  r0x78/32, r0x10/32",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// cmp    $0x1,%esi
+		.bytes = {0x83, 0xfe, 0x01},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:CMPf r0x38/32, i0x1/32",
+		.inst_size = 1,
+	},
+	{
+		.valid = 1,
+		// cmpl   $0x1,0x3c8(%r12)
+		.bytes = {0x41, 0x83, 0xbc, 0x24, 0xc8, 0x03, 0x00, 0x00, 0x01},
+		.bytes_size = 9,
+		.inst[0] = "// 0x0000:ADD  r0x70/64, i0x3c8/64, r0x90/64",
+		.inst[1] = "// 0x0001:LOAD  m[r0x90]/32, r0x98/32",
+		.inst[2] = "// 0x0002:CMPf r0x98/32, i0x1/32",
+		.inst_size = 3,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

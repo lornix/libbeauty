@@ -5378,7 +5378,17 @@ int main(int argc, char *argv[])
 	tmp = external_entry_points_init(external_entry_points, handle_void);
 	if (tmp) return 1;
 
-	debug_print(DEBUG_MAIN, 1, "Number of functions = %d\n", n);
+#if 0
+	/* FIXME: Special code to reduce processing to only one external_entry_point */
+	for (n = 0; n < 4; n++) {
+		external_entry_points[n].valid = 0;
+	}
+	for (n = 5; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
+		external_entry_points[n].valid = 0;
+	}
+#endif
+
+	debug_print(DEBUG_MAIN, 1, "List of functions\n");
 	for (n = 0; n < EXTERNAL_ENTRY_POINTS_MAX; n++) {
 		if (external_entry_points[n].valid != 0) {
 		debug_print(DEBUG_MAIN, 1, "%d: type = %d, sect_offset = %d, sect_id = %d, sect_index = %d, &%s() = 0x%04"PRIx64"\n",
