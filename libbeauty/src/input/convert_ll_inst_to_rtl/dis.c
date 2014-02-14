@@ -496,6 +496,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 			convert_operand(self, ll_inst->address, &operand_empty, 0, &(instruction->srcB));
 			convert_operand(self, ll_inst->address, &operand_reg_tmp2, 0, &(instruction->dstA));
 			instruction->dstA.value_size = ll_inst->srcA.size;
+			instruction->srcA.value_size = ll_inst->srcA.size;
 			dis_instructions->instruction_number++;
 		}
 		previous_operand = &operand_reg_tmp2;

@@ -516,8 +516,10 @@ struct test_data_s test_data[] = {
 		// movss  -0x4(%rbp),%xmm0
 		.bytes = {0xf3, 0x0f, 0x10, 0x45, 0xfc},
 		.bytes_size = 5,
-		.inst[0] = "// 0x0000:TESTf r0x8/32, r0x8/32",
-		.inst_size = 1,
+		.inst[0] = "// 0x0000:SUB  r0x30/64, i0x4/64, r0x160/64",
+		.inst[1] = "// 0x0001:LOAD  s[r0x160]/128, r0x180/128",
+		.inst[2] = "// 0x0002:MOV  r0x180/128, r0x100/128",
+		.inst_size = 3,
 	},
 	{
 		.valid = 1,
