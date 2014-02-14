@@ -133,8 +133,6 @@ extern const char * opcode_table[];
 #define REG_13 0x78
 #define REG_14 0x80
 #define REG_15 0x88
-#define REG_TMP1 0x90
-#define REG_TMP2 0x98
 #define REG_OVERFLOW 0xa0
 #define REG_NOT_OVERFLOW 0xa1
 #define REG_BELOW 0xa2
@@ -152,12 +150,14 @@ extern const char * opcode_table[];
 #define REG_LESS_EQUAL 0xae
 #define REG_GREATER 0xaf
 #define REG_CS 0xb0
-#define REG_TMP3 0xb8
 
 #define REG_XMM0 0x100
 #define REG_XMM1 0x120
 #define REG_XMM2 0x140
-#define MAX_REG 0x160
+#define REG_TMP1 0x160
+#define REG_TMP2 0x180
+#define REG_TMP3 0x1a0
+#define MAX_REG 0x1c0
 
 typedef struct reg_s reg_t;
 
