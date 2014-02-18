@@ -26,8 +26,8 @@
  Naming convention taked from Intel Instruction set manual, Appendix A. 25366713.pdf
 */
 
-#ifndef __OPCODES__
-#define __OPCODES__
+#ifndef OPCODES_H
+#define OPCODES_H
 
 /* enums for store_table */
 enum {
@@ -216,4 +216,4 @@ BH = 0x11,1
 
 */
 
-#endif /* __OPCODES__ */
+#endif /* OPCODES_H */

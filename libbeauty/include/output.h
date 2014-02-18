@@ -20,7 +20,8 @@
  *   Copyright (C) 2012 James Courtier-Dutton James@superbug.co.uk
  */
 
-#ifndef __OUTPUT__
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
 #ifdef __cplusplus
 extern "C" int label_to_string(struct label_s *label, char *string, int size);
@@ -28,6 +29,4 @@ extern "C" int label_to_string(struct label_s *label, char *string, int size);
 extern int label_to_string(struct label_s *label, char *string, int size);
 #endif
 
-#define __OUTPUT__
-
-#endif /* __OUTPUT__ */
+#endif /* OUTPUT_H */

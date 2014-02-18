@@ -20,8 +20,8 @@
  *   Copyright (C) 2004 James Courtier-Dutton James@superbug.co.uk
  */
 
-#ifndef __BFL__
-#define __BFL__
+#ifndef BFL_H
+#define BFL_H
 
 #include <inttypes.h>
 
@@ -61,4 +61,4 @@ void bf_disassemble_callback_end(void *handle_void);
 int bf_disassemble(void *handle_void, int offset);
 int bf_disassemble_set_options(void *handle_void, char *options);
 
-#endif /* __BFL__ */
+#endif /* BFL_H */

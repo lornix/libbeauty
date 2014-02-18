@@ -1,6 +1,6 @@
 
-#ifndef __EXE__
-#define __EXE__
+#ifndef EXE_H
+#define EXE_H
 
 
 extern struct memory_s *search_store(
@@ -17,4 +17,4 @@ extern uint64_t inst_log;      /* Pointer to the current free instruction log en
 extern char out_buf[1024];
 extern size_t inst_size;
 
-#endif /* __EXE__ */
+#endif /* EXE_H */

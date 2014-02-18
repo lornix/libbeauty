@@ -27,8 +27,8 @@
 */
 
 
-#ifndef __DIS__
-#define __DIS__
+#ifndef DIS_H
+#define DIS_H
 
 #include <stdio.h>
 #include <inttypes.h>
@@ -60,4 +60,4 @@ extern uint32_t getdword(uint8_t *base_address, uint64_t offset);
 extern int disassemble_amd64(void *handle, struct dis_instructions_s *dis_instructions, uint8_t *base_address, uint64_t offset);
 uint32_t print_reloc_table_entry(struct reloc_table_s *reloc_table_entry);
 
-#endif /* __DIS__ */
+#endif /* DIS_H */

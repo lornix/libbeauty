@@ -24,8 +24,8 @@
  *   Copyright (C) 2009 James Courtier-Dutton James@superbug.co.uk
  */
 
-#ifndef __REV__
-#define __REV__
+#ifndef REV_H
+#define REV_H
 
 #include <inttypes.h>
 #include <global_struct.h>
@@ -216,4 +216,4 @@ extern void disassemble_callback_end(struct self_s *self);
 #include <llvm.h>
 #include <output.h>
 
-#endif /* __REV__ */
+#endif /* REV_H */

@@ -1,5 +1,5 @@
-#ifndef __ANALYSE__
-#define __ANALYSE__
+#ifndef ANALYSE_H
+#define ANALYSE_H
 
 struct relocation_s {
 	int type; /* 0 = invalid, 1 = external_entry_point, 2 = data */
@@ -47,4 +47,4 @@ extern int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_s
 
 
 
-#endif /* __ANALYSE__ */
+#endif /* ANALYSE_H */

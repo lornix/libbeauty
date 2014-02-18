@@ -24,8 +24,8 @@
  *   Copyright (C) 2009 James Courtier-Dutton James@superbug.co.uk
  */
 
-#ifndef __GLOBAL_STRUCT__
-#define __GLOBAL_STRUCT__
+#ifndef GLOBAL_STRUCT_H
+#define GLOBAL_STRUCT_H
 
 #include <inttypes.h>
 #include <stdlib.h>
@@ -435,4 +435,4 @@ struct self_s {
 	int *flag_result_users;
 };
 
-#endif /* __GLOBAL_STRUCT__ */
+#endif /* GLOBAL_STRUCT_H */
