@@ -555,6 +555,14 @@ struct test_data_s test_data[] = {
 		.inst[2] = "// 0x0002:CMPf r0x180/32, i0x1/32",
 		.inst_size = 3,
 	},
+	{
+		.valid = 1,
+		// 0f be c0             	movsbl %al,%eax
+		.bytes = {0x0f, 0xbe, 0xc0},
+		.bytes_size = 3,
+		.inst[0] = "// 0x0000:CMPf r0x38/32, i0x1/32",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)

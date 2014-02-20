@@ -200,6 +200,7 @@ struct helper_reg_table_s helper_reg_table[] = {
 	{"%dl", 8, REG_DX},
 	{"%sil", 8, REG_SI},
 	{"%ax", 16, REG_AX},
+	{"%al", 8, REG_AX},
 };
 
 struct decode_inst_helper_s {
