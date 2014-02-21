@@ -5234,6 +5234,9 @@ int main(int argc, char *argv[])
 	struct reloc_table_s *reloc_table;
 	int reloc_table_size;
 	LLVMDecodeAsmX86_64Ref decode_asm;
+	char *buffer = NULL;
+
+	buffer = calloc(1,1024);
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 
@@ -5275,9 +5278,9 @@ int main(int argc, char *argv[])
 	bf_copy_code_section(handle_void, inst, inst_size);
 	debug_print(DEBUG_MAIN, 1, "dis:.text Data at %p, size=0x%"PRIx64"\n", inst, inst_size);
 	for (n = 0; n < inst_size; n++) {
-		debug_print(DEBUG_MAIN, 1,  "0x%02x", inst[n]);
+		printf("0x%02x", inst[n]);
 	}
-	debug_print(DEBUG_MAIN, 1, "\n");
+	printf("\n");
 
 	data_size = bf_get_data_size(handle_void);
 	data = malloc(data_size);
