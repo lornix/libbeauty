@@ -3079,7 +3079,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 	/* n is the node to process */
 	int inst;
 	struct label_s label;
-	int found = 0;
+	int found = 0, ret = 1;
 	int reg_tracker[MAX_REG];
 	debug_print(DEBUG_MAIN, 1, "assign_labels_to_src() node 0x%x\n", node);
 	/* Initialise the reg_tracker at each node */
@@ -3212,7 +3212,6 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 				variable_id++;
 				break;
 			case STORE_REG:
-				/* FIXME: TODO*/
 				switch(instruction->srcA.indirect) {
 				case IND_STACK:
 					stack_address = inst_log1->value1.indirect_init_value + inst_log1->value1.indirect_offset_value;
@@ -3234,7 +3233,57 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						} else {
 							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD stack found: no value_id. stack_address = 0x%"PRIx64"\n",
 								entry_point, inst, stack_address);
-							exit(1);
+
+							if (memory->value_scope == 1) {
+								inst_log1->value1.indirect_value_id = variable_id;
+								memory->value_id = variable_id;
+								memset(&label, 0, sizeof(struct label_s));
+								ret = log_to_label(instruction->srcA.store,
+									instruction->srcA.indirect,
+									instruction->srcA.index,
+									instruction->srcA.value_size,
+									instruction->srcA.relocated,
+									inst_log1->value1.value_scope,
+									inst_log1->value1.value_id,
+									inst_log1->value1.indirect_offset_value,
+									inst_log1->value1.indirect_value_id,
+									&label);
+								if (ret) {
+									debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD srcA unknown label\n",
+										entry_point, inst);
+									exit(1);
+								}
+
+								debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x:0x%04x: LOAD 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+									entry_point,
+									inst,
+									instruction->srcA.indirect,
+									instruction->srcA.index,
+									instruction->srcA.relocated,
+									inst_log1->value1.value_scope,
+									inst_log1->value1.value_id,
+									inst_log1->value1.indirect_offset_value,
+									inst_log1->value1.indirect_value_id);
+
+								debug_print(DEBUG_MAIN, 1, "variable_id = 0x%"PRIx64"\n", variable_id);
+								if (variable_id >= 10000) {
+									debug_print(DEBUG_MAIN, 1, "variable_id overrun 10000 limit. Trying to write to %d\n",
+											variable_id);
+									exit(1);
+								}
+
+								external_entry_point->label_redirect[variable_id].redirect = variable_id;
+								external_entry_point->labels[variable_id].scope = label.scope;
+								external_entry_point->labels[variable_id].type = label.type;
+								external_entry_point->labels[variable_id].value = label.value;
+								external_entry_point->labels[variable_id].size_bits = label.size_bits;
+								external_entry_point->labels[variable_id].lab_pointer += label.lab_pointer;
+								variable_id++;
+							} else {
+								debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD value_scope = 0x%"PRIx64" not in param_stack range!\n",
+									entry_point, inst, memory->value_scope);
+								exit(1);
+							}
 						}
 					} else {
 						debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD stack not found: stack_address = 0x%"PRIx64"\n",
