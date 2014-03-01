@@ -3265,7 +3265,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 									inst_log1->value1.indirect_offset_value,
 									inst_log1->value1.indirect_value_id);
 
-								debug_print(DEBUG_MAIN, 1, "variable_id = 0x%"PRIx64"\n", variable_id);
+								debug_print(DEBUG_MAIN, 1, "variable_id = 0x%x\n", variable_id);
 								if (variable_id >= 10000) {
 									debug_print(DEBUG_MAIN, 1, "variable_id overrun 10000 limit. Trying to write to %d\n",
 											variable_id);
@@ -3280,7 +3280,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 								external_entry_point->labels[variable_id].lab_pointer += label.lab_pointer;
 								variable_id++;
 							} else {
-								debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD value_scope = 0x%"PRIx64" not in param_stack range!\n",
+								debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD value_scope = 0x%x not in param_stack range!\n",
 									entry_point, inst, memory->value_scope);
 								exit(1);
 							}
