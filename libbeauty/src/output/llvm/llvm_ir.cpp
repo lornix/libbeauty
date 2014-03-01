@@ -702,7 +702,7 @@ int LLVM_ir_export::output(struct self_s *self)
 					size_bits = labels[m].size_bits;
 					/* FIXME: Make size_bits set correctly in the label */
 					//if (!size_bits) size_bits = 32;
-					printf("Creating alloca for lable 0x%x, size_bits = 0x%x\n", m, size_bits);
+					printf("Creating alloca for label 0x%x, size_bits = 0x%x\n", m, size_bits);
 					tmp = label_to_string(&labels[m], buffer, 1023);
 					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(mod->getContext(), size_bits), buffer, bb[1]);
 					ptr_local->setAlignment(size_bits >> 3);
