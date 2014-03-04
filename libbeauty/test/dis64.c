@@ -6243,14 +6243,18 @@ int main(int argc, char *argv[])
 	}
 
 	print_dis_instructions(self);
-#if 0
-	for (n = 0x100; n < 0x130; n++) {
-		struct label_s *label;
-		tmp = label_redirect[n].redirect;
-		label = &labels[tmp];
-		printf("Label 0x%x:", n);
-		tmp = output_label(label, stdout);
-		printf("\n");
+#if 1
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for (n = 0x100; n < 0x130; n++) {
+				struct label_s *label;
+				tmp = external_entry_points[l].label_redirect[n].redirect;
+				label = &(external_entry_points[l].labels[tmp]);
+				printf("Label 0x%x:", n);
+				tmp = label_to_string(label, buffer, 1023);
+				printf("%s\n", buffer);
+			}
+		}
 	}
 #endif
 
@@ -6779,6 +6783,32 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
+	/***************************************************
+	 * tempory here until full param works.
+	 * To help LLVM IR output.
+	 ***************************************************/
+	n = 0;
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		struct external_entry_point_s *entry_point = &(external_entry_points[l]);
+		if (entry_point->valid &&
+			entry_point->type == 1) {
+			for (m = 0; m < entry_point->variable_id; m++) {
+				struct label_s *label = &(entry_point->labels[m]);
+				if ((label) &&
+					(label->scope == 2)) {
+					debug_print(DEBUG_MAIN, 1, "sizes: params = 0x%x, locals = 0x%x\n",
+						entry_point->params_size,
+						entry_point->locals_size);
+					(entry_point->params_size)++;
+					entry_point->params = realloc(entry_point->params, entry_point->params_size * sizeof(int));
+					entry_point->params[entry_point->params_size - 1] = m;
+
+				}
+			}
+		}
+	}
+				
+	
 	/***************************************************
 	 * This section sorts the external entry point params to the correct order
 	 ***************************************************/

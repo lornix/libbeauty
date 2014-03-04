@@ -28,6 +28,8 @@ char *dis_flags_table[] = { " ", "f" };
 
 /* RDI, RSI, RDX, RCX, R08, R09  */
 int reg_params_order[] = {
+        0x28, /* RSP */
+        0x30, /* RBP */
         0x40, /* RDI */
         0x38, /* RSI */
         0x18, /* RDX */
