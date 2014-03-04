@@ -145,6 +145,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 		}
 		srcB = value[value_id];
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
+		printf("srcA = %x, srcB = %x\n", srcA->getType(), srcB->getType());
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
 		dstA = BinaryOperator::CreateAdd(srcA, srcB, buffer, bb[node]);
 		value[inst_log1->value3.value_id] = dstA;
@@ -476,7 +477,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			break;
 		}
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
-		dstA = new StoreInst(srcA, srcB, false, bb[node]);
+		// FIXME: temporary comment out.
+		//dstA = new StoreInst(srcA, srcB, false, bb[node]);
 		break;
 	case 0x2F:  // GEP1
 		printf("LLVM 0x%x: OPCODE = 0x%x:GEP1\n", inst, inst_log1->instruction.opcode);
