@@ -6252,7 +6252,11 @@ int main(int argc, char *argv[])
 				label = &(external_entry_points[l].labels[tmp]);
 				printf("Label 0x%x:", n);
 				tmp = label_to_string(label, buffer, 1023);
-				printf("%s\n", buffer);
+				printf("%s/0x%lx,0x%lx, 0x%lx\n",
+					buffer,
+					label->size_bits,
+					label->pointer_type_size_bits,
+					label->lab_pointer);
 			}
 		}
 	}
