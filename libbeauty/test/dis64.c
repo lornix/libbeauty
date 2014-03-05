@@ -6764,7 +6764,6 @@ int main(int argc, char *argv[])
 	 * 	Function params,
 	 *	local vars.
 	 ***************************************************/
-#if 0
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid &&
 			external_entry_points[l].type == 1) {
@@ -6786,9 +6785,10 @@ int main(int argc, char *argv[])
 			external_entry_points[l].locals_size);
 		}
 	}
-#endif
+
+#if 0
 	/***************************************************
-	 * tempory here until full param works.
+	 * FIXME: temporary here until full param works.
 	 * To help LLVM IR output.
 	 ***************************************************/
 	n = 0;
@@ -6811,7 +6811,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-				
+#endif				
 	
 	/***************************************************
 	 * This section sorts the external entry point params to the correct order
