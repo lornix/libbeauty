@@ -1766,7 +1766,7 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 	int label_offset;
 	label_offset = label_redirect[value_id].redirect;
 	label = &labels[label_offset];
-	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64", label_offset 0x%"PRIx64"\n",
 		value_id,
 		label->scope,
 		label->type,
@@ -1774,7 +1774,8 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 		label->size_bits,
 		label->lab_pointer,
 		label->lab_signed,
-		label->lab_unsigned);
+		label->lab_unsigned,
+		label_offset);
 	//int params_size;
 	//int *params;
 	//int *params_order;
@@ -1899,7 +1900,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
 					//break;
 				}
-				value_id = inst_log1->value1.value_id;
+				value_id = inst_log1->value1.indirect_value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
@@ -1916,7 +1917,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
-				value_id = inst_log1->value3.value_id;
+				value_id = inst_log1->value3.indirect_value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				break;
