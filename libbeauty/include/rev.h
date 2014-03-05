@@ -58,8 +58,8 @@ void debug_print(int module, int level, const char *format, ...) __attribute__((
 #define INST_LOG_ENTRY_SIZE 10000
 #define ENTRY_POINTS_SIZE 1000
 
-#define REG_PARAMS_ORDER_MAX 6
-/* RDI, RSI, RDX, RCX, R08, R09  */
+#define REG_PARAMS_ORDER_MAX 8
+/* RSP, RBP, RDI, RSI, RDX, RCX, R08, R09  */
 extern int reg_params_order[];
 
 struct extension_call_s {
