@@ -286,14 +286,12 @@ struct memory_s {
 	uint64_t offset_value;
 	/* Indirect value */
 	/* E.g. MOV %rax, [%rsp]    The indirect_offset_value will be the value of %rsp, the 
-	 * indirect_value_id will be the stack label.
+	 * value_id will be the stack label.
 	 * the init_value and offset_value will be %rax that fills [%rsp].
 	 */
 	uint64_t indirect_init_value;
 	/* Indirect offset */
 	uint64_t indirect_offset_value;
-	/* Special case of a value_id before dereferencing */
-	uint64_t indirect_value_id;
 	/* 0 - unknown,
 	 * 1 - unsigned,
 	 * 2 - signed,
