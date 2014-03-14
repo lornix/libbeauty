@@ -279,9 +279,9 @@ int print_dis_instructions(void)
 			inst_log1->value2.indirect_offset_value,
 			inst_log1->value3.indirect_offset_value);
 		printf("indirect value_id:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
-			inst_log1->value1.indirect_value_id,
-			inst_log1->value2.indirect_value_id,
-			inst_log1->value3.indirect_value_id);
+			inst_log1->value1.value_id,
+			inst_log1->value2.value_id,
+			inst_log1->value3.value_id);
 		printf("value_type:0x%x, 0x%x -> 0x%x\n",
 			inst_log1->value1.value_type,
 			inst_log1->value2.value_type,
@@ -711,7 +711,7 @@ int process_block(struct process_state_s *process_state, struct rev_eng *handle,
 	return 0;
 }
 
-int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
+int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, struct label_s *label) {
 	int tmp;
 	/* FIXME: May handle by using first switch as switch (indirect) */
 	switch (store) {
@@ -770,7 +770,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t relocated, ui
 			/* It will always be a local and not a param */
 			label->scope = 4;
 			label->type = 1;
-			label->value = indirect_value_id;
+			label->value = value_id;
 			break;
 		default:
 			label->scope = 0;
@@ -878,7 +878,7 @@ int output_label(struct label_s *label, FILE *fd) {
 	return 0;
 }
 
-int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, FILE *fd) {
+int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, FILE *fd) {
 	int tmp;
 	/* FIXME: May handle by using first switch as switch (indirect) */
 	switch (store) {
@@ -938,9 +938,9 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 			/* It will always be a register, and therefore can re-use the */
 			/* value_id to identify it. */
 			/* It will always be a local and not a param */
-			printf("*local_mem%04"PRIx64";\n", (indirect_value_id));
+			printf("*local_mem%04"PRIx64";\n", (value_id));
 			tmp = fprintf(fd, "*local_mem%04"PRIx64,
-				indirect_value_id);
+				value_id);
 			break;
 		default:
 			printf("unknown value scope: %04"PRIx64";\n", (value_scope));
@@ -969,7 +969,6 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	uint64_t value_scope;
 	uint64_t value_id;
 	uint64_t indirect_offset_value;
-	uint64_t indirect_value_id;
 	struct label_s *label;
 
 	switch (opcode) {
@@ -1761,7 +1760,6 @@ int main(int argc, char *argv[])
 				inst_log1->value2.value_scope,
 				inst_log1->value2.value_id,
 				inst_log1->value2.indirect_offset_value,
-				inst_log1->value2.indirect_value_id,
 				&label);
 			if (value_id > 0) {
 				label_redirect[value_id].redirect = value_id;
@@ -1782,7 +1780,6 @@ int main(int argc, char *argv[])
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
 				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id,
 				&label);
 			if (value_id > 0) {
 				label_redirect[value_id].redirect = value_id;
@@ -1804,7 +1801,6 @@ int main(int argc, char *argv[])
 				inst_log1->value2.value_scope,
 				inst_log1->value2.value_id,
 				inst_log1->value2.indirect_offset_value,
-				inst_log1->value2.indirect_value_id,
 				&label);
 			if (value_id > 0) {
 				label_redirect[value_id].redirect = value_id;

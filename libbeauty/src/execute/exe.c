@@ -335,7 +335,7 @@ static int get_value_RTL_instruction(
 				break;
 			}
 			data_index = value->init_value + value->offset_value;
-			destination->indirect_value_id = value->value_id;
+			destination->value_id = value->value_id;
 			break;
 		default:
 			/* Should not get here */
@@ -971,7 +971,7 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value2.init_value;
 			inst->value3.indirect_offset_value =
 				inst->value2.offset_value;
-			inst->value3.indirect_value_id =
+			inst->value3.value_id =
 				inst->value2.value_id;
 		}
 		inst->value3.ref_memory =
@@ -1064,8 +1064,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1120,8 +1120,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1171,8 +1171,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1210,8 +1210,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1250,8 +1250,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1290,8 +1290,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1331,8 +1331,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1371,8 +1371,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1419,8 +1419,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1457,8 +1457,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1494,8 +1494,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1535,8 +1535,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1576,8 +1576,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1618,8 +1618,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1660,8 +1660,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;
@@ -1727,8 +1727,8 @@ int execute_instruction(struct self_s *self, struct process_state_s *process_sta
 				inst->value1.indirect_init_value;
 			inst->value3.indirect_offset_value =
 				inst->value1.indirect_offset_value;
-			inst->value3.indirect_value_id =
-				inst->value1.indirect_value_id;
+			inst->value3.value_id =
+				inst->value1.value_id;
 		}
 		inst->value3.ref_memory =
 			inst->value1.ref_memory;

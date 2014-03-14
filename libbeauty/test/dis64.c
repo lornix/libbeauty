@@ -240,10 +240,6 @@ int print_dis_instructions(struct self_s *self)
 			inst_log1->value1.indirect_offset_value,
 			inst_log1->value2.indirect_offset_value,
 			inst_log1->value3.indirect_offset_value);
-		debug_print(DEBUG_MAIN, 1, "indirect value_id:%"PRIx64", %"PRIx64" -> %"PRIx64"\n",
-			inst_log1->value1.indirect_value_id,
-			inst_log1->value2.indirect_value_id,
-			inst_log1->value3.indirect_value_id);
 		debug_print(DEBUG_MAIN, 1, "value_type:0x%x, 0x%x -> 0x%x\n",
 			inst_log1->value1.value_type,
 			inst_log1->value2.value_type,
@@ -3223,19 +3219,16 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						inst_log1->instruction.srcA.indirect_size);
 					if (memory) {
 						if (memory->value_id) {
-							inst_log1->value1.indirect_value_id = memory->value_id;
+							inst_log1->value1.value_id = memory->value_id;
 							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD srcA reg given value_id = 0x%"PRIx64"\n",
 								entry_point, inst,
 								inst_log1->value1.value_id); 
-							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD srcA reg given indirect_value_id = 0x%"PRIx64"\n",
-								entry_point, inst,
-								inst_log1->value1.indirect_value_id); 
 						} else {
 							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD stack found: no value_id. stack_address = 0x%"PRIx64"\n",
 								entry_point, inst, stack_address);
 
 							if (memory->value_scope == 1) {
-								inst_log1->value1.indirect_value_id = variable_id;
+								inst_log1->value1.value_id = variable_id;
 								memory->value_id = variable_id;
 								memset(&label, 0, sizeof(struct label_s));
 								ret = log_to_label(instruction->srcA.store,
@@ -3246,7 +3239,6 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 									inst_log1->value1.value_scope,
 									inst_log1->value1.value_id,
 									inst_log1->value1.indirect_offset_value,
-									inst_log1->value1.indirect_value_id,
 									&label);
 								if (ret) {
 									debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x:LOAD srcA unknown label\n",
@@ -3254,7 +3246,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 									exit(1);
 								}
 
-								debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x:0x%04x: LOAD 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+								debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x:0x%04x: LOAD 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 									entry_point,
 									inst,
 									instruction->srcA.indirect,
@@ -3262,8 +3254,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 									instruction->srcA.relocated,
 									inst_log1->value1.value_scope,
 									inst_log1->value1.value_id,
-									inst_log1->value1.indirect_offset_value,
-									inst_log1->value1.indirect_value_id);
+									inst_log1->value1.indirect_offset_value);
 
 								debug_print(DEBUG_MAIN, 1, "variable_id = 0x%x\n", variable_id);
 								if (variable_id >= 10000) {
@@ -3382,7 +3373,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						inst_log1->instruction.srcA.indirect_size);
 					if (memory) {
 						if (memory->value_id) {
-							inst_log1->value1.indirect_value_id = memory->value_id;
+							inst_log1->value1.value_id = memory->value_id;
 						}
 					}
 					break;
@@ -3455,10 +3446,10 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						inst_log1->instruction.srcB.indirect_size);
 					if (memory) {
 						if (memory->value_id) {
-							inst_log1->value2.indirect_value_id = memory->value_id;
-							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given indirect_value_id = 0x%"PRIx64"\n",
+							inst_log1->value2.value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given value_id = 0x%"PRIx64"\n",
 								entry_point, inst,
-								inst_log1->value2.indirect_value_id); 
+								inst_log1->value2.value_id); 
 						}
 					}
 				}
@@ -3537,10 +3528,10 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						inst_log1->instruction.srcA.indirect_size);
 					if (memory) {
 						if (memory->value_id) {
-							inst_log1->value1.indirect_value_id = memory->value_id;
-							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given indirect_value_id = 0x%"PRIx64"\n",
+							inst_log1->value1.value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given value_id = 0x%"PRIx64"\n",
 								entry_point, inst,
-								inst_log1->value1.indirect_value_id); 
+								inst_log1->value1.value_id); 
 						}
 					}
 				}
@@ -3600,10 +3591,10 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 						inst_log1->instruction.srcB.indirect_size);
 					if (memory) {
 						if (memory->value_id) {
-							inst_log1->value2.indirect_value_id = memory->value_id;
-							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given indirect_value_id = 0x%"PRIx64"\n",
+							inst_log1->value2.value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given value_id = 0x%"PRIx64"\n",
 								entry_point, inst,
-								inst_log1->value2.indirect_value_id); 
+								inst_log1->value2.value_id); 
 						}
 					}
 				}
@@ -3985,7 +3976,7 @@ int discover_pointer_types(struct self_s *self, struct external_entry_point_s *e
 					value_id1, instruction->srcA.value_size);
 				break;
 			case 2:  // Stack
-				value_id1 = label_redirect[inst_log1->value1.indirect_value_id].redirect;
+				value_id1 = label_redirect[inst_log1->value1.value_id].redirect;
 				labels[value_id1].pointer_type_size_bits = instruction->srcA.value_size;
 				debug_print(DEBUG_MAIN, 1, "discover_pointer_types() label 0x%x pointer type size = 0x%x\n",
 					value_id1, instruction->srcA.value_size);
@@ -4911,7 +4902,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 
 	debug_print(DEBUG_MAIN, 1, "label address2 = %p\n", label);
 	debug_print(DEBUG_MAIN, 1, "opcode = 0x%x\n", instruction->opcode);
-	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x:0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+	debug_print(DEBUG_MAIN, 1, "assign_id_label_dst: value to log_to_label:inst = 0x%x:0x%x: 0x%x, 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 		function,
 		n,
 		instruction->dstA.store,
@@ -4921,8 +4912,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 		instruction->dstA.relocated,
 		inst_log1->value3.value_scope,
 		inst_log1->value3.value_id,
-		inst_log1->value3.indirect_offset_value,
-		inst_log1->value3.indirect_value_id);
+		inst_log1->value3.indirect_offset_value);
 
 	switch (instruction->opcode) {
 	case NOP:
@@ -4963,7 +4953,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				inst_log1->value3.value_scope,
 				inst_log1->value3.value_id,
 				inst_log1->value3.indirect_offset_value,
-				inst_log1->value3.indirect_value_id,
 				label);
 			if (ret) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
@@ -4977,9 +4966,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 		break;
 
 	case STORE:
-		/* If dstA.indirect, assign the dst label to indirect_value_id
-		   In the indirect case the value_id is a SRC and not a DST */
-		/* If not dstA.indirect, assign the dst label to value_id. */
 		switch (instruction->dstA.indirect) {
 		case IND_DIRECT:
 			debug_print(DEBUG_MAIN, 1, "assign_id_dst: Failed: IND_DIRECT STORE should not happen\n");
@@ -4987,7 +4973,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 
 		case IND_MEM:
 			debug_print(DEBUG_MAIN, 1, "assign_id_dst: IND_MEM\n");
-			inst_log1->value3.indirect_value_id = 0;
+			inst_log1->value3.value_id = 0;
 			data_address = inst_log1->value3.indirect_init_value + inst_log1->value3.indirect_offset_value;
 			debug_print(DEBUG_MAIN, 1, "assign_id: data_address = 0x%"PRIx64"\n", data_address);
 			memory = search_store(
@@ -4996,11 +4982,11 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				inst_log1->instruction.dstA.indirect_size);
 			if (memory) {
 				if (memory->value_id) {
-					inst_log1->value3.indirect_value_id = memory->value_id;
+					inst_log1->value3.value_id = memory->value_id;
 					ret = 0;
 					break;
 				} else {
-					inst_log1->value3.indirect_value_id = variable_id;
+					inst_log1->value3.value_id = variable_id;
 					memory->value_id = variable_id;
 					ret = log_to_label(instruction->dstA.store,
 						instruction->dstA.indirect,
@@ -5010,7 +4996,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 						inst_log1->value3.value_scope,
 						inst_log1->value3.value_id,
 						inst_log1->value3.indirect_offset_value,
-						inst_log1->value3.indirect_value_id,
 						label);
 					if (ret) {
 						debug_print(DEBUG_MAIN, 1, "assign_id: IND_MEM log_to_label failed\n");
@@ -5033,11 +5018,11 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				inst_log1->instruction.dstA.indirect_size);
 			if (memory) {
 				if (memory->value_id) {
-					inst_log1->value3.indirect_value_id = memory->value_id;
+					inst_log1->value3.value_id = memory->value_id;
 					ret = 0;
 					break;
 				} else {
-					inst_log1->value3.indirect_value_id = variable_id;
+					inst_log1->value3.value_id = variable_id;
 					memory->value_id = variable_id;
 					ret = log_to_label(instruction->dstA.store,
 						instruction->dstA.indirect,
@@ -5047,7 +5032,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 						inst_log1->value3.value_scope,
 						inst_log1->value3.value_id,
 						inst_log1->value3.indirect_offset_value,
-						inst_log1->value3.indirect_value_id,
 						label);
 					if (ret) {
 						debug_print(DEBUG_MAIN, 1, "assign_id: IND_STACK log_to_label failed\n");
@@ -5097,7 +5081,6 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 			inst_log1->value3.value_scope,
 			inst_log1->value3.value_id,
 			inst_log1->value3.indirect_offset_value,
-			inst_log1->value3.indirect_value_id,
 			label);
 		if (ret) {
 			debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
@@ -5966,11 +5949,8 @@ int main(int argc, char *argv[])
 	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		inst_log1->value1.value_id = 0;
-		inst_log1->value1.indirect_value_id = 0;
 		inst_log1->value2.value_id = 0;
-		inst_log1->value2.indirect_value_id = 0;
 		inst_log1->value3.value_id = 0;
-		inst_log1->value3.indirect_value_id = 0;
 	}
 	
 	/************************************************************
@@ -6021,15 +6001,14 @@ int main(int argc, char *argv[])
 					/* returns 0 for id and label set. 1 for error */
 					debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
 					tmp  = assign_id_label_dst(self, l, n, inst_log1, &label);
-					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 						n,
 						instruction->dstA.indirect,
 						instruction->dstA.index,
 						instruction->dstA.relocated,
 						inst_log1->value3.value_scope,
 						inst_log1->value3.value_id,
-						inst_log1->value3.indirect_offset_value,
-						inst_log1->value3.indirect_value_id);
+						inst_log1->value3.indirect_offset_value);
 
 					if (!tmp) {
 						debug_print(DEBUG_MAIN, 1, "variable_id = %x\n", external_entry_points[l].variable_id);
@@ -6288,15 +6267,14 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
 				instruction->srcA.relocated,
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
-				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id);
+				inst_log1->value1.indirect_offset_value);
 
 		switch (instruction->opcode) {
 		case MOV:
@@ -6317,7 +6295,8 @@ int main(int argc, char *argv[])
 		case SAR:
 		case SEX:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "SEX: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
@@ -6333,7 +6312,6 @@ int main(int argc, char *argv[])
 				inst_log1->value3.value_scope,
 				inst_log1->value3.value_id,
 				inst_log1->value3.indirect_offset_value,
-				inst_log1->value3.indirect_value_id,
 				&label);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
@@ -6347,7 +6325,8 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "SEX: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -6363,7 +6342,6 @@ int main(int argc, char *argv[])
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
 				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id,
 				&label);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
@@ -6381,7 +6359,8 @@ int main(int argc, char *argv[])
 		case TEST:
 		case CMP:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id2 = inst_log1->value2.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "CMP: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id2 = inst_log1->value2.value_id;
 			}
@@ -6397,7 +6376,6 @@ int main(int argc, char *argv[])
 				inst_log1->value2.value_scope,
 				inst_log1->value2.value_id,
 				inst_log1->value2.indirect_offset_value,
-				inst_log1->value2.indirect_value_id,
 				&label);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
@@ -6411,7 +6389,8 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "CMP: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -6427,7 +6406,6 @@ int main(int argc, char *argv[])
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
 				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id,
 				&label);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
@@ -6444,7 +6422,8 @@ int main(int argc, char *argv[])
 		case CALL:
 			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id = inst_log1->value3.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "CALL: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
@@ -6460,7 +6439,6 @@ int main(int argc, char *argv[])
 				inst_log1->value3.value_scope,
 				inst_log1->value3.value_id,
 				inst_log1->value3.indirect_offset_value,
-				inst_log1->value3.indirect_value_id,
 				&label);
 			if (tmp) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x, value3 unknown label %x\n", n);
@@ -6474,7 +6452,10 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "CALL: srcA Illegal indirect\n");
+				return 1;
+			} else {
+				value_id = inst_log1->value1.value_id;
 				if (value_id > self->local_counter) {
 					debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
 					return 1;
@@ -6487,7 +6468,6 @@ int main(int argc, char *argv[])
 					inst_log1->value1.value_scope,
 					inst_log1->value1.value_id,
 					inst_log1->value1.indirect_offset_value,
-					inst_log1->value1.indirect_value_id,
 					&label);
 				if (tmp) {
 					debug_print(DEBUG_MAIN, 1, "Inst:0x, value1 unknown label %x\n", n);
@@ -6993,26 +6973,27 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
 				instruction->srcA.relocated,
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
-				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id);
+				inst_log1->value1.indirect_offset_value);
 
 		switch (instruction->opcode) {
 		case MOV:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -7039,26 +7020,27 @@ int main(int argc, char *argv[])
 
 		inst_log1 =  &inst_log_entry[n];
 		instruction =  &inst_log1->instruction;
-		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64", 0x%"PRIx64"\n",
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:n = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
 				n,
 				instruction->srcA.indirect,
 				instruction->srcA.index,
 				instruction->srcA.relocated,
 				inst_log1->value1.value_scope,
 				inst_log1->value1.value_id,
-				inst_log1->value1.indirect_offset_value,
-				inst_log1->value1.indirect_value_id);
+				inst_log1->value1.indirect_offset_value);
 
 		switch (instruction->opcode) {
 		case MOV:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.indirect_value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}

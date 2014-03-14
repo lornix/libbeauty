@@ -1631,11 +1631,11 @@ int get_value_from_index(struct operand_s *operand, uint64_t *index)
  * This function uses information from instruction log entries
  * and creates labels.
  ************************************************************/
-int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, uint64_t indirect_value_id, struct label_s *label) {
+int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, struct label_s *label) {
 	//int tmp;
 
 	/* FIXME: May handle by using first switch as switch (indirect) */
-	debug_print(DEBUG_ANALYSE, 1, "value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", size=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64", ind_val_id = 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "value in log_to_label: store=0x%x, indirect=0x%x, index=0x%"PRIx64", size=0x%"PRIx64", relocated = 0x%"PRIx64", scope = 0x%"PRIx64", id = 0x%"PRIx64", ind_off_value = 0x%"PRIx64"\n",
 				store,
 				indirect,
 				index,
@@ -1643,8 +1643,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 				relocated,
 				value_scope,
 				value_id,
-				indirect_offset_value,
-				indirect_value_id);
+				indirect_offset_value);
 
 
 	switch (store) {
@@ -1729,7 +1728,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 			label->scope = 1;
 			label->type = 1;
 			label->lab_pointer = 1;
-			label->value = indirect_value_id;
+			label->value = value_id;
 			label->size_bits = size;
 			break;
 		default:
@@ -1900,7 +1899,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 					debug_print(DEBUG_ANALYSE, 1, "ERROR2\n");
 					//break;
 				}
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
@@ -1917,7 +1916,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
-				value_id = inst_log1->value3.indirect_value_id;
+				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				break;
@@ -1953,28 +1952,34 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case CALL:
 				if (IND_MEM == instruction->dstA.indirect) {
-					value_id = inst_log1->value3.indirect_value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CALL: dstA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				/* Special case for function pointers */
 				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.indirect_value_id;
-					tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+					debug_print(DEBUG_ANALYSE, 1, "CALL: srcA Illegal indirect\n");
+					return 1;
+				} else {
+					value_id = inst_log1->value1.value_id;
 				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				break;
 			case CMP:
 			case TEST:
 				if (IND_MEM == instruction->srcB.indirect) {
-					value_id = inst_log1->value2.indirect_value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CMP: srcB Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value2.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
 				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.indirect_value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CMP: srcA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
@@ -1994,7 +1999,8 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case RET:
 				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.indirect_value_id;
+					debug_print(DEBUG_ANALYSE, 1, "RET: srcA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}

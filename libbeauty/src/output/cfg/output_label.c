@@ -191,7 +191,7 @@ int output_label_redirect(int offset, struct label_s *labels, struct label_redir
 	return 0;
 }
 
-int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, uint64_t indirect_value_id, int fd) {
+int output_variable(int store, int indirect, uint64_t index, uint64_t relocated, uint64_t value_scope, uint64_t value_id, uint64_t indirect_offset_value, int fd) {
 	int tmp;
 	/* FIXME: May handle by using first switch as switch (indirect) */
 	switch (store) {
@@ -251,9 +251,9 @@ int output_variable(int store, int indirect, uint64_t index, uint64_t relocated,
 			/* It will always be a register, and therefore can re-use the */
 			/* value_id to identify it. */
 			/* It will always be a local and not a param */
-			debug_print(DEBUG_OUTPUT, 1, "xxxlocal_mem%04"PRIx64";\n", (indirect_value_id));
+			debug_print(DEBUG_OUTPUT, 1, "xxxlocal_mem%04"PRIx64";\n", (value_id));
 			tmp = dprintf(fd, "xxxlocal_mem%04"PRIx64,
-				indirect_value_id);
+				value_id);
 			break;
 		default:
 			debug_print(DEBUG_OUTPUT, 1, "unknown value scope: %04"PRIx64";\n", (value_scope));
@@ -282,7 +282,6 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 	//uint64_t value_scope;
 	uint64_t value_id;
 	//uint64_t indirect_offset_value;
-	//uint64_t indirect_value_id;
 	struct label_s *label;
 	const char *condition_string;
 	char buffer[1024];
@@ -330,7 +329,7 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			tmp = dprintf(fd, "*");
 			/* fall through */
 		case IND_STACK:
-			value_id = inst_log1_flagged->value2.indirect_value_id;
+			value_id = inst_log1_flagged->value2.value_id;
 			break;
 		case IND_DIRECT:
 			value_id = inst_log1_flagged->value2.value_id;
@@ -354,7 +353,7 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			tmp = dprintf(fd, "*");
 			/* fall through */
 		case IND_STACK:
-			value_id = inst_log1_flagged->value1.indirect_value_id;
+			value_id = inst_log1_flagged->value1.value_id;
 			break;
 		case IND_DIRECT:
 			value_id = inst_log1_flagged->value1.value_id;
@@ -392,18 +391,16 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
 			tmp = dprintf(fd, "((");
-			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1_flagged->value2.indirect_value_id;
-			} else {
-				value_id = inst_log1_flagged->value2.value_id;
-			}
+			value_id = inst_log1_flagged->value2.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, "%s) ", condition_string);
+		} else {
+			debug_print(DEBUG_OUTPUT, 1, "ADD: error\n");
+			err = 1;
 		}
 		break;
 
@@ -428,30 +425,23 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
 			tmp = dprintf(fd, "((");
-			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1_flagged->value2.indirect_value_id;
-			} else {
-				value_id = inst_log1_flagged->value2.value_id;
-			}
+			value_id = inst_log1_flagged->value2.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, " AND ");
-			if (1 == inst_log1_flagged->instruction.srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1_flagged->value1.indirect_value_id;
-			} else {
-				value_id = inst_log1_flagged->value1.value_id;
-			}
+			value_id = inst_log1_flagged->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, ")%s) ", condition_string);
+		} else {
+			debug_print(DEBUG_OUTPUT, 1, "TEST: error\n");
+			err = 1;
 		}
 		break;
 
@@ -473,30 +463,23 @@ int if_expression( int condition, struct inst_log_entry_s *inst_log1_flagged,
 			(IND_DIRECT == inst_log1_flagged->instruction.dstA.indirect) &&
 			(0 == inst_log1_flagged->value3.offset_value)) {
 			tmp = dprintf(fd, "((");
-			if (1 == inst_log1_flagged->instruction.dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1_flagged->value2.indirect_value_id;
-			} else {
-				value_id = inst_log1_flagged->value2.value_id;
-			}
+			value_id = inst_log1_flagged->value2.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, " AND ");
-			if (1 == inst_log1_flagged->instruction.srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1_flagged->value1.indirect_value_id;
-			} else {
-				value_id = inst_log1_flagged->value1.value_id;
-			}
+			value_id = inst_log1_flagged->value1.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			//tmp = dprintf(fd, "0x%x:", tmp);
 			tmp = label_to_string(label, buffer, 1023);
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, ")%s) ", condition_string);
+		} else {
+			debug_print(DEBUG_OUTPUT, 1, "rAND: error\n");
+			err = 1;
 		}
 		break;
 
@@ -675,7 +658,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				 *	within the scope of the function.
 				 *	Assume in-variant for now.
 				 */
-				value_id = inst_log1->value3.indirect_value_id;
+				value_id = inst_log1->value3.value_id;
 				break;
 			case IND_IO:
 				tmp = dprintf(fd, "*");
@@ -706,10 +689,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				break;
 			case IND_STACK:
 				//tmp = dprintf(fd, "stack_");
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
 				break;
 			case IND_IO:
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
 				break;
 			case IND_DIRECT:
 				value_id = inst_log1->value1.value_id;
@@ -754,7 +737,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				 *	within the scope of the function.
 				 *	Assume in-variant for now.
 				 */
-				value_id = inst_log1->value3.indirect_value_id;
+				value_id = inst_log1->value3.value_id;
 				break;
 			case IND_IO:
 				tmp = dprintf(fd, "*");
@@ -785,10 +768,10 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				break;
 			case IND_STACK:
 				//tmp = dprintf(fd, "stack_");
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
 				break;
 			case IND_IO:
-				value_id = inst_log1->value1.indirect_value_id;
+				value_id = inst_log1->value1.value_id;
 				break;
 			case IND_DIRECT:
 				value_id = inst_log1->value1.value_id;
@@ -938,15 +921,15 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 		case MUL:
 		case IMUL:
 			if (instruction->srcA.indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				debug_print(DEBUG_OUTPUT, 1, "IMUL: srcA Illegal indirect\n");
 				exit(1);
 			}
 			if (instruction->srcB.indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				debug_print(DEBUG_OUTPUT, 1, "IMUL: srcB Illegal indirect\n");
 				exit(1);
 			}
 			if (instruction->dstA.indirect) {
-				debug_print(DEBUG_OUTPUT, 1, "Illegal indirect\n");
+				debug_print(DEBUG_OUTPUT, 1, "IMUL: dstA Illegal indirect\n");
 				exit(1);
 			}
 			if (print_inst(self, instruction, inst_number, labels))
@@ -968,12 +951,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			tmp = dprintf(fd, "%s", buffer);
 			tmp = dprintf(fd, " * ");
 			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value1.value_id);
-			if (1 == instruction->srcB.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value2.indirect_value_id;
-			} else {
-				value_id = inst_log1->value2.value_id;
-			}
+			value_id = inst_log1->value2.value_id;
 			tmp = label_redirect[value_id].redirect;
 			label = &labels[tmp];
 			tmp = label_to_string(label, buffer, 1023);
@@ -1000,9 +978,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = dprintf(fd, "\t");
-			if (1 == instruction->dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value3.indirect_value_id;
+			if (IND_MEM == instruction->dstA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "NOT: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
@@ -1013,9 +991,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
 			tmp = dprintf(fd, " = !");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			if (1 == instruction->srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "NOT: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -1070,9 +1048,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = dprintf(fd, "\t");
 			/* FIXME: Check limits */
-			if (1 == instruction->dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value3.indirect_value_id;
+			if (IND_MEM == instruction->dstA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "JMPT: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
@@ -1084,9 +1062,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
 			tmp = dprintf(fd, " = ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			if (1 == instruction->srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "JMPT: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -1203,7 +1181,7 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			} else {
 				/* A indirect call via a function pointer or call table. */
 				tmp = dprintf(fd, "(*");
-				tmp = label_redirect[inst_log1->value1.indirect_value_id].redirect;
+				tmp = label_redirect[inst_log1->value1.value_id].redirect;
 				label = &labels[tmp];
 				tmp = label_to_string(label, buffer, 1023);
 				tmp = dprintf(fd, "%s", buffer);
@@ -1220,9 +1198,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "//\tcmp ");
 			tmp = dprintf(fd, "//\tcmp ");
-			if (1 == instruction->srcB.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value2.indirect_value_id;
+			if (IND_MEM == instruction->srcB.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "CMP: srcB Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value2.value_id;
 			}
@@ -1233,9 +1211,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
 			tmp = dprintf(fd, " - ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			if (1 == instruction->srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "CMP: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -1252,9 +1230,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "\t");
 			tmp = dprintf(fd, "\t");
-			if (1 == instruction->dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value3.indirect_value_id;
+			if (IND_MEM == instruction->dstA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "ICMP: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
@@ -1281,9 +1259,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 				return 1;
 			debug_print(DEBUG_OUTPUT, 1, "//\ttest ");
 			tmp = dprintf(fd, "//\ttest ");
-			if (1 == instruction->dstA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value2.indirect_value_id;
+			if (IND_MEM == instruction->dstA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "TEST: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value2.value_id;
 			}
@@ -1294,9 +1272,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 			//tmp = dprintf(fd, " /*(0x%"PRIx64")*/", inst_log1->value3.value_id);
 			tmp = dprintf(fd, " , ");
 			debug_print(DEBUG_OUTPUT, 1, "\nstore=%d\n", instruction->srcA.store);
-			if (1 == instruction->srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "TEST: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -1377,9 +1355,9 @@ int output_inst_in_c(struct self_s *self, struct process_state_s *process_state,
 //			debug_print(DEBUG_OUTPUT, 1, "\t prev opcode=0x%x, ",inst_log1_flags->instruction.opcode);
 //			debug_print(DEBUG_OUTPUT, 1, "\t LHS=%d, ",inst_log1->prev[0]);
 //			debug_print(DEBUG_OUTPUT, 1, "IF goto label%04"PRIx32";\n", inst_log1->next[1]);
-			if (1 == instruction->srcA.indirect) {
-				tmp = dprintf(fd, "*");
-				value_id = inst_log1->value1.indirect_value_id;
+			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_OUTPUT, 1, "BC: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
