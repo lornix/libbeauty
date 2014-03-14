@@ -1952,28 +1952,34 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case CALL:
 				if (IND_MEM == instruction->dstA.indirect) {
-					value_id = inst_log1->value3.value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CALL: dstA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
 				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
 				/* Special case for function pointers */
 				if (IND_MEM == instruction->srcA.indirect) {
+					debug_print(DEBUG_ANALYSE, 1, "CALL: srcA Illegal indirect\n");
+					return 1;
+				} else {
 					value_id = inst_log1->value1.value_id;
-					tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				}
+				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
 				break;
 			case CMP:
 			case TEST:
 				if (IND_MEM == instruction->srcB.indirect) {
-					value_id = inst_log1->value2.value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CMP: srcB Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value2.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
 				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.value_id;
+					debug_print(DEBUG_ANALYSE, 1, "CMP: srcA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
@@ -1993,7 +1999,8 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				break;
 			case RET:
 				if (IND_MEM == instruction->srcA.indirect) {
-					value_id = inst_log1->value1.value_id;
+					debug_print(DEBUG_ANALYSE, 1, "RET: srcA Illegal indirect\n");
+					return 1;
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}

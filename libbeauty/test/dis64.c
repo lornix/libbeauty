@@ -5949,10 +5949,7 @@ int main(int argc, char *argv[])
 	for (n = 1; n < inst_log; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		inst_log1->value1.value_id = 0;
-		inst_log1->value1.value_id = 0;
 		inst_log1->value2.value_id = 0;
-		inst_log1->value2.value_id = 0;
-		inst_log1->value3.value_id = 0;
 		inst_log1->value3.value_id = 0;
 	}
 	
@@ -6298,7 +6295,8 @@ int main(int argc, char *argv[])
 		case SAR:
 		case SEX:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.value_id;
+				debug_print(DEBUG_MAIN, 1, "SEX: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
@@ -6327,7 +6325,8 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_MAIN, 1, "SEX: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -6360,7 +6359,8 @@ int main(int argc, char *argv[])
 		case TEST:
 		case CMP:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id2 = inst_log1->value2.value_id;
+				debug_print(DEBUG_MAIN, 1, "CMP: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id2 = inst_log1->value2.value_id;
 			}
@@ -6389,7 +6389,8 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_MAIN, 1, "CMP: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -6421,7 +6422,8 @@ int main(int argc, char *argv[])
 		case CALL:
 			debug_print(DEBUG_MAIN, 1, "SSA CALL inst_log 0x%x\n", n);
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id = inst_log1->value3.value_id;
+				debug_print(DEBUG_MAIN, 1, "CALL: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value3.value_id;
 			}
@@ -6450,6 +6452,9 @@ int main(int argc, char *argv[])
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
+				debug_print(DEBUG_MAIN, 1, "CALL: srcA Illegal indirect\n");
+				return 1;
+			} else {
 				value_id = inst_log1->value1.value_id;
 				if (value_id > self->local_counter) {
 					debug_print(DEBUG_MAIN, 1, "SSA Failed at inst_log 0x%x\n", n);
@@ -6980,13 +6985,15 @@ int main(int argc, char *argv[])
 		switch (instruction->opcode) {
 		case MOV:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
@@ -7025,13 +7032,15 @@ int main(int argc, char *argv[])
 		switch (instruction->opcode) {
 		case MOV:
 			if (IND_MEM == instruction->dstA.indirect) {
-				value_id3 = inst_log1->value3.value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: dstA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id3 = inst_log1->value3.value_id;
 			}
 
 			if (IND_MEM == instruction->srcA.indirect) {
-				value_id = inst_log1->value1.value_id;
+				debug_print(DEBUG_MAIN, 1, "MOV: srcA Illegal indirect\n");
+				return 1;
 			} else {
 				value_id = inst_log1->value1.value_id;
 			}
