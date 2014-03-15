@@ -1874,6 +1874,10 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 	}
 	debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:start=0x%x, end=0x%x\n", start, end);
 
+	/* FIXME: Not correct way to iterate through instructions.
+	 *	  Need to use "next" and instructions within each node.
+	 *        i.e. Iterate over the nodes assigned to the entry_point
+	 */
 	for (n = start; n <= end; n++) {
 		inst_log1 =  &inst_log_entry[n];
 		if (!inst_log1) {
