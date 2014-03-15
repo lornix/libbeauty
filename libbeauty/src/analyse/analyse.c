@@ -1645,7 +1645,7 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 				value_id,
 				indirect_offset_value);
 
-
+	label->tip_size = 0;
 	switch (store) {
 	case STORE_DIRECT:
 		/* FIXME: Handle the case of an immediate value being &data */

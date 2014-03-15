@@ -203,6 +203,7 @@ struct label_s {
 	/* is it a unsigned */
 	uint64_t lab_unsigned;
 	/* Type Inference Propagation */
+	int tip_size;
 	struct tip_s *tip;
 	/* human readable name */
 	char *name;
