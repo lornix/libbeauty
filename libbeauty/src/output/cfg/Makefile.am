@@ -15,7 +15,7 @@ lib_LTLIBRARIES = libbeauty_output_cfg.la
 #	exe.h
 
 libbeauty_output_cfg_la_SOURCES = \
-	print_inst.c output_label.c
+	print_inst.c output_label.c output_cfg_dot.c
 
 libbeauty_output_cfg_la_LDFLAGS = \
 	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
