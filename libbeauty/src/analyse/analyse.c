@@ -1756,16 +1756,32 @@ int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_
 	return 0;
 }
 
-int register_label(struct external_entry_point_s *entry_point, uint64_t value_id,
-	struct memory_s *value, struct label_redirect_s *label_redirect, struct label_s *labels)
+int register_label(struct external_entry_point_s *entry_point, int inst, int operand, uint64_t value_id,
+	struct inst_log_entry_s *inst_log_entry, struct label_redirect_s *label_redirect, struct label_s *labels)
 {
 	int n;
 	int found;
 	struct label_s *label;
 	int label_offset;
+	struct memory_s *value;
+	switch (operand) {
+	case 1:
+		value = &(inst_log_entry[inst].value1);
+		break;
+	case 2:
+		value = &(inst_log_entry[inst].value2);
+		break;
+	case 3:
+		value = &(inst_log_entry[inst].value3);
+		break;
+	default:
+		debug_print(DEBUG_ANALYSE, 1, "Invalid operand\n");
+		return 1;
+	}
+
 	label_offset = label_redirect[value_id].redirect;
 	label = &labels[label_offset];
-	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64", label_offset 0x%"PRIx64"\n",
+	debug_print(DEBUG_ANALYSE, 1, "Registering label: value_id = 0x%"PRIx64", scope 0x%"PRIx64", type 0x%"PRIx64", value 0x%"PRIx64", size 0x%"PRIx64", pointer 0x%"PRIx64", signed 0x%"PRIx64", unsigned 0x%"PRIx64", label_offset 0x%x\n",
 		value_id,
 		label->scope,
 		label->type,
@@ -1837,7 +1853,6 @@ int register_label(struct external_entry_point_s *entry_point, uint64_t value_id
 		value->value_type,
 		value->value_scope,
 		value->value_id);
-	//tmp = register_label(label, &(inst_log1->value3));
 	return 0;
 }
 
@@ -1887,10 +1902,10 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			case SEX:
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case LOAD:
 				debug_print(DEBUG_ANALYSE, 1, "LOAD\n");
@@ -1901,10 +1916,10 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				}
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case STORE:
 				debug_print(DEBUG_ANALYSE, 1, "STORE\n");
@@ -1915,10 +1930,10 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				}
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case ADD:
 			case GEP1:
@@ -1938,13 +1953,13 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 			case ICMP:
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value2.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value2\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
+				tmp = register_label(entry_point, n, 2, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case JMP:
 				break;
@@ -1957,7 +1972,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
-				tmp = register_label(entry_point, value_id, &(inst_log1->value3), label_redirect, labels);
+				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
 				/* Special case for function pointers */
 				if (IND_MEM == instruction->srcA.indirect) {
 					debug_print(DEBUG_ANALYSE, 1, "CALL: srcA Illegal indirect\n");
@@ -1965,7 +1980,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case CMP:
 			case TEST:
@@ -1976,7 +1991,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 					value_id = inst_log1->value2.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
-				tmp = register_label(entry_point, value_id, &(inst_log1->value2), label_redirect, labels);
+				tmp = register_label(entry_point, n, 2, value_id, inst_log_entry, label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
 					debug_print(DEBUG_ANALYSE, 1, "CMP: srcA Illegal indirect\n");
 					return 1;
@@ -1984,7 +1999,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 					value_id = inst_log1->value1.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 
 			case IF:
@@ -2004,7 +2019,7 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				tmp = register_label(entry_point, value_id, &(inst_log1->value1), label_redirect, labels);
+				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			default:
 				debug_print(DEBUG_ANALYSE, 1, "Unhandled scan instruction1\n");
