@@ -167,7 +167,9 @@ struct ast_type_index_s {
 
 struct tip_s {
 	int valid;  /* Is this entry valid? More use for when we need to delete individual entries */
+	int node;   /* The node that the inst or phi is contained in */
 	int inst_number; /* Number of the inst_log entry */
+	int phi_number; /* Number of the phi */
 	int operand; /* Which operand of the instruction? 1 = srcA/value1, 2 = srcB/value2, 3 = dstA/value3 */
 	int lab_pointer_first;  /* Is this a pointer. Determined from the LOAD or STORE command */
 	int lab_pointer_inferred;
