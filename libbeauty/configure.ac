@@ -112,6 +112,7 @@ src/analyse/Makefile
 src/output/Makefile
 src/output/cfg/Makefile
 src/output/llvm/Makefile
+src/output/ast/Makefile
 test/Makefile
 include/Makefile
 ])
