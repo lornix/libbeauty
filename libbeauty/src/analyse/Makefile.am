@@ -15,7 +15,7 @@ lib_LTLIBRARIES = libbeauty_analyse.la
 #	exe.h
 
 libbeauty_analyse_la_SOURCES = \
-	analyse.c
+	analyse.c ast.c
 
 libbeauty_analyse_la_LDFLAGS = \
 	 -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)

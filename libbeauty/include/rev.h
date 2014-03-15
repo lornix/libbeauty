@@ -57,6 +57,7 @@ void debug_print(int module, int level, const char *format, ...) __attribute__((
 #define MEMORY_USED_SIZE 10000
 #define INST_LOG_ENTRY_SIZE 10000
 #define ENTRY_POINTS_SIZE 1000
+#define AST_SIZE 300
 
 #define REG_PARAMS_ORDER_MAX 8
 /* RSP, RBP, RDI, RSI, RDX, RCX, R08, R09  */
