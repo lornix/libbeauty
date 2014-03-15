@@ -563,6 +563,14 @@ struct test_data_s test_data[] = {
 		.inst[0] = "// 0x0000:SEX  r0x8/8, r0x8/32",
 		.inst_size = 1,
 	},
+	{
+		.valid = 1,
+		// e8 78 56 34 12	callq
+		.bytes = {0xe8, 0x78, 0x56, 0x34, 0x12},
+		.bytes_size = 5,
+		.inst[0] = "// 0x0000:CALL 0x12345678 ();",
+		.inst_size = 1,
+	},
 };
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
