@@ -165,12 +165,24 @@ struct ast_type_index_s {
 	uint64_t index; /* index into the specific object table */
 };
 
+struct tip_s {
+	int valid;  /* Is this entry valid? More use for when we need to delete individual entries */
+	int inst_number; /* Number of the inst_log entry */
+	int operand; /* Which operand of the instruction? 1 = srcA/value1, 2 = srcB/value2, 3 = dstA/value3 */
+	int lab_pointer_first;  /* Is this a pointer. Determined from the LOAD or STORE command */
+	int lab_pointer_inferred;
+	int size_bits_first;
+	int size_bits_inferred;
+	int lab_pointer_size_first;
+	int lab_pointer_size_inferred;
+};
+
 /* redirect is used for SSA correction, when one needs to rename a variable */
 /* renaming the variable within the log entries would take too long. */
 /* so use log entry value_id -> redirect -> label_s */
 struct label_redirect_s {
 	uint64_t redirect;
-} ;
+};
 
 struct label_s {
 	/* local = 1, param = 2, data = 3, mem = 4, sp_bp = 5 */
@@ -190,9 +202,11 @@ struct label_s {
 	uint64_t lab_signed;
 	/* is it a unsigned */
 	uint64_t lab_unsigned;
+	/* Type Inference Propagation */
+	struct tip_s *tip;
 	/* human readable name */
 	char *name;
-} ;
+};
 
 #define NODE_TYPE_UNKNOWN 0
 #define NODE_TYPE_LOOP 1
