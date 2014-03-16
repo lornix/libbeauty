@@ -1858,62 +1858,55 @@ int register_label(struct external_entry_point_s *entry_point, int inst, int ope
 
 int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 {
-	int tmp, n;
+	int tmp;
 	//int err;
 	uint64_t value_id;
+	int found = 0;
+	int inst;
+	int node;
 	struct instruction_s *instruction;
 	struct inst_log_entry_s *inst_log1;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	//struct memory_s *value;
 	//struct label_s *label;
 	struct external_entry_point_s *entry_point = &(self->external_entry_points[entry_point_index]);
-        int start = entry_point->inst_log;
-	int end = entry_point->inst_log_end;
+	struct control_flow_node_s *nodes = entry_point->nodes;
         struct label_redirect_s *label_redirect = entry_point->label_redirect;
 	struct label_s *labels = entry_point->labels;
 
-	if (!start || !end) {
-		debug_print(DEBUG_ANALYSE, 1, "scan_for_labels_in_function:Invalid start or end\n");
-		return 1;
-	}
-	debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:start=0x%x, end=0x%x\n", start, end);
-
-	/* FIXME: Not correct way to iterate through instructions.
-	 *	  Need to use "next" and instructions within each node.
-	 *        i.e. Iterate over the nodes assigned to the entry_point
-	 */
-	for (n = start; n <= end; n++) {
-		inst_log1 =  &inst_log_entry[n];
-		if (!inst_log1) {
-			debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:Invalid inst_log1[0x%x]\n", n);
-			return 1;
+	for(node = 1; node < entry_point->nodes_size; node++) {
+		if (!entry_point->nodes[node].valid) {
+			/* Only output nodes that are valid */
+			continue;
 		}
 
-		instruction =  &inst_log1->instruction;
+		inst = nodes[node].inst_start;
+		/* FIXME: Need to iterate over the PHI instructions also. */
+		do {
+			inst_log1 =  &inst_log_entry[inst];
+			if (!inst_log1) {
+				debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:Invalid inst_log1[0x%x]\n", inst);
+				return 1;
+			}
 
-		/* Test to see if we have an instruction to output */
-		debug_print(DEBUG_ANALYSE, 1, "Inst 0x%04x: %d: value_type = %d, %d, %d\n", n,
-			instruction->opcode,
-			inst_log1->value1.value_type,
-			inst_log1->value2.value_type,
-			inst_log1->value3.value_type);
-		if ((0 == inst_log1->value3.value_type) ||
-			(1 == inst_log1->value3.value_type) ||
-			(2 == inst_log1->value3.value_type) ||
-			(3 == inst_log1->value3.value_type) ||
-			(4 == inst_log1->value3.value_type) ||
-			(6 == inst_log1->value3.value_type) ||
-			(5 == inst_log1->value3.value_type)) {
+			instruction =  &inst_log1->instruction;
+
+			/* Test to see if we have an instruction to output */
+			debug_print(DEBUG_ANALYSE, 1, "Inst 0x%04x: %d: value_type = %d, %d, %d\n", inst,
+				instruction->opcode,
+				inst_log1->value1.value_type,
+				inst_log1->value2.value_type,
+				inst_log1->value3.value_type);
 			debug_print(DEBUG_ANALYSE, 1, "Instruction Opcode = 0x%x\n", instruction->opcode);
 			switch (instruction->opcode) {
 			case MOV:
 			case SEX:
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case LOAD:
 				debug_print(DEBUG_ANALYSE, 1, "LOAD\n");
@@ -1924,10 +1917,10 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				}
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case STORE:
 				debug_print(DEBUG_ANALYSE, 1, "STORE\n");
@@ -1938,10 +1931,10 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				}
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case ADD:
 			case GEP1:
@@ -1961,13 +1954,13 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 			case ICMP:
 				value_id = inst_log1->value1.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value1\n");
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value2.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value2\n");
-				tmp = register_label(entry_point, n, 2, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 2, value_id, inst_log_entry, label_redirect, labels);
 				value_id = inst_log1->value3.value_id;
 				debug_print(DEBUG_ANALYSE, 1, "value3\n");
-				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 3, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case JMP:
 				break;
@@ -1980,7 +1973,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				} else {
 					value_id = inst_log1->value3.value_id;
 				}
-				tmp = register_label(entry_point, n, 3, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 3, value_id, inst_log_entry, label_redirect, labels);
 				/* Special case for function pointers */
 				if (IND_MEM == instruction->srcA.indirect) {
 					debug_print(DEBUG_ANALYSE, 1, "CALL: srcA Illegal indirect\n");
@@ -1988,7 +1981,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case CMP:
 			case TEST:
@@ -1999,7 +1992,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 					value_id = inst_log1->value2.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
-				tmp = register_label(entry_point, n, 2, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 2, value_id, inst_log_entry, label_redirect, labels);
 				if (IND_MEM == instruction->srcA.indirect) {
 					debug_print(DEBUG_ANALYSE, 1, "CMP: srcA Illegal indirect\n");
 					return 1;
@@ -2007,7 +2000,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 					value_id = inst_log1->value1.value_id;
 				}
 				debug_print(DEBUG_ANALYSE, 1, "JCD6: Registering CMP label, value_id = 0x%"PRIx64"\n", value_id);
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 
 			case IF:
@@ -2027,16 +2020,25 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				} else {
 					value_id = inst_log1->value1.value_id;
 				}
-				tmp = register_label(entry_point, n, 1, value_id, inst_log_entry, label_redirect, labels);
+				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			default:
 				debug_print(DEBUG_ANALYSE, 1, "Unhandled scan instruction1\n");
-				if (print_inst(self, instruction, n, labels))
+				if (print_inst(self, instruction, inst, labels))
 					return 1;
 				return 1;
 				break;
 			}
-		}
+			if (inst == nodes[node].inst_end) {
+				found = 1;
+			}
+			if (inst_log1->next_size > 0) {
+				inst = inst_log1->next[0];
+			} else {
+				/* Exit here */
+				found = 1;
+			}
+		} while (!found);
 	}
 	return 0;
 }
