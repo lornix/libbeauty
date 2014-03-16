@@ -41,8 +41,7 @@ extern int get_value_from_index(struct operand_s *operand, uint64_t *index);
 extern int log_to_label(int store, int indirect, uint64_t index, uint64_t size, uint64_t relocated, uint64_t value_scope, uint64_t value_id, int64_t indirect_offset_value, struct label_s *label);
 extern int register_label(struct external_entry_point_s *entry_point, int inst, int operand, uint64_t value_id,
 	struct inst_log_entry_s *inst_log_entry, struct label_redirect_s *label_redirect, struct label_s *labels);
-extern int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_point_s *entry_point,
-			 int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels);
+extern int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index);
 extern int search_back_local_reg_stack(struct self_s *self, uint64_t mid_start_size, struct mid_start_s *mid_start, int reg_stack, uint64_t indirect_init_value, uint64_t indirect_offset_value, uint64_t *size, int *search_back_seen, uint64_t **inst_list);
 
 

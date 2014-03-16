@@ -1856,8 +1856,7 @@ int register_label(struct external_entry_point_s *entry_point, int inst, int ope
 	return 0;
 }
 
-int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_point_s *entry_point,
-			 int start, int end, struct label_redirect_s *label_redirect, struct label_s *labels)
+int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 {
 	int tmp, n;
 	//int err;
@@ -1867,6 +1866,11 @@ int scan_for_labels_in_function_body(struct self_s *self, struct external_entry_
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	//struct memory_s *value;
 	//struct label_s *label;
+	struct external_entry_point_s *entry_point = &(self->external_entry_points[entry_point_index]);
+        int start = entry_point->inst_log;
+	int end = entry_point->inst_log_end;
+        struct label_redirect_s *label_redirect = entry_point->label_redirect;
+	struct label_s *labels = entry_point->labels;
 
 	if (!start || !end) {
 		debug_print(DEBUG_ANALYSE, 1, "scan_for_labels_in_function:Invalid start or end\n");

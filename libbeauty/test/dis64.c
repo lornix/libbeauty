@@ -5172,11 +5172,7 @@ int main(int argc, char *argv[])
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid &&
 			external_entry_points[l].type == 1) {
-		tmp = scan_for_labels_in_function_body(self, &external_entry_points[l],
-				external_entry_points[l].inst_log,
-				external_entry_points[l].inst_log_end,
-				external_entry_points[l].label_redirect,
-				external_entry_points[l].labels);
+		tmp = scan_for_labels_in_function_body(self, l);
 		if (tmp) {
 			debug_print(DEBUG_MAIN, 1, "Unhandled scan instruction 0x%x\n", l);
 			return 1;
