@@ -2032,7 +2032,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 			if (inst == nodes[node].inst_end) {
 				found = 1;
 			}
-			if (inst_log1->next_size > 0) {
+			if (inst_log1->next_size == 1) {
 				inst = inst_log1->next[0];
 			} else {
 				/* Exit here */
