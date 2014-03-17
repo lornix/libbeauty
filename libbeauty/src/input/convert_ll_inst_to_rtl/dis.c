@@ -493,10 +493,10 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 			} else {
 				instruction->srcA.indirect = IND_MEM;
 			}
-			convert_operand(self, ll_inst->address, &operand_empty, 0, &(instruction->srcB));
+			convert_operand(self, ll_inst->address, previous_operand, 0, &(instruction->srcB));
+			instruction->srcB.value_size = ll_inst->srcA.size;
 			convert_operand(self, ll_inst->address, &operand_reg_tmp2, 0, &(instruction->dstA));
 			instruction->dstA.value_size = ll_inst->srcA.size;
-			instruction->srcA.value_size = ll_inst->srcA.size;
 			dis_instructions->instruction_number++;
 		}
 		previous_operand = &operand_reg_tmp2;
@@ -883,7 +883,7 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->srcA.value_size = 64;
 
 		instruction->srcB.store = STORE_REG;
-		instruction->srcB.indirect = IND_STACK;
+		instruction->srcB.indirect = IND_DIRECT;
 		instruction->srcB.indirect_size = 64;
 		instruction->srcB.index = REG_SP;
 		instruction->srcB.relocated = 0;
@@ -1095,6 +1095,12 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = 64;
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];
@@ -1176,7 +1182,12 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->srcA.index = REG_SP;
 		instruction->srcA.relocated = 0;
 		instruction->srcA.value_size = ll_inst->srcA.size;
-		convert_operand(self, ll_inst->address, &(operand_empty), 0, &(instruction->srcB));
+		instruction->srcB.store = STORE_REG;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = 64;
+		instruction->srcB.index = REG_SP;
+		instruction->srcB.relocated = 0;
+		instruction->srcB.value_size = ll_inst->srcA.size;
 		/* Form 2 puts the dest in the src. So correct it here */
 		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->dstA));
 		dis_instructions->instruction_number++;
@@ -1279,10 +1290,13 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->opcode = LOAD;
 		instruction->flags = 0;
 		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcA));
+		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcB));
 		convert_operand(self, ll_inst->address, &(operand_reg_tmp2), 0, &(instruction->dstA));
 		/* Force indirect */
 		instruction->srcA.indirect = IND_MEM;
 		instruction->srcA.indirect_size = ll_inst->srcA.size;
+		instruction->srcB.indirect = IND_DIRECT;
+		instruction->srcB.indirect_size = ll_inst->srcA.size;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
