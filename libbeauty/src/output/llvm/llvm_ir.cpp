@@ -135,6 +135,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcA = value[value_id];
+		srcA->dump();
 		value_id = external_entry_point->label_redirect[inst_log1->value2.value_id].redirect;
 		if (!value[value_id]) {
 			tmp = LLVM_ir_export::fill_value(self, value, value_id, external_entry);
@@ -144,6 +145,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcB = value[value_id];
+		srcB->dump();
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		printf("srcA = %x, srcB = %x\n", srcA->getType(), srcB->getType());
 		tmp = label_to_string(&external_entry_point->labels[inst_log1->value3.value_id], buffer, 1023);
@@ -170,6 +172,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcA = value[value_id];
+		srcA->dump();
 		srcA_size = external_entry_point->labels[value_id].size_bits;
 		printf("srcA: scope=0x%lx, type=0x%lx value=0x%lx size_bits=0x%lx pointer_type_size_bits=0x%lx lab_pointer=0x%lx lab_signed=0x%lx lab_unsigned=0x%lx name=%s\n",
 			external_entry_point->labels[value_id].scope,
@@ -191,6 +194,7 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 			}
 		}
 		srcB = value[value_id];
+		srcB->dump();
 		srcB_size = external_entry_point->labels[value_id].size_bits;
 		printf("srcB: scope=0x%lx, type=0x%lx value=0x%lx size_bits=0x%lx pointer_type_size_bits=0x%lx lab_pointer=0x%lx lab_signed=0x%lx lab_unsigned=0x%lx name=%s\n",
 			external_entry_point->labels[value_id].scope,
