@@ -128,6 +128,24 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	switch (instruction->opcode) {
 	case MOV:
 	case SEX:
+		if (instruction->srcA.indirect ||
+			(instruction->dstA.indirect)) {
+			ret = 1;
+			break;
+		}
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcA.store],
+			instruction->srcA.index,
+			instruction->srcA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+			store_table[instruction->dstA.store],
+			instruction->dstA.index,
+			instruction->dstA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+		ret = 0;
+		break;
 	case LOAD:
 		if (instruction->srcA.indirect) {
 			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
@@ -160,6 +178,50 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		ret = 0;
 		break;
 	case STORE:
+		if (instruction->srcA.indirect) {
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
+				indirect_table[instruction->srcA.indirect],
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+				store_table[instruction->srcA.store],
+				instruction->srcA.index,
+				instruction->srcA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		}
+		if (instruction->srcB.indirect) {
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
+				indirect_table[instruction->srcB.indirect],
+				store_table[instruction->srcB.store],
+				instruction->srcB.index,
+				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+				store_table[instruction->srcB.store],
+				instruction->srcB.index,
+				instruction->srcB.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		}
+		if (instruction->dstA.indirect) {
+			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
+				indirect_table[instruction->dstA.indirect],
+				store_table[instruction->dstA.store],
+				instruction->dstA.index,
+				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+				store_table[instruction->dstA.store],
+				instruction->dstA.index,
+				instruction->dstA.value_size);
+			tmp = string_cat(string, buffer, strlen(buffer));
+		}
+		ret = 0;
+		break;
 	case ADD:
 	case ADC:
 	case GEP1:
@@ -178,128 +240,79 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	case NEG:
 	/* FIXME: Add DIV */
 	//case DIV:
-		if (instruction->srcA.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
-				indirect_table[instruction->srcA.indirect],
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
+		if (instruction->srcA.indirect ||
+			(instruction->srcB.indirect) ||
+			(instruction->dstA.indirect)) {
+			ret = 1;
+			break;
 		}
-		if (instruction->srcB.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
-				indirect_table[instruction->srcB.indirect],
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
-		if (instruction->dstA.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
-				indirect_table[instruction->dstA.indirect],
-				store_table[instruction->dstA.store],
-				instruction->dstA.index,
-				instruction->dstA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
-				store_table[instruction->dstA.store],
-				instruction->dstA.index,
-				instruction->dstA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcA.store],
+			instruction->srcA.index,
+			instruction->srcA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcB.store],
+			instruction->srcB.index,
+			instruction->srcB.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+			store_table[instruction->dstA.store],
+			instruction->dstA.index,
+			instruction->dstA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		ret = 0;
 		break;
 	case CMP:
 	case TEST:
-		if (instruction->srcA.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
-				indirect_table[instruction->srcA.indirect],
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
+		if (instruction->srcA.indirect ||
+			(instruction->srcB.indirect)) {
+			ret = 1;
+			break;
 		}
-		if (instruction->srcB.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
-				indirect_table[instruction->srcB.indirect],
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcA.store],
+			instruction->srcA.index,
+			instruction->srcA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+			store_table[instruction->srcB.store],
+			instruction->srcB.index,
+			instruction->srcB.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		ret = 0;
 		break;
 	case ICMP:
+		if (instruction->srcA.indirect ||
+			(instruction->srcB.indirect) ||
+			(instruction->dstA.indirect)) {
+			ret = 1;
+			break;
+		}
 		tmp = snprintf(buffer, 1023, " COND 0x%x,",
 			instruction->predicate);
 		tmp = string_cat(string, buffer, strlen(buffer));
-		if (instruction->srcA.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
-				indirect_table[instruction->srcA.indirect],
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
-				store_table[instruction->srcA.store],
-				instruction->srcA.index,
-				instruction->srcA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
-		if (instruction->srcB.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d,",
-				indirect_table[instruction->srcB.indirect],
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
-				store_table[instruction->srcB.store],
-				instruction->srcB.index,
-				instruction->srcB.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
-		if (instruction->dstA.indirect) {
-			tmp = snprintf(buffer, 1023, " %s[%s0x%"PRIx64"]/%d",
-				indirect_table[instruction->dstA.indirect],
-				store_table[instruction->dstA.store],
-				instruction->dstA.index,
-				instruction->dstA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		} else {
-			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
-				store_table[instruction->dstA.store],
-				instruction->dstA.index,
-				instruction->dstA.value_size);
-			tmp = string_cat(string, buffer, strlen(buffer));
-		}
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcA.store],
+			instruction->srcA.index,
+			instruction->srcA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcB.store],
+			instruction->srcB.index,
+			instruction->srcB.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+			store_table[instruction->dstA.store],
+			instruction->dstA.index,
+			instruction->dstA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
 		ret = 0;
 		break;
 	case JMP:
