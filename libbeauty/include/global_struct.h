@@ -172,11 +172,12 @@ struct tip_s {
 	int phi_number; /* Number of the phi */
 	int operand; /* Which operand of the instruction? 1 = srcA/value1, 2 = srcB/value2, 3 = dstA/value3 */
 	int lab_pointer_first;  /* Is this a pointer. Determined from the LOAD or STORE command */
-	int lab_pointer_inferred;
-	int size_bits_first;
-	int size_bits_inferred;
-	int lab_pointer_size_first;
-	int lab_pointer_size_inferred;
+	int lab_pointer_inferred; /* This has been inferred from another label. */
+	int lab_size_first; /* Bit width of the label */
+	int lab_size_inferred;
+	int lab_integer_first;
+	int lab_unsigned_integer_first;
+	int lab_signed_integer_first;
 };
 
 /* redirect is used for SSA correction, when one needs to rename a variable */

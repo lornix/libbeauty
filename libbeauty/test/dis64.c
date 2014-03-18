@@ -2311,6 +2311,146 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 	return 0;
 }
 
+int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, int operand, struct label_s *label, int pointer, int integer, int bit_size)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	int value_id;
+	int redirect_value_id;
+	int tmp;
+	int index;
+
+	inst_log1 =  &inst_log_entry[inst];
+	instruction =  &inst_log1->instruction;
+	if (inst) {
+		index = label->tip_size;
+		label->tip_size++;
+		label->tip = realloc(label->tip, sizeof(struct tip_s) * label->tip_size);
+		label->tip[index].valid = 1;
+		label->tip[index].node = node;
+		label->tip[index].inst_number = inst;
+		label->tip[index].phi_number = phi;
+		label->tip[index].operand = operand;
+		label->tip[index].lab_pointer_first = pointer;
+		label->tip[index].lab_integer_first = integer;
+		label->tip[index].lab_size_first = bit_size;
+	} else if (phi) {
+
+	} else {
+	}
+exit1:
+	return 0;
+}
+
+int build_tip_table(struct self_s *self, int entry_point, int node)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	struct label_s *label;
+	int inst;
+	int found = 0;
+	int ret = 1;
+	int tmp;
+	int value_id;
+
+	inst = nodes[node].inst_start;
+	do {
+		inst_log1 =  &inst_log_entry[inst];
+		instruction =  &inst_log1->instruction;
+		switch (instruction->opcode) {
+//int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, int operand, struct label_s *label, int pointer, int integer, int bit_size)
+		case NOP:
+			break;
+
+		case MOV:
+			value_id = inst_log1->value1.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			value_id = inst_log1->value3.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			ret = 0;
+			break;
+
+		case LOAD:
+			value_id = inst_log1->value1.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			value_id = inst_log1->value2.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 1, 0, instruction->srcB.value_size);
+			value_id = inst_log1->value3.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			ret = 0;
+			break;
+
+		case STORE:
+			value_id = inst_log1->value1.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			value_id = inst_log1->value2.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 1, 0, instruction->srcB.value_size);
+			value_id = inst_log1->value3.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			ret = 0;
+			break;
+
+		case ADD:
+		case SUB:
+			value_id = inst_log1->value1.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			value_id = inst_log1->value2.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 0, 0, instruction->srcB.value_size);
+			value_id = inst_log1->value3.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			ret = 0;
+			break;
+
+		case RET:
+			value_id = inst_log1->value1.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			value_id = inst_log1->value3.value_id;
+			label = &labels[label_redirect[value_id].redirect];
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			ret = 0;
+			break;
+
+		default:
+			debug_print(DEBUG_MAIN, 1, "build_tip_table failed for Inst:0x%x:0x%04x, OP 0x%x\n",
+				entry_point, inst, instruction->opcode);
+			goto exit1;
+		}
+		if (inst == nodes[node].inst_end) {
+			found = 1;
+		}
+		if (inst_log1->next_size > 0) {
+			inst = inst_log1->next[0];
+		} else {
+			/* Exit here */
+			found = 1;
+		}
+	} while (!found);
+exit1:
+	return ret;
+}
+
 int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point_s *external_entry_point, int node)
 {
 	struct control_flow_node_s *nodes = external_entry_point->nodes;
@@ -4650,6 +4790,23 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	/* Build TIP table */
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
+					continue;
+				}
+				tmp = build_tip_table(self, l, n);
+				if (tmp) {
+					printf("build_tip_table() failed\n");
+					exit(1);
+				}
+			}
+		}
+	}
+
 	/* Change ADD to GEP1 where the ADD involves pointers */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
