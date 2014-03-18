@@ -701,10 +701,9 @@ int LLVM_ir_export::output(struct self_s *self)
 			/* Create the AllocaInst's */
 			for (m = 0; m < labels_size; m++) {
 				int size_bits;
-				/* param_stack or local_stack */
-				if (((labels[m].scope == 1) || 
-					(labels[m].scope == 2)) &&
-					(labels[m].type == 2)) {
+				/* local_stack */
+				if ((labels[m].scope == 1) && 
+					(labels[m].type == 2)) { 
 					size_bits = labels[m].size_bits;
 					/* FIXME: Make size_bits set correctly in the label */
 					//if (!size_bits) size_bits = 32;
