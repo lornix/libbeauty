@@ -2483,7 +2483,8 @@ int build_flag_dependency_table(struct self_s *self)
 	struct inst_log_entry_s *inst_log1_flags;
 	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
 	struct instruction_s *instruction;
-	int l,n;
+	int n;
+	int prev = 0;
 	int found;
 	int tmp;
 	int new_inst;
@@ -2508,12 +2509,12 @@ int build_flag_dependency_table(struct self_s *self)
 			inst_log1_flags =  inst_log1;
 			do {
 				if (inst_log1_flags->prev > 0) {
-					l = inst_log1_flags->prev[0];
+					prev = inst_log1_flags->prev[0];
 				} else {
 					break;
 				}
 				tmp--;
-				inst_log1_flags =  &inst_log_entry[l];
+				inst_log1_flags =  &inst_log_entry[prev];
 				debug_print(DEBUG_MAIN, 1, "Previous opcode 0x%x\n", inst_log1_flags->instruction.opcode);
 				debug_print(DEBUG_MAIN, 1, "Previous flags 0x%x\n", inst_log1_flags->instruction.flags);
 				if (1 == inst_log1_flags->instruction.flags) {
@@ -2521,30 +2522,30 @@ int build_flag_dependency_table(struct self_s *self)
 				}
 				debug_print(DEBUG_MAIN, 1, "Previous flags instruction size 0x%x\n", inst_log1_flags->prev_size);
 				tmp--;
-			} while ((0 == found) && (0 < tmp) && (0 != l));
+			} while ((0 == found) && (0 < tmp) && (0 != prev));
 			if (found == 0) {
-				debug_print(DEBUG_MAIN, 1, "Previous flags instruction not found. found=%d, tmp=%d, l=0x%x\n", found, tmp, l);
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction not found. found=%d, tmp=%d, prev=0x%x\n", found, tmp, prev);
 				return 1;
 			} else {
-				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, l=0x%x n=0x%x\n", found, tmp, l, n);
-				if (self->flag_result_users[l] > 0) {
-					if ((inst_log_entry[l].instruction.opcode != CMP) &&
-						(inst_log_entry[l].instruction.opcode != TEST)) {
+				debug_print(DEBUG_MAIN, 1, "Previous flags instruction found. found=%d, tmp=%d, prev=0x%x n=0x%x\n", found, tmp, prev, n);
+				if (self->flag_result_users[prev] > 0) {
+					if ((inst_log_entry[prev].instruction.opcode != CMP) &&
+						(inst_log_entry[prev].instruction.opcode != TEST)) {
 						debug_print(DEBUG_MAIN, 1, "TOO MANY FLAGGED NON CMP/TEST. Opcode = 0x%x, Node = 0x%x\n",
-							inst_log_entry[l].instruction.opcode,
-							inst_log_entry[l].node_member);
+							inst_log_entry[prev].instruction.opcode,
+							inst_log_entry[prev].node_member);
 						exit(1);
 					}
-					if (inst_log_entry[l].instruction.opcode == TEST) {
+					if (inst_log_entry[prev].instruction.opcode == TEST) {
 						debug_print(DEBUG_MAIN, 1, "FIXME: Too many TEST. Inst = 0x%x Opcode = 0x%x\n",
-							l,
-							inst_log_entry[l].instruction.opcode);
+							prev,
+							inst_log_entry[prev].instruction.opcode);
 					}
 					
 					/* Use "before" because after will cause a race condition */
-					tmp = insert_nop_before(self, l, &new_inst);
+					tmp = insert_nop_before(self, prev, &new_inst);
 					/* copy CMP/TEST into it */
-					tmp = substitute_inst(self, l, new_inst);
+					tmp = substitute_inst(self, prev, new_inst);
 					self->flag_dependency[n] = new_inst;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
 					self->flag_result_users[new_inst]++;
@@ -2553,12 +2554,12 @@ int build_flag_dependency_table(struct self_s *self)
 							new_inst, self->flag_result_users[new_inst], self->flag_dependency_size);
 					}
 				} else {		
-					self->flag_dependency[n] = l;
+					self->flag_dependency[n] = prev;
 					self->flag_dependency_opcode[n] = inst_log1_flags->instruction.opcode;
-					self->flag_result_users[l]++;
-					if (l > 0xe20) {
+					self->flag_result_users[prev]++;
+					if (prev > 0xe20) {
 						debug_print(DEBUG_MAIN, 1, "ADDING FLAGGED 0x%x, flagged = 0x%x, flag_dep_size = 0x%x\n",
-							l, self->flag_result_users[l], self->flag_dependency_size);
+							prev, self->flag_result_users[prev], self->flag_dependency_size);
 					}
 				}
 			}
@@ -4379,7 +4380,7 @@ int main(int argc, char *argv[])
 	}
 	
 	/************************************************************
-	 * This bit assigned a variable ID and label to each assignment (dst).
+	 * Initialise Labels.
 	 ************************************************************/
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
@@ -4411,6 +4412,14 @@ int main(int argc, char *argv[])
 				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_start = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_start);
 				debug_print(DEBUG_ANALYSE, 1, "e1_node[0x%x]_end = inst 0x%x\n", n, external_entry_points[l].nodes[n].inst_end);
 			}
+		}
+	}
+
+	/************************************************************
+	 * This bit assigned a variable ID and label to each assignment (dst).
+	 ************************************************************/
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 
 			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
 				int next;
