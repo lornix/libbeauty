@@ -1483,6 +1483,74 @@ int search_back_for_register(struct self_s *self, int l, int node, int inst, int
 	return 0;
 }
 
+int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_log_entry_s *inst_log1, struct label_s *label);
+
+int assign_labels_to_dst(struct self_s *self, int entry_point, int node)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	int variable_id = external_entry_point->variable_id;
+	int next;
+	int inst;
+	int tmp;
+	
+	debug_print(DEBUG_MAIN, 1, "Start variable_id = 0x%x\n", variable_id);
+	next = nodes[node].inst_start;
+	do {
+		struct label_s label;
+		inst = next;
+		inst_log1 =  &inst_log_entry[inst];
+		instruction =  &inst_log1->instruction;
+		/* returns 0 for id and label set. 1 for error */
+		debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
+		tmp  = assign_id_label_dst(self, entry_point, node, inst_log1, &label);
+		debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
+			inst,
+			instruction->dstA.indirect,
+			instruction->dstA.index,
+			instruction->dstA.relocated,
+			inst_log1->value3.value_scope,
+			inst_log1->value3.value_id,
+			inst_log1->value3.indirect_offset_value);
+
+		if (!tmp) {
+			debug_print(DEBUG_MAIN, 1, "variable_id = %x\n", variable_id);
+			if (variable_id >= 10000) {
+				debug_print(DEBUG_MAIN, 1, "variable_id overrun 10000 limit. Trying to write to %d\n", variable_id);
+				exit(1);
+			}
+			label_redirect[variable_id].redirect = variable_id;
+			labels[variable_id].scope = label.scope;
+			labels[variable_id].type = label.type;
+			labels[variable_id].value = label.value;
+			labels[variable_id].size_bits = label.size_bits;
+			labels[variable_id].lab_pointer += label.lab_pointer;
+			variable_id++;
+			/* Needed by assign_id_label_dst() */
+			external_entry_point->variable_id = variable_id;
+		} else {
+			debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed\n");
+			exit(1);
+		}
+
+		if (inst_log1->next_size) {
+			next = inst_log1->next[0];
+		} else if (inst != nodes[node].inst_end) {
+			debug_print(DEBUG_MAIN, 1, "DST inst 0x%x, entry_point = 0x%x, node = 0x%x next failure. No inst_end!!! inst_end1 = 0x%x, inst_end2 = 0x%x\n",
+				inst, entry_point, node, nodes[node].inst_end, nodes[node - 1].inst_end);
+			exit(1);
+		}
+	} while (inst != nodes[node].inst_end);
+
+	debug_print(DEBUG_MAIN, 1, "End variable_id = 0x%x, 0x%x\n", variable_id, self->external_entry_points[entry_point].variable_id);
+	return 0;
+}
+
 int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 {
 	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
@@ -4420,56 +4488,16 @@ int main(int argc, char *argv[])
 	 ************************************************************/
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
-
-			for(m = 1; m < external_entry_points[l].nodes_size; m++) {
-				int next;
-				if (!(external_entry_points[l].nodes[m].valid)) {
+			for(n = 1; n < external_entry_points[l].nodes_size; n++) {
+				if (!external_entry_points[l].nodes[n].valid) {
+					/* Only output nodes that are valid */
 					continue;
 				}
-				next = external_entry_points[l].nodes[m].inst_start;
-				do {
-					struct label_s label;
-					n = next;
-					inst_log1 =  &inst_log_entry[n];
-					instruction =  &inst_log1->instruction;
-					/* returns 0 for id and label set. 1 for error */
-					debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
-					tmp  = assign_id_label_dst(self, l, n, inst_log1, &label);
-					debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
-						n,
-						instruction->dstA.indirect,
-						instruction->dstA.index,
-						instruction->dstA.relocated,
-						inst_log1->value3.value_scope,
-						inst_log1->value3.value_id,
-						inst_log1->value3.indirect_offset_value);
-
-					if (!tmp) {
-						debug_print(DEBUG_MAIN, 1, "variable_id = %x\n", external_entry_points[l].variable_id);
-						if (external_entry_points[l].variable_id >= 10000) {
-							debug_print(DEBUG_MAIN, 1, "variable_id overrun 10000 limit. Trying to write to %d\n", external_entry_points[l].variable_id);
-							exit(1);
-						}
-						external_entry_points[l].label_redirect[external_entry_points[l].variable_id].redirect = external_entry_points[l].variable_id;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].scope = label.scope;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].type = label.type;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].value = label.value;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].size_bits = label.size_bits;
-						external_entry_points[l].labels[external_entry_points[l].variable_id].lab_pointer += label.lab_pointer;
-						external_entry_points[l].variable_id++;
-					} else {
-						debug_print(DEBUG_MAIN, 1, "assign_id_label_dst() failed\n");
-						exit(1);
-					}
-						
-					if (inst_log1->next_size) {
-						next = inst_log1->next[0];
-					} else if (n != external_entry_points[l].nodes[m].inst_end) {
-						debug_print(DEBUG_MAIN, 1, "DST inst 0x%x, l = 0x%x, m = 0x%x next failure. No inst_end!!! inst_end1 = 0x%x, inst_end2 = 0x%x\n",
-							n, l, m, external_entry_points[l].nodes[m].inst_end, external_entry_points[l].nodes[m - 1].inst_end);
-						exit(1);
-					}
-				} while (n != external_entry_points[l].nodes[m].inst_end);
+				tmp = assign_labels_to_dst(self, l, n);
+				if (tmp) {
+					printf("assign_labels_to_src() failed\n");
+					exit(1);
+				}
 			}
 		}
 	}
