@@ -2409,7 +2409,22 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 			break;
 
 		case ADD:
+		case ADC:
 		case SUB:
+		case SBB:
+		case MUL:
+		case IMUL:
+		case OR:
+		case XOR:
+		case rAND:
+		case NOT:
+		case NEG:
+		case SHL:
+		case SHR:
+		case SAL:
+		case SAR:
+		case SEX:
+		case ICMP:
 			value_id = inst_log1->value1.value_id;
 			label = &labels[label_redirect[value_id].redirect];
 			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
