@@ -4857,6 +4857,7 @@ int main(int argc, char *argv[])
 
 	print_dis_instructions(self);
 #if 1
+	/* Dump the labels table */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
 			for (n = 0x100; n < 0x130; n++) {
@@ -4864,12 +4865,14 @@ int main(int argc, char *argv[])
 				tmp = external_entry_points[l].label_redirect[n].redirect;
 				label = &(external_entry_points[l].labels[tmp]);
 				printf("Label 0x%x:", n);
-				tmp = label_to_string(label, buffer, 1023);
-				printf("%s/0x%lx,0x%lx, 0x%lx\n",
-					buffer,
-					label->size_bits,
-					label->pointer_type_size_bits,
-					label->lab_pointer);
+				if (label->scope) {
+					tmp = label_to_string(label, buffer, 1023);
+					printf("%s/0x%lx,0x%lx, 0x%lx\n",
+						buffer,
+						label->size_bits,
+						label->pointer_type_size_bits,
+						label->lab_pointer);
+				}
 			}
 		}
 	}
