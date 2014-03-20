@@ -494,7 +494,7 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 				instruction->srcA.indirect = IND_MEM;
 			}
 			convert_operand(self, ll_inst->address, previous_operand, 0, &(instruction->srcB));
-			instruction->srcB.value_size = ll_inst->srcA.size;
+			instruction->srcB.value_size = 64;
 			convert_operand(self, ll_inst->address, &operand_reg_tmp2, 0, &(instruction->dstA));
 			instruction->dstA.value_size = ll_inst->srcA.size;
 			dis_instructions->instruction_number++;
@@ -1296,7 +1296,7 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction->srcA.indirect = IND_MEM;
 		instruction->srcA.indirect_size = ll_inst->srcA.size;
 		instruction->srcB.indirect = IND_DIRECT;
-		instruction->srcB.indirect_size = ll_inst->srcA.size;
+		instruction->srcB.indirect_size = 64;
 		dis_instructions->instruction_number++;
 
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	

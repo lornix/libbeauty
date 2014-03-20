@@ -160,7 +160,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 			instruction->srcA.value_size);
 		tmp = string_cat(string, buffer, strlen(buffer));
 
-		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
 			store_table[instruction->srcB.store],
 			instruction->srcB.index,
 			instruction->srcB.value_size);
