@@ -95,15 +95,6 @@ char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 //struct self_s *self = NULL;
 
-#define DEBUG_MAIN 1
-#define DEBUG_INPUT_BFD 2
-#define DEBUG_INPUT_DIS 3
-#define DEBUG_OUTPUT 4
-#define DEBUG_EXE 5
-#define DEBUG_ANALYSE 6
-#define DEBUG_ANALYSE_PATHS 7
-#define DEBUG_ANALYSE_PHI 8
-
 /* debug: 0 = no debug output. >= 1 is more debug output */
 int debug_dis64 = 1;
 int debug_input_bfd = 1;
@@ -575,56 +566,56 @@ struct test_data_s test_data[] = {
 
 #define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
 
-void debug_print(int module, int level, const char *format, ...)
+void dbg_print(const char* func, int line, int module, int level, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
 	switch (module) {
 	case DEBUG_MAIN:
 		if (level <= debug_dis64) {
-			fprintf(stderr, "DEBUG_MAIN,0x%x:", level);
+			fprintf(stderr, "DEBUG_MAIN,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_BFD:
 		if (level <= debug_input_bfd) {
-			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x:", level);
+			fprintf(stderr, "DEBUG_INPUT_BFD,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_DIS:
 		if (level <= debug_input_dis) {
-			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x:", level);
+			fprintf(stderr, "DEBUG_INPUT_DIS,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_EXE:
 		if (level <= debug_exe) {
-			fprintf(stderr, "DEBUG_EXE,0x%x:", level);
+			fprintf(stderr, "DEBUG_EXE,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE:
 		if (level <= debug_analyse) {
-			fprintf(stderr, "DEBUG_ANALYSE,0x%x:", level);
+			fprintf(stderr, "DEBUG_ANALYSE,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PATHS:
 		if (level <= debug_analyse_paths) {
-			fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x:", level);
+			fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PHI:
 		if (level <= debug_analyse_phi) {
-			fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x:", level);
+			fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;
 	case DEBUG_OUTPUT:
 		if (level <= debug_output) {
-			fprintf(stderr, "DEBUG_OUTPUT,0x%x:", level);
+			fprintf(stderr, "DEBUG_OUTPUT,0x%x %s,%d: ", level, func, line);
 			vfprintf(stderr, format, ap);
 		}
 		break;

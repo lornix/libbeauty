@@ -82,56 +82,56 @@ int debug_analyse_paths = 1;
 int debug_analyse_phi = 1;
 int debug_output = 1;
 
-void debug_print(int module, int level, const char *format, ...)
+void dbg_print(const char* func, int line, int module, int level, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
 	switch (module) {
 	case DEBUG_MAIN:
 		if (level <= debug_dis64) {
-			dprintf(STDERR_FILENO, "DEBUG_MAIN,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_MAIN,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_BFD:
 		if (level <= debug_input_bfd) {
-			dprintf(STDERR_FILENO, "DEBUG_INPUT_BFD,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_INPUT_BFD,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_INPUT_DIS:
 		if (level <= debug_input_dis) {
-			dprintf(STDERR_FILENO, "DEBUG_INPUT_DIS,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_INPUT_DIS,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_EXE:
 		if (level <= debug_exe) {
-			dprintf(STDERR_FILENO, "DEBUG_EXE,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_EXE,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE:
 		if (level <= debug_analyse) {
-			dprintf(STDERR_FILENO, "DEBUG_ANALYSE,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PATHS:
 		if (level <= debug_analyse_paths) {
-			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PATHS,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PATHS,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_ANALYSE_PHI:
 		if (level <= debug_analyse_phi) {
-			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PHI,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_ANALYSE_PHI,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
 	case DEBUG_OUTPUT:
 		if (level <= debug_output) {
-			dprintf(STDERR_FILENO, "DEBUG_OUTPUT,0x%x:", level);
+			dprintf(STDERR_FILENO, "DEBUG_OUTPUT,0x%x %s,%d: ", level, func, line);
 			vdprintf(STDERR_FILENO, format, ap);
 		}
 		break;
