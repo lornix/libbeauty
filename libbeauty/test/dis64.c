@@ -2466,6 +2466,35 @@ exit1:
 	return ret;
 }
 
+int print_tip_label(struct self_s *self, int entry_point, int label_index)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	struct label_s *label;
+	int n;
+
+	label = &labels[label_redirect[label_index].redirect];
+	if (label->scope != 0 && label->tip_size > 0) {
+		for (n = 0; n < label->tip_size; n++) {
+			printf("label tip:0x%x node = 0x%x, inst = 0x%x, phi = 0x%x, operand = 0x%x, lap_pointer_first = 0x%x, lab_integer_first = 0x%x, lab_size_first = 0x%x\n",
+			label_index,
+			label->tip[n].node,
+			label->tip[n].inst_number,
+			label->tip[n].phi_number,
+			label->tip[n].operand,
+			label->tip[n].lab_pointer_first,
+			label->tip[n].lab_integer_first,
+			label->tip[n].lab_size_first);
+		}
+	}
+	return 0;
+}
+
 int redirect_mov_reg_reg_labels(struct self_s *self, struct external_entry_point_s *external_entry_point, int node)
 {
 	struct control_flow_node_s *nodes = external_entry_point->nodes;
@@ -4818,6 +4847,14 @@ int main(int argc, char *argv[])
 					printf("build_tip_table() failed\n");
 					exit(1);
 				}
+			}
+		}
+	}
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].variable_id; n++) {
+				tmp = print_tip_label(self, l, n);
 			}
 		}
 	}
