@@ -2311,7 +2311,7 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 	return 0;
 }
 
-int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, int operand, struct label_s *label, int pointer, int integer, int bit_size)
+int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, int operand, int label_index, int pointer, int integer, int bit_size)
 {
 	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
 	struct control_flow_node_s *nodes = external_entry_point->nodes;
@@ -2324,6 +2324,8 @@ int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, i
 	int redirect_value_id;
 	int tmp;
 	int index;
+	struct label_s *label;
+	label = &labels[label_redirect[label_index].redirect];
 
 	inst_log1 =  &inst_log_entry[inst];
 	instruction =  &inst_log1->instruction;
@@ -2339,6 +2341,16 @@ int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, i
 		label->tip[index].lab_pointer_first = pointer;
 		label->tip[index].lab_integer_first = integer;
 		label->tip[index].lab_size_first = bit_size;
+		printf("tip_add:0x%x:0x%x node = 0x%x, inst = 0x%x, phi = 0x%x, operand = 0x%x, lap_pointer_first = 0x%x, lab_integer_first = 0x%x, lab_size_first = 0x%x\n",
+			label_index,
+			label_redirect[label_index].redirect,
+			label->tip[index].node,
+			label->tip[index].inst_number,
+			label->tip[index].phi_number,
+			label->tip[index].operand,
+			label->tip[index].lab_pointer_first,
+			label->tip[index].lab_integer_first,
+			label->tip[index].lab_size_first);
 	} else if (phi) {
 
 	} else {
@@ -2374,37 +2386,29 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 
 		case MOV:
 			value_id = inst_log1->value1.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value3.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
 		case LOAD:
 			value_id = inst_log1->value1.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 1, 0, instruction->srcB.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 1, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
 		case STORE:
 			value_id = inst_log1->value1.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 1, 0, instruction->srcB.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 1, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
@@ -2426,24 +2430,19 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 		case SEX:
 		case ICMP:
 			value_id = inst_log1->value1.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 2, label, 0, 0, instruction->srcB.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 0, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
 		case RET:
 			value_id = inst_log1->value1.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, label, 0, 0, instruction->srcA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value3.value_id;
-			label = &labels[label_redirect[value_id].redirect];
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, label, 0, 0, instruction->dstA.value_size);
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
@@ -2479,7 +2478,8 @@ int print_tip_label(struct self_s *self, int entry_point, int label_index)
 	int n;
 
 	label = &labels[label_redirect[label_index].redirect];
-	if (label->scope != 0 && label->tip_size > 0) {
+	if ((label->scope != 0) && (label->tip_size > 0) &&
+		(label_redirect[label_index].redirect == label_index)) {
 		for (n = 0; n < label->tip_size; n++) {
 			printf("label tip:0x%x node = 0x%x, inst = 0x%x, phi = 0x%x, operand = 0x%x, lap_pointer_first = 0x%x, lab_integer_first = 0x%x, lab_size_first = 0x%x\n",
 			label_index,
