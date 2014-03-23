@@ -2351,6 +2351,10 @@ int tip_add(struct self_s *self, int entry_point, int node, int inst, int phi, i
 			label->tip[index].lab_pointer_first,
 			label->tip[index].lab_integer_first,
 			label->tip[index].lab_size_first);
+		if (label_index == 0) {
+			debug_print(DEBUG_MAIN, 1, "tip_add: ERROR: label_index should not be zero\n");
+			exit(1);
+		}
 	} else if (phi) {
 
 	} else {
