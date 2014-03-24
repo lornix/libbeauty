@@ -2509,8 +2509,8 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 		case RET:
 			value_id = inst_log1->value1.value_id;
 			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
-			value_id = inst_log1->value3.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
+			//value_id = inst_log1->value3.value_id;
+			//tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
