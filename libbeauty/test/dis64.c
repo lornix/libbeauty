@@ -1792,6 +1792,70 @@ int assign_labels_to_src(struct self_s *self, int entry_point, int node)
 				break;
 			}
 
+			switch (instruction->srcB.store) {
+			case STORE_DIRECT:
+				memset(&label, 0, sizeof(struct label_s));
+				if (instruction->srcB.indirect == IND_MEM) {
+					label.scope = 3;
+					label.type = 1;
+					label.lab_pointer = 1;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				} else if (instruction->srcB.relocated) {
+					label.scope = 3;
+					label.type = 2;
+					label.lab_pointer = 0;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				} else {
+					label.scope = 3;
+					label.type = 3;
+					label.lab_pointer = 0;
+					label.value = instruction->srcB.index;
+					label.size_bits = instruction->srcB.value_size;
+				}
+				
+				inst_log1->value2.value_id = variable_id;
+				label_redirect[variable_id].redirect = variable_id;
+				labels[variable_id].scope = label.scope;
+				labels[variable_id].type = label.type;
+				labels[variable_id].lab_pointer += label.lab_pointer;
+				labels[variable_id].value = label.value;
+				labels[variable_id].size_bits = label.size_bits;
+				debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given value_id = 0x%"PRIx64"\n",
+					entry_point, inst,
+					inst_log1->value2.value_id); 
+				variable_id++;
+				break;
+			case STORE_REG:
+				/* FIXME: TODO*/
+				switch(instruction->srcB.indirect) {
+				case IND_DIRECT:
+					inst_log1->value2.value_id = 
+						reg_tracker[instruction->srcB.index];
+					debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcA given value_id = 0x%"PRIx64"\n",
+						entry_point, inst,
+						inst_log1->value2.value_id);
+					break;
+				case IND_STACK:
+					stack_address = inst_log1->value2.indirect_init_value + inst_log1->value2.indirect_offset_value;
+					debug_print(DEBUG_MAIN, 1, "assign_id: stack_address = 0x%"PRIx64"\n", stack_address);
+					memory = search_store(
+						external_entry_point->process_state.memory_stack,
+						stack_address,
+						inst_log1->instruction.srcB.indirect_size);
+					if (memory) {
+						if (memory->value_id) {
+							inst_log1->value2.value_id = memory->value_id;
+							debug_print(DEBUG_MAIN, 1, "Inst 0x%x:0x%04x: srcB direct given value_id = 0x%"PRIx64"\n",
+								entry_point, inst,
+								inst_log1->value2.value_id); 
+						}
+					}
+				}
+				break;
+			}
+
 			/* Used to update the reg_tracker while stepping through the assign src */
 			switch (instruction->dstA.store) {
 			case STORE_DIRECT:
