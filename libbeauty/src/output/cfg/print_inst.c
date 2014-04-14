@@ -202,7 +202,6 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 		break;
 	case ADD:
 	case ADC:
-	case GEP1:
 	case SUB:
 	case SBB:
 	case MUL:
@@ -234,6 +233,39 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 			store_table[instruction->srcB.store],
 			instruction->srcB.index,
 			instruction->srcB.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",
+			store_table[instruction->dstA.store],
+			instruction->dstA.index,
+			instruction->dstA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+		ret = 0;
+		break;
+	case GEP1:
+		if (instruction->srcA.indirect ||
+			(instruction->srcB.indirect) ||
+			(instruction->dstA.indirect)) {
+			ret = 1;
+			break;
+		}
+		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+			store_table[instruction->srcA.store],
+			instruction->srcA.index,
+			instruction->srcA.value_size);
+		tmp = string_cat(string, buffer, strlen(buffer));
+
+		if (instruction->srcB.index > INT64_MAX) {
+			tmp = snprintf(buffer, 1023, " %s-0x%"PRIx64"/%d,",
+				store_table[instruction->srcB.store],
+				-instruction->srcB.index,
+				instruction->srcB.value_size);
+		} else {
+			tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d,",
+				store_table[instruction->srcB.store],
+				instruction->srcB.index,
+				instruction->srcB.value_size);
+		}
 		tmp = string_cat(string, buffer, strlen(buffer));
 
 		tmp = snprintf(buffer, 1023, " %s0x%"PRIx64"/%d",

@@ -2734,6 +2734,7 @@ int change_add_to_gep1(struct self_s *self, struct external_entry_point_s *exter
 				(labels[value_id2].lab_pointer == 0)) {
 				instruction->opcode = GEP1;
 				labels[value_id2].value = -labels[value_id2].value;
+				instruction->srcB.index = -instruction->srcB.index;
 			}
 			break;
 		default:
