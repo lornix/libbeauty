@@ -2427,6 +2427,21 @@ exit1:
 	return 0;
 }
 
+int is_pointer_reg(struct operand_s *operand) {
+
+	if ((operand->store == 1) &&
+		(operand->index >= REG_SP) && 
+		(operand->index <= REG_BP)) {
+		return 1;
+	}
+	return 0;
+}
+
+/* The TIP table is build initially to identify pointers first.
+ * It can do this from the LOAD and STORE instructions.
+ * It can also do this by analysing instructions that have stack pointers as operands.
+ * value_id == 3 is the EIP on the stack.
+ */
 int build_tip_table(struct self_s *self, int entry_point, int node)
 {
 	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
@@ -2442,6 +2457,10 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 	int ret = 1;
 	int tmp;
 	int value_id;
+	int is_pointer = 0;
+	int is_pointer1 = 0;
+	int is_pointer2 = 0;
+	int is_pointer3 = 0;
 
 	inst = nodes[node].inst_start;
 	do {
@@ -2454,29 +2473,44 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 
 		case MOV:
 			value_id = inst_log1->value1.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
+			is_pointer1 = is_pointer_reg(&(instruction->srcA));
+			is_pointer2 = is_pointer_reg(&(instruction->dstA));
+			is_pointer = is_pointer1 | is_pointer2;
+			if (value_id == 3) is_pointer = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, is_pointer, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value3.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
+			if (value_id == 3) is_pointer = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, is_pointer, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
 		case LOAD:
+			/* If the destination is a pointer register, the source must also be a pointer */
+			is_pointer1 = is_pointer3 = is_pointer_reg(&(instruction->dstA));
+			is_pointer2 = 0;
 			value_id = inst_log1->value1.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
+			if (value_id == 3) is_pointer1 = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, is_pointer, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
+			if (value_id == 3) is_pointer2 = 1;
 			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 1, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
+			if (value_id == 3) is_pointer3 = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, is_pointer, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
 		case STORE:
+			/* If the source is a pointer register, the destination must also be a pointer */
+			is_pointer1 = is_pointer3 = is_pointer_reg(&(instruction->srcA));
 			value_id = inst_log1->value1.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
+			if (value_id == 3) is_pointer1= 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, is_pointer1, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
 			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 1, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
+			if (value_id == 3) is_pointer3 = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, is_pointer3, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
@@ -2498,11 +2532,17 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 		case SEX:
 		case ICMP:
 			value_id = inst_log1->value1.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 0, instruction->srcA.value_size);
+			is_pointer = is_pointer_reg(&(instruction->srcA));
+			if (value_id == 3) is_pointer = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, is_pointer, 0, instruction->srcA.value_size);
 			value_id = inst_log1->value2.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, 0, 0, instruction->srcB.value_size);
+			is_pointer = is_pointer_reg(&(instruction->srcB));
+			if (value_id == 3) is_pointer = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 2, value_id, is_pointer, 0, instruction->srcB.value_size);
 			value_id = inst_log1->value3.value_id;
-			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, 0, 0, instruction->dstA.value_size);
+			is_pointer = is_pointer_reg(&(instruction->dstA));
+			if (value_id == 3) is_pointer = 1;
+			tmp = tip_add(self, entry_point, node, inst, 0, 3, value_id, is_pointer, 0, instruction->dstA.value_size);
 			ret = 0;
 			break;
 
@@ -4927,6 +4967,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#if 1
 	/* Change ADD to GEP1 where the ADD involves pointers */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
@@ -4943,6 +4984,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+#endif
+
+#if 0
 	/* Discover pointer types */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
@@ -4960,19 +5004,20 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	print_dis_instructions(self);
+#endif
+	//print_dis_instructions(self);
 #if 1
 	/* Dump the labels table */
 	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
 		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
-			for (n = 0x100; n < 0x130; n++) {
+			for (n = 0x1; n < 0x130; n++) {
 				struct label_s *label;
 				tmp = external_entry_points[l].label_redirect[n].redirect;
 				label = &(external_entry_points[l].labels[tmp]);
-				printf("Label 0x%x:", n);
 				if (label->scope) {
+					printf("Label 0x%x:", n);
 					tmp = label_to_string(label, buffer, 1023);
-					printf("%s/0x%lx,0x%lx, 0x%lx\n",
+					printf("%s/0x%lx,ps=0x%lx, lp=0x%lx\n",
 						buffer,
 						label->size_bits,
 						label->pointer_type_size_bits,
