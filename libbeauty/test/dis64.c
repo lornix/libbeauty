@@ -2573,6 +2573,32 @@ exit1:
 	return ret;
 }
 
+int process_tip_label(struct self_s *self, int entry_point, int label_index)
+{
+	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
+	struct control_flow_node_s *nodes = external_entry_point->nodes;
+	struct inst_log_entry_s *inst_log_entry = self->inst_log_entry;
+	struct label_redirect_s *label_redirect = external_entry_point->label_redirect;
+	struct label_s *labels = external_entry_point->labels;
+	struct inst_log_entry_s *inst_log1;
+	struct instruction_s *instruction;
+	struct label_s *label;
+	int n;
+
+	label = &labels[label_redirect[label_index].redirect];
+	if ((label->scope != 0) && (label->tip_size > 0) &&
+		(label_redirect[label_index].redirect == label_index)) {
+		for (n = 0; n < label->tip_size; n++) {
+			if (label->tip[n].lab_pointer_first) {
+				label->size_bits = label->tip[n].lab_size_first;
+				label->pointer_type_size_bits = 64;
+				label->lab_pointer += label->tip[n].lab_pointer_first;
+			}
+		}
+	}
+	return 0;
+}
+
 int print_tip_label(struct self_s *self, int entry_point, int label_index)
 {
 	struct external_entry_point_s *external_entry_point = &(self->external_entry_points[entry_point]);
@@ -4955,6 +4981,14 @@ int main(int argc, char *argv[])
 					printf("build_tip_table() failed\n");
 					exit(1);
 				}
+			}
+		}
+	}
+
+	for (l = 0; l < EXTERNAL_ENTRY_POINTS_MAX; l++) {
+		if (external_entry_points[l].valid && external_entry_points[l].type == 1) {
+			for(n = 1; n < external_entry_points[l].variable_id; n++) {
+				tmp = process_tip_label(self, l, n);
 			}
 		}
 	}
