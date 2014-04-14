@@ -2,7 +2,7 @@ include $(top_srcdir)/misc/Makefile.common
 
 #AM_CPPFLAGS = -I$(top_srcdir)/src/input
 AM_CFLAGS = -O0 -g3 -Wall -fno-rtti
-AM_CXXFLAGS = -O0 -g3 -Wall -lLLVM-3.5svn -fno-rtti
+AM_CXXFLAGS = -O0 -g3 -Wall -lLLVM-3.5svn -fno-rtti -std=c++11
 #CFLAGS = -O0 -g3 -Wall
 
 #modulesdir = $(pkglibdir)/instruction_decoder

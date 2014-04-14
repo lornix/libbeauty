@@ -767,7 +767,7 @@ int LLVM_ir_export::output(struct self_s *self)
 				}
 			}
 			std::string ErrorInfo;
-			raw_fd_ostream OS(output_filename, ErrorInfo, sys::fs::F_Binary);
+			raw_fd_ostream OS(output_filename, ErrorInfo, llvm::sys::fs::F_None);
 
 			if (!ErrorInfo.empty())
 				return -1;

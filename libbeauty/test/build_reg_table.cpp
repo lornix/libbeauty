@@ -87,8 +87,8 @@ int build_reg_table() {
 	OwningPtr<MCSymbolizer> Symbolizer(
 		TheTarget->createMCSymbolizer(TripleName, GetOpInfo, SymbolLookUp, DisInfo,
 			Ctx, RelInfo.take()));
-	DisAsm->setSymbolizer(Symbolizer);
-	DisAsm->setupForSymbolicDisassembly(GetOpInfo, SymbolLookUp, DisInfo, Ctx, RelInfo);
+	//DisAsm->setSymbolizer(Symbolizer);
+	//DisAsm->setupForSymbolicDisassembly(GetOpInfo, SymbolLookUp, DisInfo, Ctx, RelInfo);
 
 	// Set up the instruction printer.
 	int AsmPrinterVariant = MAI->getAssemblerDialect();

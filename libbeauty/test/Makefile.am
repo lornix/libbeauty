@@ -3,7 +3,7 @@ include $(top_srcdir)/misc/Makefile.common
 #AM_CFLAGS = -I$(top_srcdir)/test -I/usr/include/llvm-c-3.2 -I/usr/include/llvm-3.2 -O0 -g3 -Wall -fno-rtti
 AM_CFLAGS = -I$(top_srcdir)/test -I/usr/local/include/llvm-c -I/usr/local/include/llvm -O0 -g3 -Wall -fno-rtti
 #AM_CXXFLAGS = -I$(top_srcdir)/test -I/usr/include/llvm-c-3.2 -I/usr/include/llvm-3.2 -O0 -g3 -Wall -fno-rtti
-AM_CXXFLAGS = -I$(top_srcdir)/test -I/usr/local/include/llvm-c -I/usr/local/include/llvm -O0 -g3 -Wall -fno-rtti
+AM_CXXFLAGS = -I$(top_srcdir)/test -I/usr/local/include/llvm-c -I/usr/local/include/llvm -O0 -g3 -Wall -fno-rtti -std=c++11
 
 #bin_PROGRAMS = dis32 dis64 bf
 #noinst_PROGRAMS = dis64 test_id test_id_arm mem test_case

@@ -1,6 +1,6 @@
 include $(top_srcdir)/misc/Makefile.common
 
-AM_CPPFLAGS = -O0 -g3 -Wall -I/usr/local/include/llvm -L/usr/local/lib/
+AM_CPPFLAGS = -O0 -g3 -Wall -I/usr/local/include/llvm -L/usr/local/lib/ -std=c++11
 #AM_CFLAGS = -O0 -g3 -Wall
 #CFLAGS = -O0 -g3 -Wall
 

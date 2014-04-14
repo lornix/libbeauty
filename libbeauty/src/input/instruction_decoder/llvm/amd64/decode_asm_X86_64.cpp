@@ -119,11 +119,11 @@ int DecodeAsmX86_64::setup() {
 	if (!RelInfo)
 		return 1;
 
-	OwningPtr<MCSymbolizer> Symbolizer(
+	std::unique_ptr<MCSymbolizer> Symbolizer(
 		TheTarget->createMCSymbolizer(TripleName, GetOpInfo, SymbolLookUp, DisInfo,
 			Ctx, RelInfo.take()));
-	DisAsm->setSymbolizer(Symbolizer);
-	DisAsm->setupForSymbolicDisassembly(GetOpInfo, SymbolLookUp, DisInfo, Ctx, RelInfo);
+	//DisAsm->setSymbolizer(Symbolizer);
+	//DisAsm->setupForSymbolicDisassembly(GetOpInfo, SymbolLookUp, DisInfo, Ctx, RelInfo);
 
 	// Set up the instruction printer.
 	int AsmPrinterVariant = MAI->getAssemblerDialect();
