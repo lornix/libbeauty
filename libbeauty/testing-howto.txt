@@ -1,4 +1,5 @@
 To run the tests, execute this in the base libbeauty directory where lib.site.cfg exists. 
 You need to define the environmental variable LLVM_BASE.
+You need to define the environmental variable LIBBEAUTY_BASE.
 
 $LLVM_BASE/utils/lit/lit.py -s -v .
