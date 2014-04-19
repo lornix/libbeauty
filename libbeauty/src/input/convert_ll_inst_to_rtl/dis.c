@@ -759,7 +759,8 @@ int convert_ll_inst_to_rtl(struct self_s *self, struct instruction_low_level_s *
 		instruction = &dis_instructions->instruction[dis_instructions->instruction_number];	
 		instruction->opcode = CALL;
 		instruction->flags = 0;
-		convert_operand(self, ll_inst->address, &(ll_inst->srcA), 0, &(instruction->srcA));
+		/* Note: ll_inst->srcB due to the way opcode_form == 1 is processed. */
+		convert_operand(self, ll_inst->address, &(ll_inst->srcB), 0, &(instruction->srcA));
 		instruction->dstA.store = STORE_REG;
 		instruction->dstA.indirect = IND_DIRECT;
 		instruction->dstA.indirect_size = 64;
