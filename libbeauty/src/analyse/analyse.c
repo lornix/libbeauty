@@ -1978,10 +1978,7 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 				if (IND_MEM == instruction->srcA.indirect) {
 					debug_print(DEBUG_ANALYSE, 1, "CALL: srcA Illegal indirect\n");
 					return 1;
-				} else {
-					value_id = inst_log1->value1.value_id;
 				}
-				tmp = register_label(entry_point, inst, 1, value_id, inst_log_entry, label_redirect, labels);
 				break;
 			case CMP:
 			case TEST:
