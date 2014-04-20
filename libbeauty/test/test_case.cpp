@@ -143,8 +143,6 @@ int analyzeLine(const char* src, char* dst)
 
 	dst[validchar] = '\0';
 
-	outs() << "validchar:" << validchar << "   tokens:" << tokens << "\n";
-
 	return tokens;
 }
 
@@ -181,7 +179,6 @@ int main(int argc, char *argv[])
 
 		while (pos != -1) {
 			test_data[i] = getHexToken(buf, ' ', &pos);
-			outs() << "Test Data " << i << " [" << test_data[i] << "]\n";
 			i++;
 		}
 

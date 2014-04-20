@@ -73,14 +73,34 @@ char *dis_flags_table[] = { " ", "f" };
 uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
-int debug_dis64 = 1;
-int debug_input_bfd = 1;
-int debug_input_dis = 1;
-int debug_exe = 1;
-int debug_analyse = 1;
-int debug_analyse_paths = 1;
-int debug_analyse_phi = 1;
-int debug_output = 1;
+int debug_dis64 = 0;
+int debug_input_bfd = 0;
+int debug_input_dis = 0;
+int debug_exe = 0;
+int debug_analyse = 0;
+int debug_analyse_paths = 0;
+int debug_analyse_phi = 0;
+int debug_output = 0;
+
+void setLogLevel()
+{
+	if (getenv("ENABLE_DEBUG_DIS64"))
+		debug_dis64 = 1;
+	if (getenv("ENABLE_DEBUG_INPUT_BFD"))
+		debug_input_bfd = 1;
+	if (getenv("ENABLE_DEBUG_INPUT_DIS"))
+		debug_input_dis = 1;
+	if (getenv("ENABLE_DEBUG_EXE"))
+		debug_exe = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE"))
+		debug_analyse = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE_PATHS"))
+		debug_analyse_paths = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE_PHI"))
+		debug_analyse_phi = 1;
+	if (getenv("ENABLE_DEBUG_OUTPUT"))
+		debug_output = 1;
+}
 
 void dbg_print(const char* func, int line, int module, int level, const char *format, ...)
 {
@@ -4082,6 +4102,7 @@ int main(int argc, char *argv[])
 	char *buffer = NULL;
 
 	buffer = calloc(1,1024);
+	setLogLevel();
 
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 

@@ -96,14 +96,14 @@ uint64_t inst_log = 1;	/* Pointer to the current free instruction log entry. */
 //struct self_s *self = NULL;
 
 /* debug: 0 = no debug output. >= 1 is more debug output */
-int debug_dis64 = 1;
-int debug_input_bfd = 1;
-int debug_input_dis = 1;
-int debug_exe = 1;
-int debug_analyse = 1;
-int debug_analyse_paths = 1;
-int debug_analyse_phi = 1;
-int debug_output = 1;
+int debug_dis64 = 0;
+int debug_input_bfd = 0;
+int debug_input_dis = 0;
+int debug_exe = 0;
+int debug_analyse = 0;
+int debug_analyse_paths = 0;
+int debug_analyse_phi = 0;
+int debug_output = 0;
 
 struct test_data_s {
 	int	valid;
@@ -635,6 +635,26 @@ int disassemble(void *handle_void, struct dis_instructions_s *dis_instructions, 
 }
 #endif
 
+void setLogLevel()
+{
+	if (getenv("ENABLE_DEBUG_DIS64"))
+		debug_dis64 = 1;
+	if (getenv("ENABLE_DEBUG_INPUT_BFD"))
+		debug_input_bfd = 1;
+	if (getenv("ENABLE_DEBUG_INPUT_DIS"))
+		debug_input_dis = 1;
+	if (getenv("ENABLE_DEBUG_EXE"))
+		debug_exe = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE"))
+		debug_analyse = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE_PATHS"))
+		debug_analyse_paths = 1;
+	if (getenv("ENABLE_DEBUG_ANALYSE_PHI"))
+		debug_analyse_phi = 1;
+	if (getenv("ENABLE_DEBUG_OUTPUT"))
+		debug_output = 1;
+}
+
 int main(int argc, char *argv[])
 {
 	int n,m,l;
@@ -657,6 +677,8 @@ int main(int argc, char *argv[])
 	string1.max = 1023;
 	string1.string[0] = 0;
 	int result_count;
+
+	setLogLevel();
 
 	if (argc != 1) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
