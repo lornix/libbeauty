@@ -482,6 +482,8 @@ int LLVM_ir_export::add_instruction(struct self_s *self, Module *mod, Value **va
 		}
 		printf("srcA = %p, srcB = %p\n", srcA, srcB);
 		// FIXME: temporary comment out.
+		srcA->dump();
+		srcB->dump();
 		dstA = new StoreInst(srcA, srcB, false, bb[node]);
 		break;
 	case 0x2F:  // GEP1
@@ -703,15 +705,22 @@ int LLVM_ir_export::output(struct self_s *self)
 				int size_bits;
 				/* local_stack */
 				if ((labels[m].scope == 1) && 
-					(labels[m].type == 2)) { 
+					(labels[m].type == 2)) {
 					size_bits = labels[m].size_bits;
 					/* FIXME: Make size_bits set correctly in the label */
 					//if (!size_bits) size_bits = 32;
 					printf("Creating alloca for label 0x%x, size_bits = 0x%x\n", m, size_bits);
 					tmp = label_to_string(&labels[m], buffer, 1023);
-					AllocaInst* ptr_local = new AllocaInst(IntegerType::get(mod->getContext(), size_bits), buffer, bb[1]);
-					ptr_local->setAlignment(size_bits >> 3);
-					value[m] = ptr_local;
+					if (labels[m].lab_pointer) {
+						PointerType* PointerTy_1 = PointerType::get(IntegerType::get(mod->getContext(), size_bits), 0);
+						AllocaInst* ptr_local = new AllocaInst(PointerTy_1, buffer, bb[1]);
+						ptr_local->setAlignment(size_bits >> 3);
+						value[m] = ptr_local;
+					} else {
+						AllocaInst* ptr_local = new AllocaInst(IntegerType::get(mod->getContext(), size_bits), buffer, bb[1]);
+						ptr_local->setAlignment(size_bits >> 3);
+						value[m] = ptr_local;
+					}
 				}
 			}
 				
