@@ -800,7 +800,7 @@ void *bf_test_open_file(const char *fn)
 	/* Open the file with libbfd */
 	b = bfd_openr(fn, NULL);
 	if ( b == NULL ) {
-		debug_print(DEBUG_INPUT_BFD, 1, "Error opening %s:%s\n",
+		printf("Error opening %s:%s\n",
 				fn, bfd_err());
 		return NULL;
 	}

@@ -113,7 +113,7 @@ int process_block(struct self_s *self, struct process_state_s *process_state, ui
 		/* Update EIP */
 		offset = memory_reg[2].offset_value;
 		if (offset >= eip_offset_limit) {
-			debug_print(DEBUG_EXE, 1, "Over ran offset=0x%"PRIx64" >= eip_offset_limit=0x%"PRIx64" \n",
+			printf("Over ran offset=0x%"PRIx64" >= eip_offset_limit=0x%"PRIx64" \n",
 				offset, eip_offset_limit);
 			return 1;
 		}

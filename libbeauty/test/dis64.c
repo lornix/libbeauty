@@ -4363,7 +4363,7 @@ int main(int argc, char *argv[])
 						err = process_block(self, process_state, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
 						if (err) {
-							debug_print(DEBUG_MAIN, 1, "process_block failed\n");
+							printf("process_block failed\n");
 							return err;
 						}
 						entry_point[n].used = 0;
