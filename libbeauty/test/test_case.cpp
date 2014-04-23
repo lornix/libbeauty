@@ -163,9 +163,13 @@ int main(int argc, char *argv[])
 	uint8_t test_data[MAX_TEST_DATA] = {0};
 
 	FILE* fin = NULL;
+	if (argc != 2) {
+		outs() << "usage: test_case filename\n";
+		exit(0);
+	}
 	if (argv[1]) {
 		if ((fin = fopen(argv[1], "r")) < 0) {
-			outs() << "usage: test_case filename\n" << argv[1];
+			outs() << "File not found: " << argv[1] << "\n";
 			exit(0);
 		}
 	}
