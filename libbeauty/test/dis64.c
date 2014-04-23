@@ -4358,7 +4358,7 @@ int main(int argc, char *argv[])
 						memory_reg[2].offset_value = entry_point[n].eip_offset_value;
 						inst_log_prev = entry_point[n].previous_instuction;
 						not_finished = 1;
-						debug_print(DEBUG_MAIN, 1, "LOGS: EIPinit = 0x%"PRIx64"\n", memory_reg[2].init_value);
+						debug_print(DEBUG_MAIN, 1, "LOGS: EIPinit   = 0x%"PRIx64"\n", memory_reg[2].init_value);
 						debug_print(DEBUG_MAIN, 1, "LOGS: EIPoffset = 0x%"PRIx64"\n", memory_reg[2].offset_value);
 						err = process_block(self, process_state, inst_log_prev, inst_size);
 						/* clear the entry after calling process_block */
