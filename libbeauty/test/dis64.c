@@ -4133,9 +4133,9 @@ int main(int argc, char *argv[])
 	debug_print(DEBUG_MAIN, 1, "Hello loops 0x%x\n", 2000);
 
 	if (argc != 2) {
-		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
-		debug_print(DEBUG_MAIN, 1, "Usage: dis64 filename\n");
-		debug_print(DEBUG_MAIN, 1, "Where \"filename\" is the input .o file\n");
+		printf("Syntax error\n");
+		printf("Usage: dis64 filename\n");
+		printf("Where \"filename\" is the input .o file\n");
 		exit(1);
 	}
 	file = argv[1];
