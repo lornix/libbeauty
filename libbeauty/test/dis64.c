@@ -2574,6 +2574,13 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 			ret = 0;
 			break;
 
+		case JMP:
+			/* No value_id with JMP */
+			/* FIXME: Test the case where the operand is a register. */
+			/*        That will probably be the JMPT case */
+			ret = 0;
+			break;
+
 		default:
 			debug_print(DEBUG_MAIN, 1, "build_tip_table failed for Inst:0x%x:0x%04x, OP 0x%x\n",
 				entry_point, inst, instruction->opcode);
