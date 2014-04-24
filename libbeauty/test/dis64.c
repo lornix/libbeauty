@@ -2581,6 +2581,12 @@ int build_tip_table(struct self_s *self, int entry_point, int node)
 			ret = 0;
 			break;
 
+		case BC:
+			value_id = inst_log1->value1.value_id;
+			tmp = tip_add(self, entry_point, node, inst, 0, 1, value_id, 0, 1, instruction->srcA.value_size);
+			ret = 0;
+			break;
+
 		default:
 			debug_print(DEBUG_MAIN, 1, "build_tip_table failed for Inst:0x%x:0x%04x, OP 0x%x\n",
 				entry_point, inst, instruction->opcode);
