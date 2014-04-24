@@ -1880,7 +1880,9 @@ int scan_for_labels_in_function_body(struct self_s *self, int entry_point_index)
 			continue;
 		}
 
+		debug_print(DEBUG_ANALYSE, 1, "scan_for_labels:Scanning node 0x%x\n", node);
 		inst = nodes[node].inst_start;
+		found = 0;
 		/* FIXME: Need to iterate over the PHI instructions also. */
 		do {
 			inst_log1 =  &inst_log_entry[inst];
