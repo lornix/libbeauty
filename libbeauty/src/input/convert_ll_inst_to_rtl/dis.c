@@ -101,7 +101,7 @@ int convert_operand(struct self_s *self, uint64_t base_address, struct operand_l
 	struct reloc_table_s *reloc_table_entry;
 	int tmp;
 
-	printf("convert_operand: kind = 0x%x\n", ll_operand->kind);
+	debug_print(DEBUG_INPUT_DIS, 1, "convert_operand: kind = 0x%x\n", ll_operand->kind);
 	switch(ll_operand->kind) {
 	case KIND_EMPTY:
 		inst_operand->store = 0;
@@ -127,7 +127,7 @@ int convert_operand(struct self_s *self, uint64_t base_address, struct operand_l
 		inst_operand->relocated = 0;
 //		inst_operand->value_size = ll_operand->operand[operand_number].size;
 		inst_operand->value_size = ll_operand->size;
-		printf("convert_operand: relocate: base_address = 0x%lx, offset = 0x%lx, size = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "convert_operand: relocate: base_address = 0x%lx, offset = 0x%lx, size = 0x%x\n",
 			base_address,
 			ll_operand->operand[operand_number].offset,
 			ll_operand->operand[operand_number].size);
@@ -137,7 +137,8 @@ int convert_operand(struct self_s *self, uint64_t base_address, struct operand_l
 				ll_operand->operand[operand_number].size >> 3,
 				&reloc_table_entry);
 			if (!tmp) {
-				printf("convert_operand: relocate found area=0x%lx, value = 0x%lx\n", reloc_table_entry->relocated_area, reloc_table_entry->symbol_value);
+				debug_print(DEBUG_INPUT_DIS, 1, "convert_operand: relocate found area=0x%lx, value = 0x%lx\n",
+					reloc_table_entry->relocated_area, reloc_table_entry->symbol_value);
 				inst_operand->relocated = 2;
 				inst_operand->relocated_area = reloc_table_entry->relocated_area;
 				inst_operand->relocated_index = reloc_table_entry->symbol_value;
@@ -167,7 +168,7 @@ int convert_operand(struct self_s *self, uint64_t base_address, struct operand_l
 			inst_operand->index = ll_operand->operand[operand_number].value;
 			inst_operand->relocated = 0;
 			inst_operand->value_size = ll_operand->operand[operand_number].size;
-			printf("convert_operand: relocate scale: operand =  0x%x, base_address = 0x%lx, offset = 0x%lx, size = 0x%x\n",
+			debug_print(DEBUG_INPUT_DIS, 1, "convert_operand: relocate scale: operand =  0x%x, base_address = 0x%lx, offset = 0x%lx, size = 0x%x\n",
 				operand_number,
 				base_address,
 				ll_operand->operand[operand_number].offset,
@@ -252,11 +253,11 @@ int convert_base(struct self_s *self, struct instruction_low_level_s *ll_inst, i
 	srcB_operand = &(ll_inst->srcB);
 	dstA_operand = &(ll_inst->dstA);
 	previous_operand = &operand_empty;
-	printf("KIND operand: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
+	debug_print(DEBUG_INPUT_DIS, 1, "KIND operand: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
 		srcA_operand->kind,
 		srcB_operand->kind,
 		dstA_operand->kind);
-	printf("KIND ll_inst: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
+	debug_print(DEBUG_INPUT_DIS, 1, "KIND ll_inst: srcA=0x%x, srcB=0x%x, dstA=0x%x\n",
 		ll_inst->srcA.kind,
 		ll_inst->srcB.kind,
 		ll_inst->dstA.kind);

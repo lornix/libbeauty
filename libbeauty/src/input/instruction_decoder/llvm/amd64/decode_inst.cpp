@@ -33,6 +33,9 @@
 #include "decode_inst.h"
 #include "opcodes.h"
 #include "decode_asm_X86_64.h"
+#include "rev.h"
+
+extern void dbg_print(const char* func, int line, int module, int level, const char *format, ...);
 
 namespace llvm {
 class Target;
@@ -45,26 +48,30 @@ void LLVMPrintTargets(void) {
 
 void LLVMDisasmInstructionPrint(int octets, uint8_t *buffer, int buffer_size, uint8_t *buffer1) {
 		int n;
-		outs() << format("LLVM DIS octets = 0x%x:", octets);
+		char str[256] = {0};
+		char tok[5] = {0};
+		sprintf(str, "LLVM DIS octets = 0x%x:", octets);
 		if (octets > buffer_size) {
 			octets = buffer_size;
 		}
 		for (n = 0; n < octets; n++) {
-			outs() << format("%02x ", buffer[n] & 0xff);
+			sprintf(tok, "%02x ", buffer[n] & 0xff);
+			strcat(str, tok);
 		}
-		outs() << format(":%s\n", buffer1);
+		strcat(str, (char*)buffer1);
+		debug_print(DEBUG_INPUT_DIS, 1, "%s\n", str);
 }
 
 LLVMDecodeAsmX86_64Ref LLVMNewDecodeAsmX86_64() {
 	DecodeAsmX86_64 *da = new DecodeAsmX86_64();
-	outs() << "LLVMDecodeAsmX86_64Ref = " << da << "\n";
+	debug_print(DEBUG_INPUT_DIS, 1, "LLVMDecodeAsmX86_64Ref = 0x%" PRIx64 "\n", da);
 	return (LLVMDecodeAsmX86_64Ref)da;
 }
 
 int LLVMSetupDecodeAsmX86_64(LLVMDecodeAsmX86_64Ref DCR) {
 	DecodeAsmX86_64 *da = (DecodeAsmX86_64*)DCR;
 	int tmp;
-	outs() << "LLVMDecodeAsmX86_64Ref = " << da << "\n";
+	debug_print(DEBUG_INPUT_DIS, 1, "LLVMDecodeAsmX86_64Ref = 0x%" PRIx64 "\n", da);
 	tmp = da->setup();
 	return tmp;
 }

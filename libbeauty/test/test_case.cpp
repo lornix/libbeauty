@@ -165,12 +165,12 @@ int main(int argc, char *argv[])
 	FILE* fin = NULL;
 	if (argc != 2) {
 		outs() << "usage: test_case filename\n";
-		exit(0);
+		exit(1);
 	}
 	if (argv[1]) {
 		if ((fin = fopen(argv[1], "r")) < 0) {
 			outs() << "File not found: " << argv[1] << "\n";
-			exit(0);
+			exit(1);
 		}
 	}
 
@@ -207,5 +207,9 @@ int main(int argc, char *argv[])
 			(char *)buffer1, 1023);
 	}
 
+	if(line)
+		free(line);
+	if(fin)
+		fclose(fin);
 	return 0;
 }

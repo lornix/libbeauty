@@ -82,6 +82,7 @@
 #include <convert_ll_inst_to_rtl.h>
 
 #define EIP_START 0x40000000
+#define MAX_INPUT_LEN 128
 
 //struct dis_instructions_s dis_instructions;
 uint8_t *inst;
@@ -109,8 +110,9 @@ struct test_data_s {
 	int	valid;
 	uint8_t bytes[16];
 	int bytes_size;
-	char *inst[10];
-	int inst_size;
+//	char *inst[10];
+//	int inst_size;
+	struct test_data_s* next;
 };
 
 //#define ADD 1
@@ -121,6 +123,7 @@ struct test_data_s {
 //#define NOP 6
 //#define SAR 7
 
+#if 0
 struct test_data_s test_data[] = {
 	{
 		.valid = 1,
@@ -579,8 +582,9 @@ struct test_data_s test_data[] = {
 		.inst_size = 1,
 	},
 };
+#endif
 
-#define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
+//#define test_data_no sizeof(test_data) / sizeof(struct test_data_s)
 
 void dbg_print(const char* func, int line, int module, int level, const char *format, ...)
 {
@@ -671,41 +675,181 @@ void setLogLevel()
 		debug_output = 1;
 }
 
+/* getHexToken()
+   Get next valid hexadecimal token from str starting at pos
+   str is a string of hex tokens separated by 'delimiter'
+   *pos is updated to  the position of start of the next valid token before return
+*/
+
+uint8_t getHexToken(const char* str, char delimiter, int* pos)
+{
+	uint8_t hex = 0;
+	int start = 0;
+	const char* ptr = str + *pos;
+
+	while (*ptr && *ptr != delimiter) {
+		if (*ptr == 'x' || *ptr == 'X') {
+			start = 1; }
+		else if (!start && *ptr == '0') {
+		}
+		else if (!start) {
+			return 0; //TODO: add case for decimal value if needed
+		}
+		else {
+			if (*ptr >= '0' && *ptr <= '9')
+				hex = (hex << 4) | (*ptr - '0');
+			else if (*ptr >= 'A' && *ptr <= 'F')
+				hex = (hex << 4) | (*ptr - 'A' + 0xA);
+			else if (*ptr >= 'a' && *ptr <= 'f')
+				hex = (hex << 4) | (*ptr - 'a' + 0xa);
+			else if (*ptr == 'x' || *ptr == 'X');
+			else {
+				printf("Invalid character!\n");
+				exit(0);
+			}
+		}
+
+		++*pos;
+		ptr++;
+	}
+
+	if (!*ptr)
+		*pos = -1;
+	else
+		++*pos;
+
+	return hex;
+}
+
+/* analyzeLine()
+   Get a trimmed version of src in dst without consecutive spaces, tabs and '#'
+   Return the number of valid characters in dst without the NULL terminator
+*/
+
+int analyzeLine(const char* src, char* dst)
+{
+	const char* ptr = src;
+	int validchar = 0;
+	int tokens = 0;
+	char lastchar = '\0';
+
+	while (*ptr) {
+		if (*ptr == '#' || *ptr == '\n') {
+			if (validchar && dst[validchar - 1] == ' ')
+				validchar--;
+			break;
+		}
+
+		if (validchar == 0) {
+			if (*ptr == ' ' || *ptr == EOF || *ptr == '\t') {
+				ptr++;
+				continue;
+			}
+		}
+
+		if ((*ptr == ' ' || *ptr == '\t') && (lastchar == ' ' || lastchar == '\t')) {
+			ptr++;
+			continue;
+		}
+
+		if (lastchar == '\0' || lastchar == ' ' || lastchar == '\t')
+			tokens++;
+
+		if (*ptr == '\t')
+			dst[validchar++] = ' ';
+		else
+			dst[validchar++] = *ptr;
+
+		lastchar = *ptr;
+		ptr++;
+	}
+
+	dst[validchar] = '\0';
+
+	return tokens;
+}
+
 int main(int argc, char *argv[])
 {
-	int n,m,l;
+	int n,m,l = 0;
 	int octets = 0;
 	int offset = 0;
 	int tmp;
 	struct self_s *self = NULL;
 	LLVMDisasmContextRef DC;
-	LLVMDecodeAsmContextRef DC2;
+//	LLVMDecodeAsmContextRef DC2;
 	LLVMDecodeAsmX86_64Ref DA;
 	struct dis_instructions_s dis_instructions;
 	uint8_t buffer1[1024];
 	uint8_t *buffer;
 	size_t buffer_size = 0;
-	const char *opcode_name = NULL;
-	void *inst;
-	int *test_result;
+//	const char *opcode_name = NULL;
+//	void *inst;
+//	int *test_result;
 	struct string_s string1;
 	string1.len = 0;
 	string1.max = 1023;
 	string1.string[0] = 0;
-	int result_count;
+//	int result_count;
+	int test_data_no = 0;
+
+	char buf[MAX_INPUT_LEN] = {0};
+	char* line = NULL;
+	size_t bufsize;
+	ssize_t len = 0;
+	int pos = 0, i = 0;
+	int test_data_size = 0;
+	struct test_data_s* test_data_head = NULL;
+	struct test_data_s* test_data_cur = NULL;
+	FILE* fin = NULL;
 
 	setLogLevel();
 
-	if (argc != 1) {
+	if (argc != 2) {
 		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
-		debug_print(DEBUG_MAIN, 1, "Usage: test_id\n");
+		debug_print(DEBUG_MAIN, 1, "Usage: test_id filename\n");
 		exit(1);
 	}
+	if (argv[1]) {
+		if ((fin = fopen(argv[1], "r")) < 0) {
+			printf("File not found: %s\n", argv[1]);
+			exit(1);
+		}
+	}
+
+	while ((len = getline(&line, &bufsize, fin)) != -1) {
+		pos = 0;
+		test_data_size = analyzeLine(line, buf);
+
+		if (test_data_size == 0)
+			continue;
+
+		if (test_data_head) {
+			test_data_cur->next = (struct test_data_s*) calloc(1, sizeof(struct test_data_s));
+			test_data_cur = test_data_cur->next;
+		} else {
+			test_data_cur = (struct test_data_s*) calloc(1, sizeof(struct test_data_s));
+			test_data_head = test_data_cur;
+		}
+
+		i = 0;
+		test_data_cur->valid = 1;
+		test_data_no++;
+
+		while (pos != -1) {
+			test_data_cur->bytes[i] = getHexToken(buf, ' ', &pos);
+			i++;
+		}
+
+		test_data_cur->bytes_size = i;
+	}
+
+	fclose(fin);
 
 	debug_print(DEBUG_MAIN, 1, "Setup ok\n");
-	debug_print(DEBUG_MAIN, 1, "size_of test_data = 0x%lx\n", sizeof(test_data));
+//	debug_print(DEBUG_MAIN, 1, "size_of test_data = 0x%lx\n", sizeof(test_data));
 	debug_print(DEBUG_MAIN, 1, "size_of struct test_data_s = 0x%lx\n", sizeof(struct test_data_s));
-	debug_print(DEBUG_MAIN, 1, "number of test_data entries = 0x%lx\n", sizeof(test_data) / sizeof(struct test_data_s));
+//	debug_print(DEBUG_MAIN, 1, "number of test_data entries = 0x%lx\n", sizeof(test_data) / sizeof(struct test_data_s));
 	debug_print(DEBUG_MAIN, 1, "test_data_no = 0x%lx\n", test_data_no);
 
 //	LLVMInitializeAllTargetInfos();
@@ -732,7 +876,7 @@ int main(int argc, char *argv[])
 	DC = LLVMCreateDisasm("x86_64-pc-linux-gnu", NULL,
 		0, NULL,
 		NULL);
-	printf("DC = %p\n", DC);
+	debug_print(DEBUG_MAIN, 1,"DC = %p\n", DC);
 	if (!DC) {
 		printf("LLVMCreateDisasm() failed\n");
 		exit(1);
@@ -758,17 +902,16 @@ int main(int argc, char *argv[])
 //	LLVMDecodeAsmOpcodesSource(DC); 
 
 	self = calloc(1, sizeof(struct self_s));
-	test_result = calloc(test_data_no, sizeof(int));
+//	test_result = calloc(test_data_no, sizeof(int));
 
-	for (l = 0; l < test_data_no; l++) {
-//	for (l = 3; l < 4; l++) {
-		if (!test_data[l].valid) {
+	for (test_data_cur = test_data_head; test_data_cur != NULL; test_data_cur = test_data_cur->next) {
+		if (!test_data_cur->valid) {
 			debug_print(DEBUG_MAIN, 1, "Test input data absent\n");
 		}
-		printf("\nSTART test data 0x%x\n", l);
+		debug_print(DEBUG_MAIN, 1, "\n****** START test data 0x%x ******\n", l);
 
-		buffer_size = test_data[l].bytes_size;
-		buffer = &(test_data[l].bytes[0]);
+		buffer_size = test_data_cur->bytes_size;
+		buffer = &(test_data_cur->bytes[0]);
 #if 0
 		tmp = bf_disassemble_init(handle_void, inst_size, inst);
 		debug_print(DEBUG_MAIN, 1, "disassemble att  : ");
@@ -788,7 +931,7 @@ int main(int argc, char *argv[])
 			buffer_size, offset,
 			(char *)buffer1, 1023);
 		LLVMDisasmInstructionPrint(octets, buffer, buffer_size, buffer1);
-		if (octets != test_data[l].bytes_size) {
+		if (octets != test_data_cur->bytes_size) {
 			tmp = octets;
 			octets = LLVMDisasmInstruction(DC, buffer + tmp,
 				buffer_size - tmp, offset,
@@ -801,7 +944,7 @@ int main(int argc, char *argv[])
 //			printf("%02x ", buffer[n]);
 //		}
 //		printf(":%s\n", buffer1);
-		opcode_name = NULL;
+//		opcode_name = NULL;
 		ll_inst->opcode = 0;
 		ll_inst->srcA.kind = KIND_EMPTY;
 		ll_inst->srcB.kind = KIND_EMPTY;
@@ -810,28 +953,29 @@ int main(int argc, char *argv[])
 			buffer_size, offset,
 			ll_inst);
 //		TSFlags = LLVMDecodeAsmGetTSFlags(DC2, opcode);
-		printf("LLVM DIS2 test_result = 0x%x\n", tmp);
+		debug_print(DEBUG_MAIN, 1, "LLVM DIS2 test_result = 0x%x\n", tmp);
 		if (tmp == 1) {
 			printf("FAILED TEST 0x%x : ", l);
-			test_result[l] = 1;
+//			test_result[l] = 1;
 			for (n = 0; n < buffer_size; n++) {
 				printf("%02x ", buffer[n]);
 			}
 			printf("\n");
 		}
 		if (!tmp) {
-			printf("LLVM DIS2 opcode = 0x%x:%s prec = 0x%x\n\n", ll_inst->opcode, "not yet", ll_inst->predicate);
+			debug_print(DEBUG_MAIN, 1, "LLVM DIS2 opcode = 0x%x:not yet predicate = 0x%x\n\n", ll_inst->opcode, ll_inst->predicate);
 			tmp = LLVMPrintInstructionDecodeAsmX86_64(DA, ll_inst);
 			tmp = convert_ll_inst_to_rtl(self, ll_inst, &dis_instructions);
 			if (tmp) {
 				printf("Unhandled instruction, not yet implemented convert\n");
-				test_result[l] = 1;
+//				test_result[l] = 1;
 			} else {
 				for (m = 0; m < dis_instructions.instruction_number; m++) {
 					string1.len = 0;
 					string1.string[0] = 0;
-					tmp = write_inst(self, &string1, &(dis_instructions.instruction[m]), m, NULL);
-					tmp = printf("result:    len=%zd:%s\n", string1.len, string1.string);
+					write_inst(self, &string1, &(dis_instructions.instruction[m]), m, NULL);
+					printf("result: len=%zd:%s\n", string1.len, string1.string);
+#if 0
 					if (test_data[l].inst_size == dis_instructions.instruction_number) {
 						tmp = printf("test data: len=%zd:%s\n", strlen(test_data[l].inst[m]), test_data[l].inst[m]);
 						tmp = strncmp(string1.string, test_data[l].inst[m], string1.len);
@@ -844,13 +988,15 @@ int main(int argc, char *argv[])
 							l, test_data[l].inst_size, dis_instructions.instruction_number);
 						test_result[l] = 2;
 					}
+#endif
 				}
+				printf("inst_size = %d\n", dis_instructions.instruction_number);
 			}	
 		}
-		printf("END test data 0x%x\n", l);
+		debug_print(DEBUG_MAIN, 1, "\n****** END test data 0x%x ******\n", l++);
 	
 	}
-
+#if 0
 	result_count = 0;
 	for (l = 0; l < test_data_no; l++) {
 		if (test_result[l]) {
@@ -861,7 +1007,14 @@ int main(int argc, char *argv[])
 	if (!result_count) {
 		printf("ALL TESTS PASSED!\n");
 	}
+#endif
 
+	while (test_data_head) {
+		test_data_cur = test_data_head;
+		test_data_head = test_data_head->next;
+		free(test_data_cur);
+	}
+	
 	return 0;
 
 }

@@ -115,7 +115,7 @@ int write_inst(struct self_s *self, struct string_s *string, struct instruction_
 	char buffer[1024];
 	struct external_entry_point_s *external_entry_points = self->external_entry_points;
 
-	printf("string len = 0x%x, max = 0x%x\n", string->len, string->max);
+	debug_print(DEBUG_OUTPUT, 1, "string len = 0x%x, max = 0x%x\n", string->len, string->max);
 
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->opcode);
 	debug_print(DEBUG_OUTPUT, 1, "opcode = 0x%x\n", instruction->flags);

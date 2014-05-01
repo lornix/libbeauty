@@ -40,7 +40,7 @@
 #define DEBUG_ANALYSE_PATHS 7
 #define DEBUG_ANALYSE_PHI 8
 
-void debug_print(const char* func, int line, int module, int level, const char *format, ...) __attribute__((__format__ (printf, 5, 6)));
+void dbg_print(const char* func, int line, int module, int level, const char *format, ...) __attribute__((__format__ (printf, 5, 6)));
 #define debug_print(module, level, format, ...) dbg_print(__FUNCTION__, __LINE__, module, level, format, ##__VA_ARGS__)
 
 #include <dis.h>
