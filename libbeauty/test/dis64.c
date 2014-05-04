@@ -1527,6 +1527,7 @@ int assign_labels_to_dst(struct self_s *self, int entry_point, int node)
 		inst_log1 =  &inst_log_entry[inst];
 		instruction =  &inst_log1->instruction;
 		/* returns 0 for id and label set. 1 for error */
+		printf("\nSTART\n");
 		debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
 		tmp  = assign_id_label_dst(self, entry_point, node, inst_log1, &label);
 		debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
@@ -3800,8 +3801,16 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 				inst_log1->value3.value_id,
 				inst_log1->value3.indirect_offset_value,
 				label);
+			debug_print(DEBUG_MAIN, 1, "value1 scope 0x%x, value2 scope 0x%x, value3 scope 0x%x\n",
+				inst_log1->value1.value_scope,
+				inst_log1->value2.value_scope,
+				inst_log1->value3.value_scope);
 			if (ret) {
 				debug_print(DEBUG_MAIN, 1, "Inst:0x%x, value3 unknown label\n", n);
+				debug_print(DEBUG_MAIN, 1, "value1 scope 0x%x, value2 scope 0x%x, value3 scope 0x%x\n",
+					inst_log1->value1.value_scope,
+					inst_log1->value2.value_scope,
+					inst_log1->value3.value_scope);
 			}
 			break;
 		default:
@@ -3918,6 +3927,7 @@ int assign_id_label_dst(struct self_s *self, int function, int n, struct inst_lo
 			debug_print(DEBUG_MAIN, 1, "ERROR: CALL with indirect dstA\n");
 			exit(1);
 		}
+		debug_print(DEBUG_MAIN, 1, "value3.value_scope = 0x%x\n", inst_log1->value3.value_scope);
 		memset(label, 0, sizeof(struct label_s));
 		ret = log_to_label(instruction->dstA.store,
 			instruction->dstA.indirect,
@@ -6106,7 +6116,7 @@ int main(int argc, char *argv[])
 			};
 		}
 	}
-	tmp = llvm_export(self);
+	//tmp = llvm_export(self);
 
 	bf_test_close_file(handle_void);
 	print_mem(memory_reg, 1);
