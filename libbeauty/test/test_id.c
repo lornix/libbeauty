@@ -806,8 +806,8 @@ int main(int argc, char *argv[])
 	setLogLevel();
 
 	if (argc != 2) {
-		debug_print(DEBUG_MAIN, 1, "Syntax error\n");
-		debug_print(DEBUG_MAIN, 1, "Usage: test_id filename\n");
+		printf("Syntax error\n");
+		printf("Usage: test_id filename\n");
 		exit(1);
 	}
 	if (argv[1]) {
