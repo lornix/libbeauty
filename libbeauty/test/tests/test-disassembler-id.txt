@@ -1,4 +1,4 @@
-# RUN: ./test_id input.txt | ./FileCheck input.txt
+# RUN: test_id %s | FileCheck %s
 
 # TEST CASE 0x1
 # addl    %edi, %eax
