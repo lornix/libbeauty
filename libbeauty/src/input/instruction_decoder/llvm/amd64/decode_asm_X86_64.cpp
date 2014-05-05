@@ -79,6 +79,7 @@ int DecodeAsmX86_64::setup() {
 	if (!TheTarget)
 		return 1;
 
+	/* FIXME: TheTarget */
 	debug_print(DEBUG_INPUT_DIS, 1, "TheTarget = 0x%" PRIx64 "\n", TheTarget);
 
 	const MCRegisterInfo *MRI = TheTarget->createMCRegInfo(TripleName);
@@ -320,7 +321,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	if (rep > 0) {
 		Size++;
 	}
-	printf("getInstruction Size = 0x%x\n", Size);
+	printf("getInstruction Size = 0x%lx\n", Size);
 	if (S != MCDisassembler::Success) {
 	// case MCDisassembler::Fail:
 	// case MCDisassembler::SoftFail:
@@ -349,7 +350,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 	int opcode_form = TSFlags & X86II::FormMask;
 	Name = IP->getOpcodeName(opcode);
 	const char *opcode_name = Name.data();
-	debug_print(DEBUG_INPUT_DIS, 1, "0x%lx:Opcode 0x%x\n", PC, opcode, new_helper[opcode].opcode);
+	debug_print(DEBUG_INPUT_DIS, 1, "0x%lx:Opcode 0x%x, %x\n", PC, opcode, new_helper[opcode].opcode);
 	debug_print(DEBUG_INPUT_DIS, 1, "Opcode Name: %s\n", opcode_name);
 	ll_inst->opcode = new_helper[opcode].opcode;
 	ll_inst->address = PC;
@@ -380,7 +381,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			ll_inst->srcA.operand[0].value = REG_AX;
 			ll_inst->srcA.operand[0].size = ll_inst->srcA.size;
 			ll_inst->srcA.operand[0].offset = 0;
-			debug_print(DEBUG_INPUT_DIS, 1, "DST0.0 reg = %al\n");
+			debug_print(DEBUG_INPUT_DIS, 1, "DST0.0 reg = al\n");
 			Operand = &Inst->getOperand(0);
 			if (Operand->isValid() &&
 				Operand->isImm() ) {
@@ -603,7 +604,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 			ll_inst->srcA.operand[3].value = value;
 			ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
 			ll_inst->srcA.operand[3].offset = dis_info->offset[3];
-			debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%x\n", value);
+			debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%lx\n", value);
 			debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 				dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
 		}
@@ -812,7 +813,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcB.operand[3].value = value;
 				ll_inst->srcB.operand[3].size = dis_info->size[4] * 8;
 				ll_inst->srcB.operand[3].offset = dis_info->offset[4];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[4], dis_info->size[4], Bytes[dis_info->offset[4]]);
 			}
@@ -898,7 +899,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 					ll_inst->srcB.operand[3].value = value;
 					ll_inst->srcB.operand[3].size = dis_info->size[4] * 8;
 					ll_inst->srcB.operand[3].offset = dis_info->offset[4];
-					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%x\n", value);
+					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%lx\n", value);
 					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 						dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 				}
@@ -1011,7 +1012,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 					ll_inst->srcB.operand[3].value = value;
 					ll_inst->srcB.operand[3].size = dis_info->size[5] * 8;
 					ll_inst->srcB.operand[3].offset = dis_info->offset[5];
-					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%x\n", value);
+					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 offset Imm  = 0x%lx\n", value);
 					debug_print(DEBUG_INPUT_DIS, 1, "SRC1.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 						dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 				}
@@ -1134,7 +1135,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
 				ll_inst->srcA.operand[3].offset = dis_info->offset[3];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
 			}
@@ -1204,7 +1205,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
 				ll_inst->srcA.operand[3].offset = dis_info->offset[3];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
 			}
@@ -1230,7 +1231,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcB.operand[0].value = value;
 				ll_inst->srcB.operand[0].size = dis_info->size[5] * 8;
 				ll_inst->srcB.operand[0].offset = dis_info->offset[5];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 			}
@@ -1436,7 +1437,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
 				ll_inst->srcA.operand[3].offset = dis_info->offset[3];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
 			}
@@ -1506,7 +1507,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcA.operand[3].value = value;
 				ll_inst->srcA.operand[3].size = dis_info->size[3] * 8;
 				ll_inst->srcA.operand[3].offset = dis_info->offset[3];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC0.3 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[3], dis_info->size[3], Bytes[dis_info->offset[3]]);
 			}
@@ -1532,7 +1533,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 				ll_inst->srcB.operand[0].value = value;
 				ll_inst->srcB.operand[0].size = dis_info->size[5] * 8;
 				ll_inst->srcB.operand[0].offset = dis_info->offset[5];
-				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 offset Imm  = 0x%x\n", value);
+				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 offset Imm  = 0x%lx\n", value);
 				debug_print(DEBUG_INPUT_DIS, 1, "SRC1.0 bytes at inst offset = 0x%x octets, size = 0x%x octets, value = 0x%x\n",
 					dis_info->offset[5], dis_info->size[5], Bytes[dis_info->offset[5]]);
 			}
@@ -1555,6 +1556,7 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 
 	for (n = 0; n < num_operands; n++) {
 		Operand = &Inst->getOperand(n);
+		/* FIXME Operand */
 		debug_print(DEBUG_INPUT_DIS, 1, "Operand = 0x%" PRIx64 "\n", Operand);
 		debug_print(DEBUG_INPUT_DIS, 1, "Valid = %d, isReg = %d, isImm = %d, isFPImm = %d, isExpr = %d, isInst = %d\n",
 			Operand->isValid(), Operand->isReg(), Operand->isImm(), Operand->isFPImm(), Operand->isExpr(), Operand->isInst());
@@ -1584,32 +1586,32 @@ int llvm::DecodeAsmX86_64::DecodeInstruction(uint8_t *Bytes,
 int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 	switch (operand->kind) {
 	case KIND_REG:
-		debug_print(DEBUG_INPUT_DIS, 1, "REG:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "REG:0x%lx:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
 		break;
 	case KIND_IMM:
-		debug_print(DEBUG_INPUT_DIS, 1, "IMM:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "IMM:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[0].value,
 			operand->operand[0].size,
 			operand->operand[0].offset);
 		break;
 	case KIND_SCALE:
-		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_POINTER_REG:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
-		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_IMM_INDEX_MUL:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_POINTER_REG:0x%lx:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_IMM_INDEX_MUL:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[1].value,
 			operand->operand[1].size,
 			operand->operand[1].offset);
 		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_INDEX_REG:0x%lx:size = 0lx%x\n", operand->operand[2].value, operand->operand[2].size);
-		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_IMM_OFFSET:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[3].value,
 			operand->operand[3].size,
 			operand->operand[3].offset);
-		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_SEGMENT_REG:0x%x:size = 0x%x\n", operand->operand[4].value, operand->operand[4].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_SEGMENT_REG:0x%lx:size = 0x%x\n", operand->operand[4].value, operand->operand[4].size);
 		break;
 	case KIND_IND_REG:
-		debug_print(DEBUG_INPUT_DIS, 1, "REG_IND:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "REG_IND:0x%lx:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
 		break;
 	case KIND_IND_IMM:
-		debug_print(DEBUG_INPUT_DIS, 1, "IMM_IND:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "IMM_IND:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[0].value,
 			operand->operand[0].size,
 			operand->operand[0].offset);
