@@ -27,78 +27,6 @@
 #include "decode_asm_X86_64.h"
 #include "rev.h"
 
-/* debug: 0 = no debug output. >= 1 is more debug output */
-
-int debug_dis64 = 0;
-int debug_input_bfd = 0;
-int debug_input_dis = 0;
-int debug_exe = 0;
-int debug_analyse = 0;
-int debug_analyse_paths = 0;
-int debug_analyse_phi = 0;
-int debug_output = 0;
-
-void dbg_print(const char* func, int line, int module, int level, const char *format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    switch (module) {
-    case DEBUG_MAIN:
-        if (level <= debug_dis64) {
-            fprintf(stderr, "DEBUG_MAIN,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_INPUT_BFD:
-        if (level <= debug_input_bfd) {
-            fprintf(stderr, "DEBUG_INPUT_BFD,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_INPUT_DIS:
-        if (level <= debug_input_dis) {
-            fprintf(stderr, "DEBUG_INPUT_DIS,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_EXE:
-        if (level <= debug_exe) {
-            fprintf(stderr, "DEBUG_EXE,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_ANALYSE:
-        if (level <= debug_analyse) {
-            fprintf(stderr, "DEBUG_ANALYSE,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_ANALYSE_PATHS:
-        if (level <= debug_analyse_paths) {
-            fprintf(stderr, "DEBUG_ANALYSE_PATHS,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_ANALYSE_PHI:
-        if (level <= debug_analyse_phi) {
-            fprintf(stderr, "DEBUG_ANALYSE_PHI,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    case DEBUG_OUTPUT:
-        if (level <= debug_output) {
-            fprintf(stderr, "DEBUG_OUTPUT,0x%x %s,%d: ", level, func, line);
-            vfprintf(stderr, format, ap);
-        }
-        break;
-    default:
-        printf("DEBUG Failed: Module 0x%x\n", module);
-        exit(1);
-        break;
-    }
-    va_end(ap);
-}
-
 namespace llvm {
 
 int DecodeAsmOpInfoCallback(void *DisInfo, uint64_t PC,
@@ -1670,7 +1598,7 @@ int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 			operand->operand[1].value,
 			operand->operand[1].size,
 			operand->operand[1].offset);
-		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_INDEX_REG:0x%x:size = 0x%x\n", operand->operand[2].value, operand->operand[2].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_INDEX_REG:0x%lx:size = 0lx%x\n", operand->operand[2].value, operand->operand[2].size);
 		debug_print(DEBUG_INPUT_DIS, 1, "SCALE_IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
 			operand->operand[3].value,
 			operand->operand[3].size,
@@ -1687,17 +1615,17 @@ int llvm::DecodeAsmX86_64::PrintOperand(struct operand_low_level_s *operand) {
 			operand->operand[0].offset);
 		break;
 	case KIND_IND_SCALE:
-		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_POINTER_REG:0x%x:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
-		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_IMM_INDEX_MUL:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_POINTER_REG:0x%lx:size = 0x%x\n", operand->operand[0].value, operand->operand[0].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_IMM_INDEX_MUL:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[1].value,
 			operand->operand[1].size,
 			operand->operand[1].offset);
-		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_INDEX_REG:0x%x:size = 0x%x\n", operand->operand[2].value, operand->operand[2].size);
-		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_IMM_OFFSET:0x%x:symbol size = 0x%x, symbol offset = 0x%x\n",
+		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_INDEX_REG:0x%lx:size = 0x%x\n", operand->operand[2].value, operand->operand[2].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_IMM_OFFSET:0x%lx:symbol size = 0x%x, symbol offset = 0x%lx\n",
 			operand->operand[3].value,
 			operand->operand[3].size,
 			operand->operand[3].offset);
-		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_SEGMENT_REG:0x%x:size = 0x%x\n", operand->operand[4].value, operand->operand[4].size);
+		debug_print(DEBUG_INPUT_DIS, 1, "IND_SCALE_SEGMENT_REG:0x%lx:size = 0x%x\n", operand->operand[4].value, operand->operand[4].size);
 		break;
 	default:
 		break;
