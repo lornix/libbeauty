@@ -1,0 +1,8 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x31
+# cmp    %ecx,%eax
+# CHECK: getInstruction Size = 0x2
+# CHECK: result: len=32:// 0x0000:CMPf r0x8/32, r0x10/32
+# CHECK: inst_size = 1
+0x39 0xc8

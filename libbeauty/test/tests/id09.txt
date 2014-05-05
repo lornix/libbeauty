@@ -1,0 +1,10 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x9
+# push   %rbp
+# CHECK: getInstruction Size = 0x1
+# CHECK: result: len=42:// 0x0000:SUB  r0x28/64, i0x8/64, r0x28/64
+# CHECK: result: len=48:// 0x0001:STORE  r0x30/64, r0x28/64, s[r0x28]/64
+# CHECK: inst_size = 2
+0x55
+

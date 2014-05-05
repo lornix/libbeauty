@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x17
+# jmpq   *%rax
+# CHECK: getInstruction Size = 0x2
+# CHECK: result: len=33:// 0x0000:JMPT  r0x8/64, r0x48/64
+# CHECK: inst_size = 1
+0xff 0xe0
+

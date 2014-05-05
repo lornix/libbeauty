@@ -1,0 +1,16 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x23
+# setne  -0x5b(%rbp)
+# CHECK: getInstruction Size = 0x4
+# CHECK: result: len=33:// 0x0000:IF   cond=6 JMP-REL=0x0
+# CHECK: result: len=44:// 0x0001:SUB  r0x30/64, i0x5b/64, r0x160/64
+# CHECK: result: len=31:// 0x0002:MOV  i0x1/8, r0x180/8
+# CHECK: result: len=49:// 0x0003:STORE  r0x180/8, r0x160/64, s[r0x160]/8
+# CHECK: result: len=33:// 0x0004:IF   cond=5 JMP-REL=0x0
+# CHECK: result: len=44:// 0x0005:SUB  r0x30/64, i0x5b/64, r0x160/64
+# CHECK: result: len=31:// 0x0006:MOV  i0x0/8, r0x180/8
+# CHECK: result: len=49:// 0x0007:STORE  r0x180/8, r0x160/64, s[r0x160]/8
+# CHECK: inst_size = 8
+0x0f 0x95 0x45 0xa5
+

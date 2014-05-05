@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x26
+# jmpq
+# CHECK: getInstruction Size = 0x5
+# CHECK: result: len=47:// 0x0000:JMP  i0xfffffffffffffc98/64, r0x48/64
+# CHECK: inst_size = 1
+0xe9 0x98 0xfc 0xff 0xff
+

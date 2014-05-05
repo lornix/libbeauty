@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x1A
+# imul   $0x7,%rdi,%rax
+# CHECK: getInstruction Size = 0x4
+# CHECK: result: len=42:// 0x0000:IMULf i0x7/64, r0x40/64, r0x8/64
+# CHECK: inst_size = 1
+0x48 0x6b 0xc7 0x07
+

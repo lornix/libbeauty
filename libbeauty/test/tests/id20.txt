@@ -1,0 +1,11 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x20
+# callq  *0x8(%rbx)
+# CHECK: getInstruction Size = 0x3
+# CHECK: result: len=43:// 0x0000:ADD  r0x20/64, i0x8/64, r0x160/64
+# CHECK: result: len=50:// 0x0001:LOAD  m[r0x160]/64, r0x160/64, r0x180/64
+# CHECK: result: len=31:// 0x0002:CALL  (r0x180/64) ();
+# CHECK: inst_size = 3
+0xff 0x53 0x08
+

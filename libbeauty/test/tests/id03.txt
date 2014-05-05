@@ -1,0 +1,10 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x3
+# leal    291(%rdi), %eax
+# CHECK: getInstruction Size = 0x6
+# CHECK: result: len=45:// 0x0000:ADD  r0x40/64, i0x123/64, r0x160/64
+# CHECK: result: len=33:// 0x0001:MOV  r0x160/64, r0x8/32
+# CHECK: inst_size = 2
+0x8d 0x87 0x23 0x01 0 0
+

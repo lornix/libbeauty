@@ -1,0 +1,16 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x27
+# rep movsq %ds:(%rsi),%es:(%rdi)
+# CHECK: getInstruction Size = 0x3
+# CHECK: result: len=32:// 0x0000:CMPf r0x10/64, i0x0/64
+# CHECK: result: len=33:// 0x0001:IF   cond=4 JMP-REL=0x0
+# CHECK: result: len=42:// 0x0002:SUB  i0x1/64, r0x10/64, r0x10/64
+# CHECK: result: len=48:// 0x0003:LOAD  m[r0x38]/64, r0x38/64, r0x180/64
+# CHECK: result: len=49:// 0x0004:STORE  r0x180/64, r0x40/64, m[r0x40]/64
+# CHECK: result: len=42:// 0x0005:ADD  i0x8/64, r0x38/64, r0x38/64
+# CHECK: result: len=42:// 0x0006:ADD  i0x8/64, r0x40/64, r0x40/64
+# CHECK: result: len=47:// 0x0007:JMP  i0xfffffffffffffffd/64, r0x48/64
+# CHECK: inst_size = 8
+0xf3 0x48 0xa5
+

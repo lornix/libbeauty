@@ -1,0 +1,10 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x22
+# cmovne %edx,%eax
+# CHECK: getInstruction Size = 0x3
+# CHECK: result: len=33:// 0x0000:IF   cond=6 JMP-REL=0x0
+# CHECK: result: len=32:// 0x0001:MOV  r0x18/32, r0x8/32
+# CHECK: inst_size = 2
+0x0f 0x45 0xc2
+

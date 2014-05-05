@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x2B
+# mov    %r13d,%ecx
+# CHECK: getInstruction Size = 0x3
+# CHECK: result: len=33:// 0x0000:MOV  r0x78/32, r0x10/32
+# CHECK: inst_size = 1
+0x44 0x89 0xe9
+

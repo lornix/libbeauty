@@ -1,0 +1,11 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x4
+# movzbl  -96(%rbp), %esi
+# CHECK: getInstruction Size = 0x4
+# CHECK: result: len=44:// 0x0000:SUB  r0x30/64, i0x60/64, r0x160/64
+# CHECK: result: len=48:// 0x0001:LOAD  s[r0x160]/8, r0x160/64, r0x180/8
+# CHECK: result: len=33:// 0x0002:MOV  r0x180/8, r0x38/32
+# CHECK: inst_size = 3
+0x0f 0xb6 0x75 0xa0 0x00 0x00
+

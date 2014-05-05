@@ -1,0 +1,11 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x16
+# movslq -0x4(%rsp),%rax
+# CHECK: getInstruction Size = 0x5
+# CHECK: result: len=43:// 0x0000:SUB  r0x28/64, i0x4/64, r0x160/64
+# CHECK: result: len=50:// 0x0001:LOAD  s[r0x160]/32, r0x160/64, r0x180/32
+# CHECK: result: len=33:// 0x0002:SEX  r0x180/32, r0x8/64
+# CHECK: inst_size = 3
+0x48 0x63 0x44 0x24 0xfc
+

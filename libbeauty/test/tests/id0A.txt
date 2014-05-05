@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0xa
+# sarl $2, %esi
+# CHECK: getInstruction Size = 0x3
+# CHECK: result: len=41:// 0x0000:SARf r0x38/32, i0x2/8, r0x38/32
+# CHECK: inst_size = 1
+0xc1 0xfe 0x02
+

@@ -1,0 +1,11 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0xe
+# addq   0x60(%rdi),%rsi
+# CHECK: getInstruction Size = 0x4
+# CHECK: result: len=44:// 0x0000:ADD  r0x40/64, i0x60/64, r0x160/64
+# CHECK: result: len=50:// 0x0001:LOAD  m[r0x160]/64, r0x160/64, r0x180/64
+# CHECK: result: len=44:// 0x0002:ADDf r0x38/64, r0x180/64, r0x38/64
+# CHECK: inst_size = 3
+0x48 0x03 0x77 0x60
+

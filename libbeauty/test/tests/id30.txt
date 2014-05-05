@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x30
+# jle    7 <test47+0x7>
+# CHECK: getInstruction Size = 0x2
+# CHECK: result: len=49:// 0x0000:IF   cond=15 JMP-REL=0xffffffffffffffe5
+# CHECK: inst_size = 1
+0x7e 0xe5
+

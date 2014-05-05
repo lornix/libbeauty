@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x21
+# callq  *%rax
+# CHECK: getInstruction Size = 0x2
+# CHECK: result: len=29:// 0x0000:CALL  (r0x8/64) ();
+# CHECK: inst_size = 1
+0xff 0xd0
+

@@ -1,0 +1,9 @@
+# RUN: test_id %s | FileCheck %s
+
+# TEST CASE 0x2A
+# shl    %cl,%edx
+# CHECK: getInstruction Size = 0x2
+# CHECK: result: len=42:// 0x0000:SHLf r0x18/32, r0x10/8, r0x18/32
+# CHECK: inst_size = 1
+0xd3 0xe2
+
