@@ -1259,7 +1259,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 	int n;
 	int m;
 	int l;
-	printf("fill_phi: entered\n");
+	debug_print(DEBUG_ANALYSE_PHI, 1, "fill_phi: entered\n");
 
 	for (node = 1; node < nodes_size; node++) {
 		if (!nodes[node].valid) {
@@ -1268,12 +1268,12 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 		}
 		printf("node = 0x%x\n", node);
 		if (nodes[node].phi_size > 0) {
-			printf("phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
+			debug_print(DEBUG_ANALYSE_PHI, 1, "phi_size = 0x%x, prev_size = 0x%x\n", nodes[node].phi_size, nodes[node].prev_size);
 			for (n = 0; n < nodes[node].phi_size; n++) {
 				nodes[node].phi[n].phi_node = calloc(nodes[node].prev_size, sizeof(struct phi_node_s));
 				nodes[node].phi[n].phi_node_size = nodes[node].prev_size;
 				for (m = 0; m < nodes[node].prev_size; m++) {
-					printf("n = 0x%x, m = 0x%x\n", n, m);
+					debug_print(DEBUG_ANALYSE_PHI, 1, "n = 0x%x, m = 0x%x\n", n, m);
 					nodes[node].phi[n].phi_node[m].first_prev_node = nodes[node].prev_node[m];
 					nodes[node].phi[n].phi_node[m].node = 0;
 					nodes[node].phi[n].phi_node[m].path_count = 0;
@@ -1282,7 +1282,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 						if (nodes[node].phi[n].path_node[l].first_prev_node == nodes[node].phi[n].phi_node[m].first_prev_node) {
 							if ((nodes[node].phi[n].phi_node[m].path_count > 0) &&
 								(nodes[node].phi[n].phi_node[m].node != nodes[node].phi[n].path_node[l].node)) {
-								printf("FAILED at node 0x%x, phi_node = 0x%x, path_node = 0x%x\n",
+								debug_print(DEBUG_ANALYSE_PHI, "FAILED at node 0x%x, phi_node = 0x%x, path_node = 0x%x\n",
 									node,
 									nodes[node].phi[n].phi_node[m].node,
 									nodes[node].phi[n].path_node[l].node);
@@ -1299,7 +1299,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 							nodes[node].phi[n].phi_node[m].path_count++;
 						}
 					}
-					printf("fill_phi: first_prev_node = 0x%x, node = 0x%x, path_count = 0x%x\n",
+					debug_print(DEBUG_ANALYSE_PHI, 1, "fill_phi: first_prev_node = 0x%x, node = 0x%x, path_count = 0x%x\n",
 						nodes[node].phi[n].phi_node[m].first_prev_node,
 						nodes[node].phi[n].phi_node[m].node,
 						nodes[node].phi[n].phi_node[m].path_count);
@@ -1307,7 +1307,7 @@ int fill_phi_node_list(struct self_s *self, struct control_flow_node_s *nodes, i
 			}
 		}
 	}
-	printf("fill_phi: exit\n");
+	debug_print(DEBUG_ANALYSE_PHI, 1, "fill_phi: exit\n");
 	return 0;
 }
 
@@ -1527,7 +1527,7 @@ int assign_labels_to_dst(struct self_s *self, int entry_point, int node)
 		inst_log1 =  &inst_log_entry[inst];
 		instruction =  &inst_log1->instruction;
 		/* returns 0 for id and label set. 1 for error */
-		printf("\nSTART\n");
+		debug_print(DEBUG_MAIN, 1, "START\n");
 		debug_print(DEBUG_MAIN, 1, "label address = %p\n", &label);
 		tmp  = assign_id_label_dst(self, entry_point, node, inst_log1, &label);
 		debug_print(DEBUG_MAIN, 1, "value to log_to_label:inst = 0x%x: 0x%x, 0x%"PRIx64", 0x%x, 0x%x, 0x%"PRIx64", 0x%"PRIx64"\n",
