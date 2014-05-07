@@ -1,4 +1,4 @@
-AC_INIT("libbeauty",0.2.0)
+AC_INIT([libbeauty],0.2.0)
 AM_INIT_AUTOMAKE
 AC_PREREQ(2.53)
 
@@ -41,7 +41,7 @@ dnl ------------------------------------
 dnl Flag setup
 dnl ------------------------------------
 
-INCLUDES="-I\$(top_srcdir)/include"
+AM_CPPFLAGS="-I\$(top_srcdir)/include"
 
 CXXFLAGS="-O0 -Wall -g3"
 DEBUG_CXXFLAGS="-g3 -Wall"
@@ -53,7 +53,7 @@ fi
 
 MODULE_LDFLAGS="-export-dynamic -module -avoid-version"
 
-AC_SUBST(INCLUDES)
+AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(DEBUG_CXXFLAGS)
 AC_SUBST(MODULE_LDFLAGS)

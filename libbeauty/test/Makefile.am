@@ -50,7 +50,7 @@ test_case_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.5svn -L/usr/local/lib/ -lstdc++
 build_reg_table_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.5svn -L/usr/local/lib/ -lstdc++
 #mem_LDADD = -L$(libdir) -lz -ldl -lLLVM-3.2 -L/usr/lib/llvm-3.2/lib -lstdc++
 
-common_LDFLAGS = \
+LDFLAGS_common = \
 		-L$(top_srcdir)/src/input/binary_file_decoder/libbfd/.libs \
 		-L$(top_srcdir)/src/input/instruction_decoder/amd64/.libs \
 		-L$(top_srcdir)/src/execute/.libs \
@@ -60,8 +60,8 @@ common_LDFLAGS = \
 		-L$(top_srcdir)/src/input/instruction_decoder/llvm/amd64/.libs \
 		-L$(top_srcdir)/src/input/convert_ll_inst_to_rtl/.libs
 
-dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti $(common_LDFLAGS)
-test_id_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti $(common_LDFLAGS)
+dis64_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti $(LDFLAGS_common)
+test_id_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti $(LDFLAGS_common)
 #test_id_arm_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
 test_case_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
 build_reg_table_LDFLAGS = @MODULE_LDFLAGS@ -O0 -Wall -fno-rtti
